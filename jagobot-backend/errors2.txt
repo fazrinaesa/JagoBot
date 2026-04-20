@@ -1,0 +1,14 @@
+server.ts(1,21): error TS7016: Could not find a declaration file for module 'express'. 'C:/SEMESTER 4/Tugas Akhir KoLab/jagobot/jagobot-backend/node_modules/express/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/express` if it exists or add a new declaration (.d.ts) file containing `declare module 'express';`
+server.ts(2,18): error TS7016: Could not find a declaration file for module 'cors'. 'C:/SEMESTER 4/Tugas Akhir KoLab/jagobot/jagobot-backend/node_modules/cors/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/cors` if it exists or add a new declaration (.d.ts) file containing `declare module 'cors';`
+src/controllers/authController.ts(1,35): error TS7016: Could not find a declaration file for module 'express'. 'C:/SEMESTER 4/Tugas Akhir KoLab/jagobot/jagobot-backend/node_modules/express/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/express` if it exists or add a new declaration (.d.ts) file containing `declare module 'express';`
+src/controllers/authController.ts(3,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. 'C:/SEMESTER 4/Tugas Akhir KoLab/jagobot/jagobot-backend/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+src/middleware/authMiddleware.ts(1,49): error TS7016: Could not find a declaration file for module 'express'. 'C:/SEMESTER 4/Tugas Akhir KoLab/jagobot/jagobot-backend/node_modules/express/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/express` if it exists or add a new declaration (.d.ts) file containing `declare module 'express';`
+src/middleware/authMiddleware.ts(2,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. 'C:/SEMESTER 4/Tugas Akhir KoLab/jagobot/jagobot-backend/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+src/routes/authRoutes.ts(1,21): error TS7016: Could not find a declaration file for module 'express'. 'C:/SEMESTER 4/Tugas Akhir KoLab/jagobot/jagobot-backend/node_modules/express/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/express` if it exists or add a new declaration (.d.ts) file containing `declare module 'express';`

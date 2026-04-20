@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  
+  --color-brand-blue: #0A2647;
+  --color-brand-navy: #06142E;
+  --color-brand-orange: #FF6B35;
+  --color-brand-white: #FFFFFF;
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-4xl: 2.5rem;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-brand-blue bg-white dark:bg-brand-navy dark:text-slate-100 transition-colors duration-300;
+  }
+}
+
+.sidebar-blue {
+  background: linear-gradient(180deg, #0A2647 0%, #06142E 100%);
+}

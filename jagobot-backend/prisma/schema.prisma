@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  nama_toko String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  bots      Bot[]
+}
+
+model Bot {
+  id              Int             @id @default(autoincrement())
+  userId          Int
+  nama_bot        String
+  personality     String          @default("Ramah")
+  whatsapp_linked Boolean         @default(false)
+  instructions    String?
+  user            User            @relation(fields: [userId], references: [id])
+  chatLogs        ChatLog[]
+  knowledgeBases  KnowledgeBase[]
+}
+
+model KnowledgeBase {
+  id          Int             @id @default(autoincrement())
+  botId       Int
+  nama_sumber String
+  file_path   String?
+  status      String          @default("processing")
+  createdAt   DateTime        @default(now())
+  isi_teks    String?
+  tipe_sumber String?         @default("file")
+  chunks      DocumentChunk[]
+  bot         Bot             @relation(fields: [botId], references: [id])
+  // ✅ TAMBAHKAN BARIS INI
+  @@unique([botId, nama_sumber])
+}
+
+model DocumentChunk {
+  id              Int                    @id @default(autoincrement())
+  knowledgeBaseId Int
+  content         String
+  embedding       Unsupported("vector")?
+  knowledgeBase   KnowledgeBase          @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model ChatLog {
+  id            Int      @id @default(autoincrement())
+  botId         Int
+  customer_name String
+  pertanyaan    String
+  jawaban       String
+  response_time Int?
+  timestamp     DateTime @default(now())
+  bot           Bot      @relation(fields: [botId], references: [id])
+}
