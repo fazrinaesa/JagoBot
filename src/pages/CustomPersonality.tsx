@@ -67,7 +67,7 @@ export const CustomPersonality = () => {
     },
     {
       id: "casual",
-      name: "Gaul & Ceria",
+      name: "Ramah & Profesional",
       icon: Smile,
       desc: "Cocok untuk toko baju, cafe, atau produk anak muda.",
       preview: "Halo Kak! 👋 Wah, seneng banget bisa ketemu Kakak. Mau cari produk apa nih hari ini?"
@@ -82,84 +82,89 @@ export const CustomPersonality = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    // Penyesuaian: max-w-6xl agar lebih proporsional di layar 100%
+    <div className="space-y-5 max-w-6xl mx-auto px-4 pb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Presets Selection */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl">
-            <h3 className="text-lg font-black text-white mb-6 flex items-center gap-2 uppercase tracking-tight">
-              <Sparkles className="w-5 h-5 text-brand-orange" /> Pilih Gaya Bahasa
+        <div className="lg:col-span-2 space-y-5">
+          {/* Penyesuaian: padding dikurangi (p-5) dan rounded (rounded-2xl) */}
+          <div className="bg-brand-blue p-5 rounded-3xl border border-white/5 shadow-xl">
+            <h3 className="text-base font-black text-white mb-5 flex items-center gap-2 uppercase tracking-tight">
+              <Sparkles className="w-4 h-4 text-[#1800ad]" /> Pilih Gaya Bahasa
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {presets.map((preset) => (
                 <button
                   key={preset.id}
                   onClick={() => setSelectedPreset(preset.id)}
                   className={cn(
-                    "p-5 rounded-2xl border-2 text-left transition-all duration-300",
+                    "p-4 rounded-xl border-2 text-left transition-all duration-300",
                     selectedPreset === preset.id
-                      ? "border-brand-orange bg-brand-orange/10 shadow-lg shadow-brand-orange/10"
-                      : "border-white/10 hover:border-brand-orange/30 bg-white/5"
+                      ? "border-[#1800ad] bg-[#1800ad]/10 shadow-lg shadow-[#1800ad]/10"
+                      : "border-white/10 hover:border-[#1800ad]/30 bg-white/5 dark:bg-slate-900/5"
                   )}
                 >
                   <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-colors",
-                    selectedPreset === preset.id ? "bg-brand-orange text-white" : "bg-white/10 text-slate-400 shadow-sm"
+                    "w-9 h-9 rounded-lg flex items-center justify-center mb-3 transition-colors",
+                    selectedPreset === preset.id ? "bg-[#1800ad] text-white" : "bg-white/10 dark:bg-slate-900/10 text-slate-400 shadow-sm"
                   )}>
-                    <preset.icon className="w-5 h-5" />
+                    <preset.icon className="w-4 h-4" />
                   </div>
                   <h4 className={cn(
-                    "font-bold mb-1",
-                    selectedPreset === preset.id ? "text-brand-orange" : "text-white"
+                    "text-sm font-bold mb-1",
+                    selectedPreset === preset.id ? "text-[#1800ad]" : "text-white"
                   )}>{preset.name}</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter leading-tight">{preset.desc}</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-tight">{preset.desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl">
-            <h3 className="text-lg font-black text-white mb-4 uppercase tracking-tight">Instruksi Khusus</h3>
-            <p className="text-sm text-slate-400 mb-4 font-medium">Berikan instruksi tambahan bagaimana bot harus bersikap. Contoh: "Selalu gunakan kata 'Kak' saat menyapa" atau "Jangan gunakan emoji".</p>
+          <div className="bg-brand-blue p-5 rounded-3xl border border-white/5 shadow-xl">
+            <h3 className="text-base font-black text-white mb-3 uppercase tracking-tight">Instruksi Khusus</h3>
+            <p className="text-xs text-slate-400 mb-3 font-medium leading-relaxed">Berikan instruksi tambahan bagaimana bot harus bersikap. Contoh: "Selalu gunakan kata 'Kak' saat menyapa" atau "Jangan gunakan emoji".</p>
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder="Tulis instruksi khusus di sini..."
-              className="w-full p-5 rounded-2xl bg-white/5 border border-white/10 focus:ring-4 focus:ring-brand-orange/10 outline-none text-white resize-none min-h-[150px] font-medium placeholder:text-slate-500"
+              // Penyesuaian: padding p-4 dan min-h berkurang agar pas
+              className="w-full p-4 rounded-xl bg-white/5 dark:bg-slate-900/5 border border-white/10 focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-white text-sm resize-none min-h-[120px] font-medium placeholder:text-slate-500 dark:text-slate-400"
             />
           </div>
         </div>
 
         {/* Preview Section */}
-        <div className="space-y-6">
-          <div className="bg-brand-blue rounded-[2rem] p-8 text-white shadow-2xl shadow-brand-blue/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/10 rounded-full blur-2xl -mr-16 -mt-16" />
-            <h3 className="font-black mb-6 flex items-center gap-2 uppercase tracking-widest text-xs relative z-10">
-              <MessageSquare className="w-4 h-4 text-brand-orange" /> Preview Suara Bot
+        <div className="space-y-5">
+          {/* Penyesuaian: padding p-6 dan radius 3xl */}
+          <div className="bg-brand-blue rounded-3xl p-6 text-white shadow-2xl shadow-brand-blue/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1800ad]/10 rounded-full blur-2xl -mr-12 -mt-12" />
+            <h3 className="font-black mb-5 flex items-center gap-2 uppercase tracking-widest text-[10px] relative z-10">
+              <MessageSquare className="w-3.5 h-3.5 text-[#1800ad]" /> Preview Suara Bot
             </h3>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 italic text-sm leading-relaxed relative z-10 border border-white/10">
+            <div className="bg-white/10 dark:bg-slate-900/10 backdrop-blur-md rounded-xl p-4 italic text-xs leading-relaxed relative z-10 border border-white/10">
               "{presets.find(p => p.id === selectedPreset)?.preview}"
             </div>
-            <div className="mt-8 space-y-4 relative z-10">
-              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-blue-200">
+            <div className="mt-6 space-y-3 relative z-10">
+              <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-blue-200">
                 <span>Kreativitas</span>
                 <span>Tinggi</span>
               </div>
-              <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-3/4 bg-brand-orange shadow-[0_0_15px_rgba(255,107,53,0.5)]" />
+              <div className="h-1.5 w-full bg-white/10 dark:bg-slate-900/10 rounded-full overflow-hidden">
+                <div className="h-full w-3/4 bg-[#1800ad] shadow-[0_0_15px_rgba(24,0,173,0.5)]" />
               </div>
             </div>
           </div>
 
           <button
             onClick={handleSave}
-            className="w-full bg-brand-orange text-white py-5 rounded-2xl font-black text-lg shadow-2xl shadow-brand-orange/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            // Penyesuaian: padding py-4 dan text-base
+            className="w-full bg-[#1800ad] text-white py-4 rounded-xl font-black text-base shadow-xl shadow-[#1800ad]/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
           >
-            <Save className="w-6 h-6" /> Simpan Perubahan
+            <Save className="w-5 h-5" /> Simpan Perubahan
           </button>
 
-          <button className="w-full bg-white text-brand-blue border border-slate-200 py-5 rounded-2xl font-black hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm">
-            <Play className="w-5 h-5 text-brand-orange" /> Coba di Playground
+          <button className="w-full bg-white dark:bg-slate-900 text-brand-blue dark:text-white border border-slate-200 dark:border-slate-800 py-4 rounded-xl font-black text-sm hover:bg-slate-50 dark:bg-slate-800/50 transition-all flex items-center justify-center gap-2 shadow-sm">
+            <Play className="w-4 h-4 text-[#1800ad]" /> Coba di Playground
           </button>
         </div>
       </div>

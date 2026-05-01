@@ -12,7 +12,7 @@ export const KnowledgeBase = () => {
 
   // --- ✅ STATE TAMBAHAN UNTUK EDIT ---
   const [isEditing, setIsEditing] = useState(false);
-  const [editingTitle, setEditingTitle] = useState(""); // Default kosong agar user mengisi judul
+  const [editingTitle, setEditingTitle] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const fetchInitialData = async () => {
@@ -39,23 +39,20 @@ export const KnowledgeBase = () => {
     fetchInitialData();
   }, []);
 
-  // --- ✅ FUNGSI HANDLE EDIT (MENGISI FORM MANUAL) ---
   const handleEdit = (file: any) => {
     setIsEditing(true);
     setEditingId(file.id);
-    setEditingTitle(file.nama_sumber); // Mengisi input judul otomatis
-    setManualText(file.isi_teks || ""); // Masukkan teks lama ke textarea
+    setEditingTitle(file.nama_sumber);
+    setManualText(file.isi_teks || "");
 
-    // Scroll otomatis ke section manual text
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
 
-  // --- ✅ FUNGSI BATAL EDIT ---
   const cancelEdit = () => {
     setIsEditing(false);
     setEditingId(null);
-    setEditingTitle(""); // Reset judul
-    setManualText(""); // Reset teks
+    setEditingTitle("");
+    setManualText("");
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +80,6 @@ export const KnowledgeBase = () => {
   };
 
   const handleManualSubmit = async () => {
-    // Validasi Judul dan Isi Teks
     if (!editingTitle.trim() || !manualText.trim() || !activeBotId) {
       alert("Silakan masukkan judul dan teks informasi terlebih dahulu.");
       return;
@@ -91,10 +87,9 @@ export const KnowledgeBase = () => {
 
     try {
       setIsLoading(true);
-      // Mengirim data ke API /manual yang mendukung UPSERT
       await api.post("/knowledge/manual", {
         botId: activeBotId,
-        title: editingTitle, // Menggunakan judul dari input field
+        title: editingTitle,
         content: manualText
       });
 
@@ -122,109 +117,117 @@ export const KnowledgeBase = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="bg-brand-orange/5 border border-brand-orange/10 p-4 rounded-2xl flex gap-4">
-        <Info className="w-6 h-6 text-brand-orange shrink-0" />
-        <p className="text-sm text-brand-blue">
+    // Penyesuaian: Menggunakan max-w-6xl agar tidak terlalu lebar di monitor besar
+    <div className="space-y-5 max-w-6xl mx-auto px-4 pb-10">
+      {/* Penyesuaian: Mengurangi padding (p-3) dan ukuran font (text-xs) */}
+      <div className="bg-[#1800ad]/5 border border-[#1800ad]/10 p-3 rounded-xl flex gap-3">
+        <Info className="w-5 h-5 text-[#1800ad] shrink-0" />
+        <p className="text-xs text-brand-blue dark:text-white leading-relaxed">
           <strong className="font-black uppercase tracking-tighter mr-1">Tips:</strong> Semakin detail informasi yang Anda berikan, semakin pintar bot Anda menjawab pertanyaan pelanggan. Unggah katalog produk atau tulis FAQ toko Anda di sini.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* File Upload Section */}
-        <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl">
-          <h3 className="text-lg font-black text-white mb-4 uppercase tracking-tight">Unggah Dokumen</h3>
+        {/* Penyesuaian: Mengurangi border radius (rounded-3xl) dan padding (p-5) */}
+        <div className="bg-brand-blue p-5 rounded-[1.5rem] border border-white/5 shadow-xl">
+          <h3 className="text-base font-black text-white mb-4 uppercase tracking-tight">Unggah Dokumen</h3>
           <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.txt,.docx" />
-          <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-white/10 rounded-2xl p-10 text-center hover:border-brand-orange transition-colors cursor-pointer group bg-white/5">
-            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:bg-brand-orange transition-colors">
-              <Upload className="w-8 h-8 text-slate-400 group-hover:text-white transition-colors" />
+
+          {/* Penyesuaian: Mengurangi padding dropzone (p-6) dan ukuran icon (w-12 h-12) */}
+          <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-white/10 rounded-xl p-6 text-center hover:border-[#1800ad] transition-colors cursor-pointer group bg-white/5 dark:bg-slate-900/5">
+            <div className="w-12 h-12 bg-white/10 dark:bg-slate-900/10 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:bg-[#1800ad] transition-colors">
+              <Upload className="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" />
             </div>
-            <p className="font-bold text-white">Klik atau seret file ke sini</p>
-            <p className="text-xs text-slate-400 mt-1 font-medium">Mendukung PDF, TXT, DOCX (Maks. 10MB)</p>
+            <p className="text-sm font-bold text-white">Klik atau seret file ke sini</p>
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">Mendukung PDF, TXT, DOCX (Maks. 10MB)</p>
           </div>
 
-          <div className="mt-8 space-y-3">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Terunggah</h4>
+          <div className="mt-6 space-y-2">
+            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">File Terunggah</h4>
             {isLoading && files.length === 0 ? (
-              <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 text-brand-orange animate-spin" /></div>
+              <div className="flex justify-center p-6"><Loader2 className="w-5 h-5 text-[#1800ad] animate-spin" /></div>
             ) : files.length > 0 ? (
               files.map((file, idx) => (
-                <div key={file.id || idx} className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-white/5">
+                <div key={file.id || idx} className="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 dark:bg-slate-900/5">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-white/10 rounded-xl shadow-sm"><FileText className="w-5 h-5 text-brand-orange" /></div>
+                    {/* Penyesuaian: Mengurangi ukuran icon file */}
+                    <div className="p-2 bg-white/10 dark:bg-slate-900/10 rounded-lg shadow-sm"><FileText className="w-4 h-4 text-[#1800ad]" /></div>
                     <div className="max-w-[120px] md:max-w-none overflow-hidden">
-                      <p className="text-sm font-bold text-white truncate">{file.nama_sumber || file.name}</p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                      <p className="text-xs font-bold text-white truncate">{file.nama_sumber || file.name}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
                         {file.createdAt ? new Date(file.createdAt).toLocaleDateString('id-ID') : file.date}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="hidden md:block text-[10px] font-black px-2.5 py-1 bg-brand-orange/20 text-brand-orange rounded-full uppercase tracking-tighter">
+                  <div className="flex items-center gap-1">
+                    <span className="hidden md:block text-[8px] font-black px-2 py-0.5 bg-[#1800ad]/20 text-[#1800ad] rounded-full uppercase tracking-tighter">
                       {file.status === 'ready' ? 'TERSINKRON' : 'DIPROSES'}
                     </span>
 
-                    {/* ✅ TOMBOL EDIT HANYA UNTUK TIPE TEXT/MANUAL */}
                     {file.tipe_sumber === 'text' && (
-                      <button onClick={() => handleEdit(file)} className="p-2 text-slate-400 hover:text-white transition-colors">
-                        <Edit3 className="w-4 h-4" />
+                      <button onClick={() => handleEdit(file)} className="p-1.5 text-slate-400 hover:text-white transition-colors">
+                        <Edit3 className="w-3.5 h-3.5" />
                       </button>
                     )}
 
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(file.id); }} className="p-2 text-slate-500 hover:text-red-500 transition-colors">
-                      <Trash2 className="w-4 h-4" />
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(file.id); }} className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-500 text-xs py-8">Belum ada file terunggah.</p>
+              <p className="text-center text-slate-500 dark:text-slate-400 text-[10px] py-6">Belum ada file terunggah.</p>
             )}
           </div>
         </div>
 
         {/* Manual Text Section */}
-        <div className={`bg-brand-blue p-6 rounded-[2rem] border ${isEditing ? 'border-brand-orange ring-4 ring-brand-orange/10' : 'border-white/5'} shadow-xl flex flex-col transition-all`}>
+        {/* Penyesuaian: Mengurangi padding (p-5) dan radius (rounded-3xl) */}
+        <div className={`bg-brand-blue p-5 rounded-[1.5rem] border ${isEditing ? 'border-[#1800ad] ring-2 ring-[#1800ad]/10' : 'border-white/5'} shadow-xl flex flex-col transition-all`}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-black text-white uppercase tracking-tight">
+            <h3 className="text-base font-black text-white uppercase tracking-tight">
               {isEditing ? "Edit Informasi" : "Input Manual"}
             </h3>
             {isEditing ? (
-              <button onClick={cancelEdit} className="text-[10px] font-black text-red-500 flex items-center gap-1 uppercase tracking-widest">
+              <button onClick={cancelEdit} className="text-[9px] font-black text-red-500 flex items-center gap-1 uppercase tracking-widest">
                 <X className="w-3 h-3" /> Batal Edit
               </button>
             ) : (
-              <button onClick={() => setEditingTitle("")} className="text-[10px] font-black text-brand-orange flex items-center gap-1 hover:opacity-80 transition-opacity uppercase tracking-widest">
+              <button onClick={() => setEditingTitle("")} className="text-[9px] font-black text-[#1800ad] flex items-center gap-1 hover:opacity-80 transition-opacity uppercase tracking-widest">
                 <Plus className="w-3 h-3" /> Tambah Baru
               </button>
             )}
           </div>
 
-          {/* ✅ INPUT JUDUL INFORMASI (PENTING UNTUK UPSERT) */}
-          <div className="mb-4">
+          <div className="mb-3">
             <input
               type="text"
               value={editingTitle}
               onChange={(e) => setEditingTitle(e.target.value)}
-              disabled={isEditing} // Judul dikunci saat edit agar tidak membuat baris baru secara tidak sengaja
+              disabled={isEditing}
               placeholder="Judul Informasi (Contoh: Jam Operasional)"
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-brand-orange/20 outline-none text-white font-bold placeholder:text-slate-500 transition-all disabled:opacity-50"
+              // Penyesuaian: Padding (p-3) dan font size (text-sm)
+              className="w-full p-3 rounded-lg bg-white/5 dark:bg-slate-900/5 border border-white/10 focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-white text-sm font-bold placeholder:text-slate-500 dark:text-slate-400 transition-all disabled:opacity-50"
             />
           </div>
 
           <textarea
             value={manualText}
             onChange={(e) => setManualText(e.target.value)}
-            placeholder="Tuliskan informasi penting toko Anda di sini... (Contoh: Jam operasional, alamat lengkap, cara pemesanan, dll.)"
-            className="flex-1 w-full p-5 rounded-2xl bg-white/5 border border-white/10 focus:ring-4 focus:ring-brand-orange/10 outline-none text-white resize-none min-h-[250px] font-medium placeholder:text-slate-500"
+            placeholder="Tuliskan informasi penting toko Anda di sini..."
+            // Penyesuaian: Padding (p-4), font size (text-sm), dan min-h berkurang
+            className="flex-1 w-full p-4 rounded-xl bg-white/5 dark:bg-slate-900/5 border border-white/10 focus:ring-2 focus:ring-[#1800ad]/10 outline-none text-white text-sm resize-none min-h-[200px] font-medium placeholder:text-slate-500 dark:text-slate-400"
           />
-          <div className="mt-6">
+          <div className="mt-5">
             <button
               onClick={handleManualSubmit}
               disabled={isLoading}
-              className="w-full bg-brand-orange text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-brand-orange/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              // Penyesuaian: Padding vertikal (py-3) dan font (text-base)
+              className="w-full bg-[#1800ad] text-white py-3 rounded-xl font-black text-base shadow-lg shadow-[#1800ad]/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <CheckCircle2 className="w-6 h-6" />}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
               {isEditing ? "Perbarui & Latih Bot" : "Simpan & Latih Bot"}
             </button>
           </div>

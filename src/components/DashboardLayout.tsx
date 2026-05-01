@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
 import { useTheme } from "../hooks/useTheme";
 import { cn } from "../lib/utils";
 
@@ -24,21 +23,21 @@ interface SidebarItemProps {
   label: string;
   href: string;
   active?: boolean;
-  key?: string;
 }
 
+// 1. Optimasi ukuran padding dan gap pada SidebarItem
 const SidebarItem = ({ icon: Icon, label, href, active }: SidebarItemProps) => (
   <Link
     to={href}
     className={cn(
-      "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative",
+      "flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-300 group relative",
       active
-        ? "bg-brand-orange text-white shadow-lg shadow-brand-orange/20"
+        ? "bg-[#1800ad] text-white shadow-lg shadow-[#1800ad]/20"
         : "text-slate-400 hover:text-white hover:bg-white/5"
     )}
   >
-    <Icon className={cn("w-5 h-5 transition-colors", active ? "text-white" : "text-slate-500 group-hover:text-slate-300")} />
-    <span className={cn("font-bold text-sm tracking-tight", active ? "text-white" : "text-slate-400 group-hover:text-slate-200")}>{label}</span>
+    <Icon className={cn("w-4.5 h-4.5 transition-colors", active ? "text-white" : "text-slate-500 group-hover:text-slate-300")} />
+    <span className={cn("font-bold text-xs tracking-tight", active ? "text-white" : "text-slate-400 group-hover:text-slate-200")}>{label}</span>
   </Link>
 );
 
@@ -58,8 +57,6 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
       try {
         const savedStore = localStorage.getItem('nama_toko');
         const rawUser = localStorage.getItem('user');
-
-        // Perbaikan: Gunakan Try-Catch untuk parse JSON agar tidak blank screen
         const userData = rawUser && rawUser !== "undefined" ? JSON.parse(rawUser) : {};
 
         setProfile({
@@ -92,22 +89,27 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   ];
 
   return (
-    <div className="min-h-screen bg-white transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-60 bg-brand-blue text-white transition-transform duration-500 ease-in-out transform lg:translate-x-0 border-r border-white/5",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-[#0f172a] to-[#1e293b] dark:from-slate-950 dark:to-slate-900 text-white transition-transform duration-500 ease-in-out transform lg:translate-x-0 border-r border-white/5 dark:border-slate-800",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex flex-col h-full p-5">
-          <div className="flex items-center gap-3 mb-10 px-2">
-            <div className="w-9 h-9 bg-brand-orange rounded-xl flex items-center justify-center shadow-xl shadow-brand-orange/30 rotate-3">
-              <Bot className="text-white w-5 h-5" />
-            </div>
-            <span className="text-xl font-black tracking-tighter italic">JagoBot</span>
+        {/* 2. Mengurangi padding container utama sidebar */}
+        <div className="flex flex-col h-full p-4">
+
+          {/* 3. Optimasi Logo: Dibuat ke tengah dengan justify-center */}
+          <div className="flex items-center justify-center w-full px-2 mb-6 mt-2">
+            <img
+              src="/Logo_JagoAI.png"
+              alt="JagoBot Logo"
+              className="h-30 w-auto object-contain" // Ukuran h-10 lebih proporsional untuk sidebar w-60
+            />
           </div>
 
-          <nav className="flex-1 space-y-1.5">
+          {/* 4. Spacing antar menu dipersempit (space-y-1) */}
+          <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
             {menuItems.map((item) => (
               <SidebarItem
                 key={item.href}
@@ -119,7 +121,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             ))}
           </nav>
 
-          <div className="pt-5 mt-5 border-t border-white/10 space-y-1.5">
+          {/* 5. Bagian bawah dibuat lebih compact */}
+          <div className="pt-4 mt-4 border-t border-white/10 space-y-1">
             {bottomItems.map((item) => (
               <SidebarItem
                 key={item.href}
@@ -134,52 +137,54 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                 localStorage.clear();
                 navigate("/");
               }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all w-full text-left group"
+              // Penyesuaian: bg tetap transparan (hover:bg-white/5 atau clear), teks jadi putih
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all w-full text-left group"
             >
-              <LogOut className="w-5 h-5 text-slate-500 group-hover:text-red-400" />
-              <span className="font-bold text-sm tracking-tight">Keluar</span>
+              {/* Ikon berubah ke warna biru #1800ad saat hover sebagai aksen */}
+              <LogOut className="w-4 h-4 text-slate-500 group-hover:text-[#1800ad]" />
+              <span className="font-bold text-xs tracking-tight">Keluar</span>
             </button>
           </div>
         </div>
       </aside>
 
-      <div className="lg:ml-60 flex flex-col min-h-screen">
-        <header className="sticky top-0 z-40 bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between">
+      {/* 6. Penyesuaian margin konten utama agar pas dengan lebar sidebar baru */}
+      <div className="lg:ml-64 flex flex-col min-h-screen">
+        <header className="sticky top-0 z-40 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-between transition-colors duration-300">
           <button
-            className="lg:hidden p-2 text-slate-600"
+            className="lg:hidden p-2 text-slate-600 dark:text-slate-300"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
-            {isSidebarOpen ? <X /> : <Menu />}
+            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
           <div className="flex-1 lg:flex hidden">
-            <h1 className="text-lg font-black tracking-tight text-brand-blue uppercase">
+            <h1 className="text-md font-black tracking-tight text-[#1800ad] dark:text-white uppercase">
               {menuItems.find(item => item.href === location.pathname)?.label ||
                 bottomItems.find(item => item.href === location.pathname)?.label ||
                 "Dashboard"}
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             >
-              {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
-            <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-100 dark:border-slate-800">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-brand-blue uppercase">
+                <p className="text-xs font-bold text-[#1800ad] dark:text-white uppercase leading-none mb-1">
                   {profile.toko}
                 </p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none">
                   {profile.nama}
                 </p>
               </div>
 
-              {/* Perbaikan: Tambahkan Null Check pada split() agar tidak crash */}
-              <div className="w-9 h-9 rounded-xl bg-brand-blue flex items-center justify-center text-white font-black text-xs uppercase">
+              <div className="w-8 h-8 rounded-lg bg-[#1800ad] flex items-center justify-center text-white font-black text-[10px] uppercase shadow-sm">
                 {profile.toko && profile.toko.trim() !== ""
                   ? profile.toko.split(' ').map(n => n[0]).join('').substring(0, 2)
                   : "JB"}
@@ -188,7 +193,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           </div>
         </header>
 
-        <main className="flex-1 p-8 lg:p-10 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto w-full">
           {children}
         </main>
       </div>
