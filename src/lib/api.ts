@@ -1,6 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
-// Gunakan cara manual untuk mengambil base URL agar TS tidak bingung dengan import.meta
 const BASE_URL = 'http://localhost:5000/api';
 
 const api = axios.create({
@@ -12,7 +11,6 @@ api.interceptors.request.use(
         const token = localStorage.getItem('token');
 
         if (token) {
-            // Memastikan headers ada, jika tidak buat instance baru
             if (!config.headers) {
                 config.headers = new AxiosHeaders();
             }
@@ -26,7 +24,6 @@ api.interceptors.request.use(
 );
 
 export const getDashboardStats = (botId: number, period: string = 'bulan') => {
-    // Menambahkan ?botId= dan ?period= agar backend bisa menangkapnya via req.query
     return api.get(`/dashboard/stats?botId=${botId}&period=${period}`);
 };
 
@@ -35,11 +32,9 @@ export const getActiveBot = (botId?: number) => {
     return api.get(url);
 };
 
-// --- TAMBAHAN BARU UNTUK INTEGRASI LANGKAH 5 ---
-
 /**
  * 5.1 Connect Personality Tab
- * Mengupdate kepribadian dan instruksi khusus bot
+ * Mengupdate Profil Bot dan instruksi khusus
  */
 export const updateBotSettings = (botId: number, personality: string, instructions: string) => {
     return api.patch('/bot/settings', {
@@ -55,6 +50,60 @@ export const updateBotSettings = (botId: number, personality: string, instructio
  */
 export const getKnowledgeBaseList = (botId: number) => {
     return api.get(`/knowledge/list?botId=${botId}`);
+};
+
+/**
+ * 5.2.1 Upload file (PDF/DOCX) ke Knowledge Base
+ * Menggunakan FormData karena mengirim file binary
+ */
+export const uploadKnowledgeBaseFile = (botId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('botId', String(botId));
+
+    return api.post('/knowledge/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
+
+/**
+ * 5.2.2 Ingest teks manual ke Knowledge Base
+ * Menyimpan atau memperbarui informasi manual berdasarkan title (upsert)
+ */
+export const ingestManualText = (botId: number, title: string, content: string) => {
+    return api.post('/knowledge/manual', {
+        botId,
+        title,
+        content,
+    });
+};
+
+/**
+ * 5.2.3 Ambil single Knowledge Base berdasarkan ID
+ */
+export const getKnowledgeBaseById = (id: number) => {
+    return api.get(`/knowledge/${id}`);
+};
+
+/**
+ * 5.2.4 Update Knowledge Base (manual text) berdasarkan ID
+ * Memperbarui title, content, dan re-generate embedding-nya
+ */
+export const updateKnowledgeBase = (id: number, title: string, content: string) => {
+    return api.put(`/knowledge/${id}`, {
+        title,
+        content,
+    });
+};
+
+/**
+ * 5.2.5 Hapus Knowledge Base berdasarkan ID
+ * Menghapus dokumen beserta semua chunk dan embedding terkait
+ */
+export const deleteKnowledgeBase = (id: number) => {
+    return api.delete(`/knowledge/${id}`);
 };
 
 /**

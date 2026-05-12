@@ -18,11 +18,11 @@ export const updateBotSettings = async (req: Request, res: Response) => {
 
         res.status(200).json({
             status: 'success',
-            message: 'Kepribadian bot berhasil diperbarui!',
+            message: 'Profil Bot berhasil diperbarui!',
             data: updatedBot,
         });
     } catch (error) {
         console.error('Update Bot Error:', error);
-        res.status(500).json({ status: 'error', message: 'Gagal memperbarui kepribadian bot' });
+        res.status(500).json({ status: 'error', message: 'Gagal memperbarui Profil Bot' });
     }
 };

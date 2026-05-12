@@ -238,3 +238,122 @@ export const ingestManualText = async (req: any, res: any) => {
         res.status(500).json({ message: "Gagal menyimpan teks manual", error: error.message });
     }
 };
+
+// --- ✅ AMBIL SINGLE KNOWLEDGE BASE BY ID ---
+export const getKnowledgeBaseById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        console.log("DEBUG: Fetching KB with ID:", id);
+
+        if (!id) {
+            return res.status(400).json({ 
+                success: false,
+                message: "ID dokumen diperlukan" 
+            });
+        }
+
+        const document = await prisma.knowledgeBase.findUnique({
+            where: {
+                id: Number(id)
+            }
+        });
+
+        if (!document) {
+            return res.status(404).json({ 
+                success: false,
+                message: "Dokumen tidak ditemukan" 
+            });
+        }
+
+        console.log("DEBUG: KB found:", document.id);
+
+        res.status(200).json({
+            success: true,
+            status: 'success',
+            data: document
+        });
+    } catch (error: any) {
+        console.error('❌ Fetch KB By ID Error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Gagal mengambil dokumen',
+            error: error.message 
+        });
+    }
+};
+
+// --- ✅ UPDATE KNOWLEDGE BASE (Manual Text) ---
+export const updateKnowledgeBase = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { title, content } = req.body;
+
+        console.log("DEBUG Update KB - ID:", id, "Title:", title, "Content length:", content?.length);
+
+        if (!id || !title || !content) {
+            return res.status(400).json({ 
+                success: false,
+                message: "ID, title, dan content diperlukan" 
+            });
+        }
+
+        // 1. Update KnowledgeBase metadata
+        const kb = await prisma.knowledgeBase.update({
+            where: {
+                id: Number(id)
+            },
+            data: {
+                nama_sumber: title,
+                isi_teks: content,
+                status: "ready"
+            }
+        });
+
+        console.log("DEBUG: KB updated successfully:", kb.id);
+
+        // 2. Bersihkan chunk lama
+        await prisma.documentChunk.deleteMany({
+            where: { knowledgeBaseId: kb.id }
+        });
+
+        // 3. Proses chunking dan generate embedding
+        const splitter = new RecursiveCharacterTextSplitter({
+            chunkSize: 500,
+            chunkOverlap: 50,
+        });
+        const chunks = await splitter.splitText(content);
+
+        console.log("DEBUG: Total chunks created:", chunks.length);
+
+        // 4. Simpan chunk baru dengan embedding
+        await Promise.all(
+            chunks.map(async (chunkContent) => {
+                const vector = await generateEmbedding(chunkContent);
+                const vectorString = `[${vector.join(',')}]`;
+
+                return prisma.$executeRaw`
+                    INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
+                    VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+                `;
+            })
+        );
+
+        console.log("DEBUG: All chunks inserted successfully");
+
+        res.status(200).json({
+            success: true,
+            status: 'success',
+            message: "Dokumen berhasil diperbarui!",
+            data: kb,
+            totalChunks: chunks.length
+        });
+    } catch (error: any) {
+        console.error('❌ Update KB Error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Gagal memperbarui dokumen', 
+            error: error.message 
+        });
+    }
+};

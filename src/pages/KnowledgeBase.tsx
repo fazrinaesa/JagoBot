@@ -1,32 +1,35 @@
-import { Upload, FileText, Trash2, Plus, Info, CheckCircle2, Loader2, Edit3, X, Database } from "lucide-react";
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import api, { getKnowledgeBaseList, getActiveBot } from "../lib/api";
+import { Upload, FileText, Trash2, Pencil, X, Info, Loader2, Database, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
+import api, { getKnowledgeBaseList } from "../lib/api";
 import { cn } from "../lib/utils";
+import { FloatingKnowledgePanel } from "../components/FloatingKnowledgePanel";
 
 export const KnowledgeBase = () => {
   const [files, setFiles] = useState<any[]>([]);
-  const [manualText, setManualText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeBotId, setActiveBotId] = useState<number | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // --- ✅ STATE TAMBAHAN UNTUK EDIT ---
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingTitle, setEditingTitle] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+  const [editingFile, setEditingFile] = useState<any | null>(null);
 
   const fetchInitialData = async () => {
     try {
       setIsLoading(true);
-      const botRes = await getActiveBot();
-      const botId = botRes.data.data?.id || botRes.data.id;
+
+      // ✅ FIX: Ambil botId langsung dari localStorage, tidak perlu hit API yang 404
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const botId = storedUser.botId || storedUser.bot_id || storedUser.activeBotId;
+
+      console.log("DEBUG KnowledgeBase - storedUser:", storedUser);
+      console.log("DEBUG KnowledgeBase - botId:", botId);
 
       if (botId) {
-        setActiveBotId(botId);
-        const fileRes = await getKnowledgeBaseList(botId);
+        setActiveBotId(Number(botId));
+        const fileRes = await getKnowledgeBaseList(Number(botId));
         setFiles(fileRes.data.data || []);
+      } else {
+        console.error("botId tidak ditemukan di localStorage");
       }
     } catch (error) {
       console.error("Gagal memuat data:", error);
@@ -39,125 +42,71 @@ export const KnowledgeBase = () => {
     fetchInitialData();
   }, []);
 
-  const handleEdit = (file: any) => {
-    setIsEditing(true);
-    setEditingId(file.id);
-    setEditingTitle(file.nama_sumber);
-    setManualText(file.isi_teks || "");
-    setIsPanelOpen(true);
-  };
-
-  const cancelEdit = () => {
-    setIsEditing(false);
-    setEditingId(null);
-    setEditingTitle("");
-    setManualText("");
-    setIsPanelOpen(false);
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !activeBotId) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("botId", activeBotId.toString());
-
-    try {
-      setIsLoading(true);
-      const response = await api.post("/knowledge/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      
-      if (response.data.success) {
-        alert("Dokumen berhasil diunggah!");
-        setIsPanelOpen(false);
-        fetchInitialData();
-      } else {
-        alert("Gagal: " + (response.data.message || "Terjadi kesalahan"));
-      }
-    } catch (error: any) {
-      console.error("Upload error:", error);
-      alert("Gagal mengunggah file: " + (error.response?.data?.message || "Internal Server Error"));
-    } finally {
-      setIsLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const handleManualSubmit = async () => {
-    if (!editingTitle.trim() || !manualText.trim() || !activeBotId) {
-      alert("Silakan masukkan judul dan teks informasi terlebih dahulu.");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const response = await api.post("/knowledge/manual", {
-        botId: activeBotId,
-        title: editingTitle,
-        content: manualText
-      });
-
-      if (response.data.success) {
-        alert(isEditing ? "Informasi berhasil diperbarui!" : "Informasi berhasil disimpan dan bot sedang dilatih!");
-        cancelEdit();
-        fetchInitialData();
-      }
-    } catch (error: any) {
-      console.error("Manual save error:", error);
-      alert("Gagal menyimpan informasi manual.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleDelete = async (fileId: number) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus dokumen ini?")) {
+    if (window.confirm("🗑️ Apakah Anda yakin ingin menghapus dokumen ini?")) {
       try {
         await api.delete(`/knowledge/${fileId}`);
         setFiles(files.filter((f) => f.id !== fileId));
+        alert("✅ Dokumen berhasil dihapus!");
       } catch (error) {
         console.error("Gagal menghapus:", error);
-        alert("Gagal menghapus file.");
+        alert("❌ Gagal menghapus file.");
       }
     }
+  };
+
+  const handleOpenPanel = () => {
+    setIsPanelOpen(true);
+    setIsPanelMinimized(false);
+  };
+
+  // Hanya file manual (bukan PDF/DOCX/TXT) yang bisa diedit
+  const isManualFile = (file: any) =>
+    !( file.nama_sumber || file.name || "" ).match(/\.(pdf|docx|txt)$/i);
+
+  const handleEditSuccess = (updatedFile: any) => {
+    setFiles(files.map((f) => (f.id === updatedFile.id ? { ...f, ...updatedFile } : f)));
+    setEditingFile(null);
   };
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto px-4 pb-10">
-      {/* Header Info Tip (Look Awal) */}
-      <div className="bg-[#1800ad]/5 border border-[#1800ad]/10 p-3 rounded-xl flex gap-3">
-        <Info className="w-5 h-5 text-[#1800ad] shrink-0" />
+      {/* Header Info Tip */}
+      <div className="bg-[#1800ad]/5 border border-[#1800ad]/10 p-4 rounded-2xl flex gap-3">
+        <Info className="w-5 h-5 text-[#1800ad] shrink-0 mt-0.5" />
         <p className="text-xs text-brand-blue dark:text-white leading-relaxed">
-          <strong className="font-bold uppercase tracking-tighter mr-1">Tips:</strong> Semakin detail informasi yang Anda berikan, semakin pintar bot Anda menjawab pertanyaan pelanggan. Unggah katalog produk atau tulis FAQ toko Anda di sini.
+          <strong className="font-bold uppercase tracking-tighter mr-1">💡 Tips:</strong> Semakin detail informasi yang Anda berikan, semakin pintar bot Anda menjawab pertanyaan pelanggan. Unggah katalog produk atau tulis FAQ toko Anda di sini.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT COLUMN: Storage / File List (SPACIOUS) */}
+        {/* LEFT COLUMN: File List (SPACIOUS) */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl min-h-[500px] flex flex-col">
+          <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl min-h-[400px] flex flex-col">
             <div className="flex items-center justify-between mb-6">
-               <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/10 rounded-lg">
-                    <Database className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-base font-bold text-white uppercase tracking-tight">Penyimpanan Pengetahuan (Storage)</h3>
-               </div>
-               <button 
-                onClick={() => setIsPanelOpen(true)}
-                className="bg-[#1800ad] text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-lg"
-               >
-                 <Plus className="w-3.5 h-3.5" /> Tambah Data
-               </button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-lg">
+                  <Database className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-base font-bold text-white uppercase tracking-tight">
+                  Basis Pengetahuan Bot
+                </h3>
+              </div>
+              <button 
+                onClick={handleOpenPanel}
+                className="bg-gradient-to-r from-[#1800ad] to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-[#1800ad]/30"
+              >
+                <Upload className="w-4 h-4" /> Tambah
+              </button>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
               {isLoading && files.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
                   <Loader2 className="w-8 h-8 text-[#1800ad] animate-spin" />
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Memuat Basis Pengetahuan...</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Memuat Basis Pengetahuan...
+                  </p>
                 </div>
               ) : files.length > 0 ? (
                 files.map((file, idx) => (
@@ -166,34 +115,53 @@ export const KnowledgeBase = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     key={file.id || idx} 
-                    className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-white/5 dark:bg-slate-900/10 hover:bg-white/[0.08] transition-all"
+                    className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-white/5 dark:bg-slate-900/10 hover:bg-white/[0.08] hover:border-white/20 transition-all group"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-[#1800ad]/20 rounded-xl">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="p-3 bg-[#1800ad]/20 rounded-xl group-hover:bg-[#1800ad]/30 transition-colors">
                         <FileText className="w-5 h-5 text-[#1800ad]" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-white truncate max-w-[200px] md:max-w-md">{file.nama_sumber || file.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-white truncate max-w-[300px] md:max-w-md">
+                          {file.nama_sumber || file.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
                             {file.createdAt ? new Date(file.createdAt).toLocaleDateString('id-ID') : 'BARU'}
                           </span>
                           <span className={cn(
-                            "text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter",
-                            file.status === 'ready' ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400"
+                            "text-[8px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tighter shrink-0",
+                            file.status === 'ready' 
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" 
+                              : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                           )}>
-                            {file.status === 'ready' ? 'TERSINKRON' : 'DIPROSES'}
+                            {file.status === 'ready' ? '✓ TERSINKRON' : '⏳ DIPROSES'}
                           </span>
+                          {/* Badge penanda inputan manual */}
+                          {isManualFile(file) && (
+                            <span className="text-[8px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tighter shrink-0 bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                              ✏️ MANUAL
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {file.tipe_sumber === 'text' && (
-                        <button onClick={() => handleEdit(file)} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all">
-                          <Edit3 className="w-4 h-4" />
+                    <div className="flex items-center gap-1">
+                      {/* Tombol edit HANYA muncul untuk file manual */}
+                      {isManualFile(file) && (
+                        <button
+                          onClick={() => setEditingFile(file)}
+                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                          title="Edit isi konten"
+                        >
+                          <Pencil className="w-4 h-4" />
                         </button>
                       )}
-                      <button onClick={() => handleDelete(file.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleDelete(file.id)} 
+                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        title="Hapus dokumen"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -202,169 +170,260 @@ export const KnowledgeBase = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 opacity-40">
                   <Database className="w-12 h-12 text-slate-500 mb-3" />
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Belum ada basis pengetahuan terdaftar.</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                    📭 Belum ada basis pengetahuan terdaftar.
+                  </p>
+                  <p className="text-[9px] text-slate-400 mt-2">Mulai dengan mengklik tombol "Tambah" di atas</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Guide / Action Info (Look Awal) */}
+        {/* RIGHT COLUMN: Guide / Info */}
         <div className="space-y-6">
+          {/* Information Card - ✅ tombol redundan dihapus, diganti teks panduan saja */}
           <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl">
-            <h3 className="text-base font-bold text-white mb-4 uppercase tracking-tight">Kelola Pengetahuan</h3>
-            <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              Gunakan fitur ini untuk melatih bot Anda dengan data spesifik toko Anda. Bot akan memberikan jawaban berdasarkan informasi yang Anda berikan di sini.
+            <h3 className="text-base font-bold text-white mb-4 uppercase tracking-tight">📚 Kelola Pengetahuan</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Gunakan fitur ini untuk melatih bot Anda dengan data spesifik toko Anda. Bot akan memberikan jawaban berdasarkan informasi yang Anda berikan di sini. Klik tombol <strong className="text-white">"Tambah"</strong> untuk mulai mengunggah dokumen atau menulis informasi manual.
             </p>
-            
-            <div className="space-y-3">
-              <button 
-                onClick={() => setIsPanelOpen(true)}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-[#1800ad]/10 border border-[#1800ad]/20 hover:bg-[#1800ad]/20 transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#1800ad] rounded-lg">
-                    <Upload className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xs font-bold text-white">Unggah File</span>
-                </div>
-                <Plus className="w-4 h-4 text-slate-500 group-hover:text-white" />
-              </button>
-
-              <button 
-                onClick={() => { setIsEditing(false); setIsPanelOpen(true); }}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-700 rounded-lg">
-                    <Edit3 className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xs font-bold text-white">Input Manual</span>
-                </div>
-                <Plus className="w-4 h-4 text-slate-500 group-hover:text-white" />
-              </button>
-            </div>
           </div>
 
+          {/* Guidelines Card */}
           <div className="bg-emerald-500/5 border border-emerald-500/10 p-5 rounded-[2rem]">
-            <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Panduan</h4>
-            <ul className="text-[10px] text-slate-400 space-y-2 list-disc ml-4 font-medium">
-              <li>Mendukung file PDF, TXT, dan DOCX.</li>
-              <li>Ukuran file maksimal adalah 10MB per unggahan.</li>
-              <li>Pastikan teks di dalam dokumen dapat dibaca (bukan gambar).</li>
-              <li>Tulis informasi manual sejelas mungkin untuk hasil terbaik.</li>
+            <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-3">✅ Panduan</h4>
+            <ul className="text-[10px] text-slate-400 space-y-2.5 list-disc ml-4 font-medium">
+              <li>Mendukung file <strong>PDF, DOCX, TXT</strong></li>
+              <li>Ukuran file maksimal <strong>10MB</strong> per unggahan</li>
+              <li>Pastikan teks dalam dokumen dapat dibaca (bukan gambar)</li>
+              <li>Tulis informasi sejelas mungkin untuk hasil terbaik</li>
+              <li>Data otomatis disimpan ke database Anda</li>
             </ul>
+          </div>
+
+          {/* Statistics Card */}
+          <div className="bg-blue-500/5 border border-blue-500/10 p-5 rounded-[2rem]">
+            <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">📊 Status</h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-slate-400 font-medium">Total Dokumen:</span>
+                <span className="text-white font-bold">{files.length}</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-slate-400 font-medium">Tersinkron:</span>
+                <span className="text-emerald-400 font-bold">{files.filter(f => f.status === 'ready').length}</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-slate-400 font-medium">Diproses:</span>
+                <span className="text-blue-400 font-bold">{files.filter(f => f.status !== 'ready').length}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Floating Panel (Wide Modal) - Tetap Square & Luas */}
-      <AnimatePresence>
-        {isPanelOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => cancelEdit()}
-              className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
-            />
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-4xl bg-white dark:bg-slate-900 shadow-2xl rounded-[2.5rem] flex flex-col border border-white/10 overflow-hidden max-h-[90vh]"
-            >
-              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-brand-blue">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
-                    {isEditing ? <Edit3 className="w-5 h-5 text-white" /> : <Plus className="w-5 h-5 text-white" />}
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white uppercase tracking-tight">
-                      {isEditing ? "Perbarui Data" : "Tambah Pengetahuan Baru"}
-                    </h3>
-                  </div>
-                </div>
-                <button onClick={() => cancelEdit()} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                  <X className="w-5 h-5 text-white" />
-                </button>
-              </div>
+      {/* Modal Edit Konten Manual */}
+      {editingFile && (
+        <EditManualModal
+          file={editingFile}
+          onClose={() => setEditingFile(null)}
+          onSuccess={handleEditSuccess}
+        />
+      )}
 
-              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Section 1: File Upload */}
-                  {!isEditing && (
-                    <section className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-lg bg-[#1800ad]/10 flex items-center justify-center text-[10px] font-bold text-[#1800ad]">1</div>
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">Unggah File</h4>
-                      </div>
-                      
-                      <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.txt,.docx" />
-                      
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center hover:border-[#1800ad] hover:bg-blue-50/30 transition-all cursor-pointer group bg-slate-50/50 dark:bg-slate-800/20"
-                      >
-                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100 dark:border-slate-700 group-hover:bg-[#1800ad] transition-all">
-                          <Upload className="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" />
-                        </div>
-                        <p className="text-sm font-bold text-slate-700 dark:text-white">Klik atau Tarik File</p>
-                        <p className="text-[9px] text-slate-400 mt-1 uppercase font-bold tracking-widest">PDF, DOCX, TXT</p>
-                      </div>
-                    </section>
-                  )}
+      {/* Floating Knowledge Panel */}
+      <FloatingKnowledgePanel
+        isOpen={isPanelOpen}
+        isMinimized={isPanelMinimized}
+        onClose={() => setIsPanelOpen(false)}
+        onMinimize={() => setIsPanelMinimized(true)}
+        onMaximize={() => setIsPanelMinimized(false)}
+        activeBotId={activeBotId}
+        onUploadSuccess={fetchInitialData}
+        isLoading={isLoading}
+      />
+    </div>
+  );
+};
 
-                  {/* Section 2: Manual Text */}
-                  <section className={cn("space-y-4", isEditing ? "col-span-full" : "")}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-[#1800ad]/10 flex items-center justify-center text-[10px] font-bold text-[#1800ad]">{isEditing ? "!" : "2"}</div>
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">
-                        {isEditing ? "Edit Teks" : "Input Manual"}
-                      </h4>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={editingTitle}
-                        onChange={(e) => setEditingTitle(e.target.value)}
-                        placeholder="Judul Informasi"
-                        className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-slate-800 dark:text-white text-sm font-bold placeholder:text-slate-400 transition-all"
-                      />
-                      <textarea
-                        value={manualText}
-                        onChange={(e) => setManualText(e.target.value)}
-                        placeholder="Tuliskan detail informasi toko Anda..."
-                        className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-slate-700 dark:text-white text-sm min-h-[200px] resize-none font-medium placeholder:text-slate-400 transition-all"
-                      />
-                    </div>
-                  </section>
-                </div>
-              </div>
+// ─── Komponen Modal Edit Konten Manual ───────────────────────────────────────
 
-              <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-end gap-3">
-                <button
-                  onClick={() => cancelEdit()}
-                  className="px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-700"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleManualSubmit}
-                  disabled={isLoading}
-                  className="px-8 py-3.5 bg-[#1800ad] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-[#1800ad]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  {isEditing ? "Perbarui" : "Simpan & Latih"}
-                </button>
-              </div>
-            </motion.div>
+interface EditManualModalProps {
+  file: any;
+  onClose: () => void;
+  onSuccess: (updatedFile: any) => void;
+}
+
+const EditManualModal = ({ file, onClose, onSuccess }: EditManualModalProps) => {
+  const [title, setTitle] = useState(file.nama_sumber || file.name || "");
+  const [content, setContent] = useState(file.isi_teks || file.content || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingContent, setIsLoadingContent] = useState(true);
+
+  // Fetch konten terkini saat modal dibuka
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        setIsLoadingContent(true);
+        console.log("🔍 Fetching KB content for ID:", file.id);
+        
+        const res = await api.get(`/knowledge/${file.id}`);
+        
+        console.log("✅ Response received:", res.data);
+        
+        const fetchedData = res.data.data;
+        setTitle(fetchedData?.nama_sumber || file.nama_sumber || "");
+        setContent(fetchedData?.isi_teks || file.isi_teks || "");
+        
+      } catch (error: any) {
+        console.error("❌ Gagal memuat konten:", error.message);
+        // Gunakan fallback data dari file object
+        setTitle(file.nama_sumber || file.name || "");
+        setContent(file.isi_teks || file.content || "");
+      } finally {
+        setIsLoadingContent(false);
+      }
+    };
+    
+    fetchContent();
+  }, [file.id, file.nama_sumber, file.isi_teks]);
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("⚠️ Judul dan konten tidak boleh kosong.");
+      return;
+    }
+    try {
+      setIsSaving(true);
+      console.log("💾 Saving KB with ID:", file.id);
+      console.log("📝 Title:", title);
+      console.log("📄 Content length:", content.length);
+      
+      const response = await api.put(`/knowledge/${file.id}`, {
+        title,
+        content,
+      });
+      
+      console.log("✅ Save response:", response.data);
+      
+      if (response.data.success) {
+        alert("✅ Konten berhasil diperbarui!");
+        onSuccess({ 
+          ...file, 
+          nama_sumber: title, 
+          isi_teks: content,
+          status: "ready"
+        });
+      } else {
+        alert("❌ " + (response.data.message || "Gagal memperbarui konten."));
+      }
+    } catch (error: any) {
+      console.error("❌ Gagal menyimpan:", error);
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Gagal memperbarui konten.";
+      alert("❌ " + errorMsg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 shadow-2xl rounded-3xl flex flex-col border border-white/10 overflow-hidden max-h-[85vh]"
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-[#1800ad] to-blue-600">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
+              <Pencil className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white uppercase tracking-tight">
+                Edit Konten Manual
+              </h3>
+              <p className="text-xs text-blue-100">Perbarui judul dan isi informasi</p>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            title="Tutup"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-4">
+          {isLoadingContent ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <Loader2 className="w-8 h-8 text-[#1800ad] animate-spin" />
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Memuat konten...
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                  Judul
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Judul Informasi"
+                  className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-slate-800 dark:text-white text-sm font-bold placeholder:text-slate-400 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                  Isi Konten
+                </label>
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Tuliskan detail informasi..."
+                  className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-slate-700 dark:text-white text-sm min-h-[260px] resize-none font-medium placeholder:text-slate-400 transition-all"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+          >
+            Batal
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-8 py-3.5 bg-[#1800ad] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-[#1800ad]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4" />
+            )}
+            Simpan & Perbarui
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };
