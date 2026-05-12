@@ -16,6 +16,7 @@ import { motion } from "motion/react";
 import { useTheme } from "../hooks/useTheme";
 import { cn } from "../lib/utils";
 import { Sun, Moon } from "lucide-react";
+import { Logo } from "../components/Logo";
 
 const FeatureCard = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => (
   <motion.div
@@ -25,8 +26,8 @@ const FeatureCard = ({ icon: Icon, title, description }: { icon: any, title: str
     <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 group-hover:bg-[#1800ad]/10 dark:group-hover:bg-[#1800ad]/30 rounded-2xl flex items-center justify-center mb-6 transition-colors">
       <Icon className="w-7 h-7 text-brand-blue dark:text-blue-400 group-hover:text-[#1800ad] dark:group-hover:text-blue-300 transition-colors" />
     </div>
-    <h3 className="text-lg font-display font-black text-brand-blue dark:text-white mb-3 uppercase tracking-tight">{title}</h3>
-    <p className="text-sm text-slate-800 dark:text-slate-300 font-medium leading-relaxed">{description}</p>
+    <h3 className="text-lg font-display font-bold text-brand-blue dark:text-white mb-3 uppercase tracking-tight">{title}</h3>
+    <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">{description}</p>
   </motion.div>
 );
 
@@ -40,11 +41,7 @@ export const LandingPage = () => {
       <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-transparent dark:border-slate-800/50 transition-colors duration-500">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src="/Logo_JagoAI.png"
-              alt="Logo JagoBot"
-              className="h-35 w-auto object-contain"
-            />
+            <Logo iconSize={32} textSize="text-xl" />
           </div>
 
           <div className="hidden md:flex items-center gap-10">
@@ -52,7 +49,7 @@ export const LandingPage = () => {
               <a
                 key={item}
                 href={`#${item.toLowerCase().replace(" ", "-")}`}
-                className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-800 dark:text-slate-300 hover:text-[#1800ad] dark:hover:text-white transition-colors"
+                className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-700 dark:text-slate-300 hover:text-[#1800ad] dark:hover:text-white transition-colors"
               >
                 {item}
               </a>
@@ -66,8 +63,8 @@ export const LandingPage = () => {
             >
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <Link to="/login" className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-blue dark:text-blue-400 hover:text-[#1800ad] dark:hover:text-blue-300 transition-colors">Masuk</Link>
-            <Link to="/register" className="bg-[#1800ad] text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-xl shadow-[#1800ad]/30 hover:scale-105 active:scale-95 transition-all">
+            <Link to="/login" className="text-[9px] font-bold uppercase tracking-[0.2em] text-brand-blue dark:text-blue-400 hover:text-[#1800ad] dark:hover:text-blue-300 transition-colors">Masuk</Link>
+            <Link to="/register" className="bg-[#1800ad] text-white px-6 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] shadow-xl shadow-[#1800ad]/30 hover:scale-105 active:scale-95 transition-all">
               Daftar Gratis
             </Link>
           </div>
@@ -87,22 +84,22 @@ export const LandingPage = () => {
               transition={{ duration: 0.8 }}
               className="relative z-10"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1800ad]/10 dark:bg-blue-500/10 text-[#1800ad] dark:text-blue-400 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 border border-[#1800ad]/20 dark:border-blue-500/20">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1800ad]/10 dark:bg-blue-500/10 text-[#1800ad] dark:text-blue-400 rounded-full text-[9px] font-bold uppercase tracking-widest mb-6 border border-[#1800ad]/20 dark:border-blue-500/20">
                 <Sparkles className="w-3 h-3" /> Solusi AI untuk UMKM Indonesia 🇮🇩
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-5xl font-display font-black text-brand-blue dark:text-white leading-[1.15] mb-6 tracking-tighter">
+              <h1 className="text-4xl md:text-5xl lg:text-5xl font-display font-bold text-brand-blue dark:text-white leading-[1.15] mb-6 tracking-tighter">
                 Chatbot Pintar <br />
                 <span className="text-[#1800ad] dark:text-blue-400 italic">Otomatis</span> Untuk <br />
                 Bisnis Anda
               </h1>
-              <p className="text-lg text-slate-800 dark:text-slate-300 mb-10 leading-relaxed max-w-lg font-medium">
+              <p className="text-lg text-slate-700 dark:text-slate-300 mb-10 max-w-lg leading-relaxed font-medium">
                 Tingkatkan layanan pelanggan Anda tanpa biaya mahal. JagoBot membantu UMKM mengotomatisasi tanya jawab dan pesanan 24/7.
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-5">
-                <Link to="/register" className="w-full sm:w-auto bg-[#1800ad] text-white px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-2xl shadow-[#1800ad]/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">
+                <Link to="/register" className="w-full sm:w-auto bg-[#1800ad] text-white px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest shadow-2xl shadow-[#1800ad]/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">
                   Mulai Sekarang <ArrowRight className="w-4 h-4" />
                 </Link>
-                <button className="w-full sm:w-auto bg-white dark:bg-slate-800 text-brand-blue dark:text-white border-2 border-slate-100 dark:border-slate-700 px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
+                <button className="w-full sm:w-auto bg-white dark:bg-slate-800 text-brand-blue dark:text-white border-2 border-slate-100 dark:border-slate-700 px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
                   Lihat Demo
                 </button>
               </div>
@@ -113,7 +110,7 @@ export const LandingPage = () => {
                     <img key={i} src={`https://i.pravatar.cc/100?img=${i + 10}`} className="w-10 h-10 rounded-xl border-4 border-white shadow-sm" alt="User" referrerPolicy="no-referrer" />
                   ))}
                 </div>
-                <p className="text-[10px] text-slate-800 dark:text-slate-300 font-black uppercase tracking-widest">
+                <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest">
                   Bergabung dengan <span className="text-[#1800ad] dark:text-blue-400">2,000+</span> UMKM lainnya
                 </p>
               </div>
@@ -133,16 +130,12 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="relative bg-white rounded-b-lg border border-slate-700 overflow-hidden aspect-[16/10]">
-                  <div className="bg-brand-blue p-4 flex items-center justify-between">
+                  <div className="bg-[#0A2647] p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <img
-                        src="/Logo_JagoAI.png"
-                        alt="Bot Avatar"
-                        className="w-8 h-8 rounded-lg bg-white p-1 object-contain"
-                      />
+                      <Logo iconSize={24} textSize="text-[10px]" variant="flat" />
                       <div>
-                        <span className="text-white font-black text-[10px] uppercase tracking-widest block">JagoBot Assistant</span>
-                        <span className="text-[7px] text-emerald-400 font-black uppercase tracking-widest flex items-center gap-1">
+                        <span className="text-white font-bold text-[10px] uppercase tracking-widest block">JagoBot Assistant</span>
+                        <span className="text-[7px] text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-1">
                           <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" /> Online
                         </span>
                       </div>
@@ -182,8 +175,8 @@ export const LandingPage = () => {
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold text-slate-800 dark:text-slate-300 uppercase">Respon Cepat</p>
-                  <p className="text-xs font-bold text-slate-800 dark:text-white">&lt; 1 Detik</p>
+                  <p className="text-[9px] font-bold text-slate-700 dark:text-slate-300 uppercase">Respon Cepat</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-white">&lt; 1 Detik</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -194,7 +187,7 @@ export const LandingPage = () => {
       {/* Trust Badges */}
       <div className="py-12 border-none relative z-10 -mt-[1px]">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-center text-slate-300 dark:text-slate-600 text-[9px] font-bold uppercase tracking-[0.3em] mb-8">
+          <p className="text-center text-slate-500 dark:text-slate-600 text-[9px] font-bold uppercase tracking-[0.3em] mb-8">
             Bagian dari Ekosistem JagoAI
           </p>
           <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20">
@@ -218,8 +211,8 @@ export const LandingPage = () => {
           <div className="text-center mb-16">
             <span className="text-brand-blue/70 font-bold text-[10px] tracking-[0.4em] uppercase mb-3 block">
               Fitur Unggulan
-            </span>            <h2 className="text-3xl md:text-4xl font-display font-black text-brand-blue dark:text-white mb-5 tracking-tight">Teknologi AI Masa Depan</h2>
-            <p className="text-slate-400 max-w-xl mx-auto text-base leading-relaxed font-medium">Kami menghadirkan teknologi tercanggih yang dikemas dalam antarmuka yang sangat mudah digunakan.</p>
+            </span>            <h2 className="text-3xl md:text-4xl font-display font-bold text-brand-blue dark:text-white mb-5 tracking-tight">Teknologi AI Masa Depan</h2>
+            <p className="text-slate-600 dark:text-slate-500 max-w-xl mx-auto text-base leading-relaxed font-medium">Kami menghadirkan teknologi tercanggih yang dikemas dalam antarmuka yang sangat mudah digunakan.</p>
           </div>
 
           <div className="max-w-7xl mx-auto">
@@ -268,8 +261,8 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-[#1800ad] dark:text-blue-400 font-bold text-[10px] tracking-[0.4em] uppercase mb-3 block">Harga Transparan</span>
-            <h2 className="text-3xl md:text-4xl font-display font-black text-brand-blue dark:text-white mb-4 tracking-tight">Pilih Paket Sesuai Kebutuhan</h2>
-            <p className="text-slate-700 dark:text-slate-300 max-w-xl mx-auto text-base font-medium">Mulai dari gratis hingga paket kustom untuk bisnis yang berkembang pesat.</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-brand-blue dark:text-white mb-4 tracking-tight">Pilih Paket Sesuai Kebutuhan</h2>
+            <p className="text-slate-700 dark:text-slate-500 max-w-xl mx-auto text-base font-medium">Mulai dari gratis hingga paket kustom untuk bisnis yang berkembang pesat.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -285,19 +278,19 @@ export const LandingPage = () => {
                   : "bg-white dark:bg-slate-900 shadow-sm dark:shadow-none hover:shadow-xl dark:hover:shadow-slate-900/50"
               )}>
                 {plan.popular && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1800ad] dark:bg-blue-600 text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1800ad] dark:bg-blue-600 text-white px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest">
                     Paling Populer
                   </div>
                 )}
                 <h3 className="text-lg font-display font-bold text-brand-blue dark:text-white mb-1">{plan.name}</h3>
-                <p className="text-slate-800 dark:text-slate-400 text-xs mb-6 font-medium">{plan.desc}</p>
+                <p className="text-slate-700 dark:text-slate-400 text-xs mb-6 font-medium">{plan.desc}</p>
                 <div className="flex items-baseline gap-1 mb-8">
-                  <span className="text-3xl font-black text-brand-blue dark:text-white">{plan.price}</span>
-                  <span className="text-slate-800 dark:text-slate-400 font-bold text-xs">/bulan</span>
+                  <span className="text-3xl font-bold text-brand-blue dark:text-white">{plan.price}</span>
+                  <span className="text-slate-700 dark:text-slate-500 font-bold text-xs">/bulan</span>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f, i) => (
-                    <li key={i} className="flex items-center gap-3 text-xs font-semibold text-slate-800 dark:text-slate-300">
+                    <li key={i} className="flex items-center gap-3 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div className="w-4 h-4 rounded-full bg-emerald-50 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
                         <ChevronRight className="w-2.5 h-2.5" />
                       </div>
@@ -327,29 +320,25 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
-              {/* Penyesuaian: text-brand-blue dipastikan memiliki kontras tinggi atau gunakan text-slate-900 */}
-              <h2 className="text-4xl font-display font-black text-slate-500 dark:text-slate-300 mb-10 tracking-tight">Cara Kerja JagoBot</h2>
+              <h2 className="text-4xl font-display font-bold text-slate-600 dark:text-slate-300 mb-10 tracking-tight">Cara Kerja JagoBot</h2>
 
               <div className="space-y-8">
                 {[
                   { step: "01", title: "Daftar & Buat Akun", desc: "Hanya butuh 2 menit untuk memulai perjalanan AI Anda." },
                   { step: "02", title: "Latih Bot Anda", desc: "Unggah daftar harga, jam buka, dan info produk Anda." },
-                  { step: "03", title: "Atur Kepribadian", desc: "Pilih gaya bahasa yang sesuai dengan brand toko Anda." },
+                  { step: "03", title: "Atur Profil Bot", desc: "Pilih gaya bahasa yang sesuai dengan brand toko Anda." },
                   { step: "04", title: "Hubungkan & Selesai", desc: "Aktifkan di WhatsApp atau Website dan biarkan bot bekerja." }
                 ].map((item, idx) => (
                   <div key={idx} className="flex gap-6 items-start group">
-                    {/* Penyesuaian: Angka nomor diubah dari opasitas 20% ke 40% agar lebih terlihat namun tetap estetik */}
-                    <div className="text-4xl font-display font-black text-[#1800ad]/40 dark:text-blue-500/40 group-hover:text-[#1800ad] dark:group-hover:text-blue-400 transition-colors duration-300 leading-none">
+                    <div className="text-4xl font-display font-bold text-[#1800ad]/40 dark:text-blue-500/40 group-hover:text-[#1800ad] dark:group-hover:text-blue-400 transition-colors duration-300 leading-none">
                       {item.step}
                     </div>
 
                     <div>
-                      {/* Penyesuaian: Judul per nomor menggunakan font-black dan text-slate-900 */}
-                      <h4 className="text-xl font-display font-black text-slate-500 dark:text-slate-200 mb-2 tracking-tight">
+                      <h4 className="text-xl font-display font-bold text-slate-700 dark:text-slate-200 mb-2 tracking-tight">
                         {item.title}
                       </h4>
-                      {/* Penyesuaian: Deskripsi diubah dari slate-400 ke slate-600 agar tidak 'nyaru' */}
-                      <p className="text-sm text-slate-300 dark:text-slate-400 font-medium leading-relaxed">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
                         {item.desc}
                       </p>
                     </div>
@@ -389,12 +378,9 @@ export const LandingPage = () => {
       <footer className="py-10 border-none px-6 -mt-[1px]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <img src="/Logo_JagoAI.png"
-              alt="JagoBot Logo"
-              className="h-25 w-auto object-contain"
-            />
+            <Logo iconSize={32} textSize="text-xl" />
           </div>
-          <p className="text-slate-800 dark:text-slate-400 text-xs">© 2026 JagoBot Indonesia. Semua hak dilindungi.</p>
+          <p className="text-slate-600 dark:text-slate-400 text-xs">© 2026 JagoBot Indonesia. Semua hak dilindungi.</p>
           <div className="flex gap-6">
             <a href="#" className="text-xs text-slate-800 dark:text-slate-400 hover:text-brand-blue dark:hover:text-white transition-colors font-bold uppercase tracking-widest">Twitter</a>
             <a href="#" className="text-xs text-slate-800 dark:text-slate-400 hover:text-brand-blue dark:hover:text-white transition-colors font-bold uppercase tracking-widest">Instagram</a>

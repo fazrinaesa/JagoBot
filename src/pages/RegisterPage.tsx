@@ -2,6 +2,7 @@ import { Bot, Mail, Lock, ArrowRight, User, Store } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
+import { Logo } from "../components/Logo";
 
 export const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -61,23 +62,18 @@ export const RegisterPage = () => {
         className="w-full max-w-md relative z-10"
       >
         <div className="text-center mb-10">
-          <Link to="/" className="inline-flex flex-col items-center gap-2 mb-8 group">
-            {/* Penyesuaian: Menggunakan Logo Gambar agar konsisten */}
-            <img
-              src="/Logo_JagoAI.png"
-              alt="Logo JagoBot"
-              className="h-35 w-auto object-contain group-hover:scale-105 transition-transform"
-            />
+          <Link to="/" className="inline-flex justify-center mb-8 group">
+            <Logo iconSize={48} textSize="text-3xl" />
           </Link>
-          <h1 className="text-3xl font-black text-brand-blue dark:text-white tracking-tight">Mulai Bisnis Pintar Anda</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-3 font-medium uppercase text-[10px] tracking-[0.2em]">Daftar gratis dan buat chatbot pertama Anda</p>
+          <h1 className="text-3xl font-bold text-brand-blue dark:text-white tracking-tight">Mulai Bisnis Pintar Anda</h1>
+          <p className="text-slate-700 dark:text-slate-400 mt-3 font-semibold uppercase text-[10px] tracking-[0.2em]">Daftar gratis dan buat chatbot pertama Anda</p>
         </div>
 
         <div className="bg-white/80 dark:bg-slate-900/80 p-10 rounded-[2.5rem] shadow-2xl shadow-[#1800ad]/10 border border-white backdrop-blur-xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Nama</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Nama</label>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-[#1800ad] transition-colors" />
                   <input
@@ -92,7 +88,7 @@ export const RegisterPage = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Toko</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Toko</label>
                 <div className="relative group">
                   <Store className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-[#1800ad] transition-colors" />
                   <input
@@ -109,7 +105,7 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Email Bisnis</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Email Bisnis</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#1800ad] transition-colors" />
                 <input
@@ -125,7 +121,7 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Kata Sandi</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Kata Sandi</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#1800ad] transition-colors" />
                 <input
@@ -150,7 +146,7 @@ export const RegisterPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-[#1800ad] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-[#1800ad]/30 transition-all flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
+              className={`w-full bg-[#1800ad] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-2xl shadow-[#1800ad]/30 transition-all flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
             >
               {isLoading ? "Memproses..." : "Daftar Sekarang"} <ArrowRight className="w-5 h-5" />
             </button>
@@ -161,7 +157,7 @@ export const RegisterPage = () => {
           Sudah punya akun?
           <Link
             to="/login"
-            className="text-[#1800ad] font-black hover:underline transition-all ml-1"
+            className="text-[#1800ad] font-bold hover:underline transition-all ml-1"
           >
             Masuk di sini
           </Link>

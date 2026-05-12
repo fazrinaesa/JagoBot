@@ -81,40 +81,61 @@ export const ingestPDF = async (req: Request, res: Response) => {
         });
         const chunks = await splitter.splitText(fullText);
 
-        const kb = await prisma.knowledgeBase.create({
-            data: {
+        // ✅ Gunakan UPSERT agar tidak error jika file dengan nama yang sama sudah ada
+        const kb = await prisma.knowledgeBase.upsert({
+            where: {
+                botId_nama_sumber: { botId: parsedBotId, nama_sumber: file.originalname }
+            },
+            update: {
+                file_path: file.path,
+                status: "ready",
+                tipe_sumber: "file"
+            },
+            create: {
                 botId: parsedBotId,
                 nama_sumber: file.originalname,
                 file_path: file.path,
-                status: "ready"
+                status: "ready",
+                tipe_sumber: "file"
             }
         });
 
+        // 2. Bersihkan Chunk lama (Penting agar data tidak ganda saat diupload ulang)
+        await prisma.documentChunk.deleteMany({
+            where: { knowledgeBaseId: kb.id }
+        });
+
+        // 3. Simpan Vektor
         await Promise.all(
             chunks.map(async (chunkContent) => {
                 const vector = await generateEmbedding(chunkContent);
                 const vectorString = `[${vector.join(',')}]`;
 
                 return prisma.$executeRaw`
-            INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-            VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
-        `;
+                    INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
+                    VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+                `;
             })
         );
 
         if (file && fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
         res.status(200).json({
+            success: true,
             message: "Knowledge base berhasil diproses!",
             totalChunks: chunks.length
         });
 
     } catch (error: any) {
-        console.error("Error Ingestion:", error);
+        console.error("❌ Error Ingestion:", error.message);
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            success: false,
+            message: error.message || "Terjadi kesalahan saat memproses dokumen",
+            error: error.message 
+        });
     }
 };
 

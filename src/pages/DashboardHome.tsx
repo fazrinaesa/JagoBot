@@ -34,19 +34,19 @@ const data = [
 const StatCard = ({ title, value, change, isPositive, icon: Icon }: any) => (
   <div className="bg-brand-blue/95 backdrop-blur-md p-5 rounded-[1.5rem] border border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
     <div className="flex justify-between items-start mb-4">
-      <div className="p-2.5 bg-white/10 dark:bg-slate-900/10 rounded-xl">
-        <Icon className="w-5 h-5 text-[#1800ad]" />
+      <div className="p-2.5 bg-white/20 dark:bg-white/10 rounded-xl shadow-inner">
+        <Icon className="w-5 h-5 text-white" />
       </div>
       <div className={cn(
-        "flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter",
-        isPositive ? "bg-[#1800ad]/20 text-[#1800ad]" : "bg-red-500/20 text-red-400"
+        "flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter",
+        isPositive ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
       )}>
         {isPositive ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
         {change}
       </div>
     </div>
-    <h3 className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{title}</h3>
-    <p className="text-2xl font-black text-white mt-0.5">{value}</p>
+    <h3 className="text-slate-300 text-[9px] font-bold uppercase tracking-widest">{title}</h3>
+    <p className="text-2xl font-bold text-white mt-0.5">{value}</p>
   </div>
 );
 
@@ -54,11 +54,13 @@ export const DashboardHome = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isChartLoading, setIsChartLoading] = useState(false);
   const [period, setPeriod] = useState("bulan");
 
-  const fetchData = async (currentPeriod: string, silent = false) => {
+  const fetchData = async (currentPeriod: string, silent = false, isFilterChange = false) => {
     try {
-      if (!silent) setLoading(true);
+      if (!silent && !isFilterChange) setLoading(true);
+      if (isFilterChange) setIsChartLoading(true);
       if (silent) setIsRefreshing(true);
 
       const botResponse = await getActiveBot();
@@ -72,28 +74,32 @@ export const DashboardHome = () => {
       console.error("Gagal ambil data:", err);
     } finally {
       setLoading(false);
+      setIsChartLoading(false);
       setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchData(period);
+    // Jika data sudah ada, berarti ini adalah perubahan filter (period)
+    const isFilterChange = !!dashboardData;
+    fetchData(period, false, isFilterChange);
+    
     const interval = setInterval(() => {
       fetchData(period, true);
     }, 30000);
     return () => clearInterval(interval);
   }, [period]);
 
-  if (loading) {
+  if (loading && !dashboardData) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] text-slate-500 dark:text-slate-400 font-black italic animate-pulse uppercase tracking-widest text-xs">
-        Memuat Data JagoAI...
+      <div className="flex items-center justify-center min-h-[400px] text-slate-500 dark:text-slate-400 font-bold italic animate-pulse uppercase tracking-widest text-xs">
+        Memuat Data JagoBot...
       </div>
     );
   }
 
   const stats = dashboardData?.stats;
-  const namaBotAktif = dashboardData?.nama_toko || "TOKO SAYA";
+  const namaBotAktif = dashboardData?.nama_toko || "NAMA TOKO";
   const dynamicChartData = stats?.chartData?.length > 0 ? stats.chartData : data;
 
   return (
@@ -103,12 +109,12 @@ export const DashboardHome = () => {
         {isRefreshing && (
           <div className="flex items-center gap-2 text-[#1800ad] animate-pulse">
             <RefreshCw className="w-3 h-3 animate-spin" />
-            <span className="text-[9px] font-black uppercase tracking-tighter">Memperbarui...</span>
+            <span className="text-[9px] font-bold uppercase tracking-tighter">Memperbarui...</span>
           </div>
         )}
       </div>
 
-      <h2 className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-[0.25em]">Ringkasan Statistik</h2>
+      <h2 className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-[0.25em]">Ringkasan Statistik</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -146,7 +152,7 @@ export const DashboardHome = () => {
         <div className="lg:col-span-2 bg-brand-blue p-6 rounded-[1.5rem] border border-white/10 shadow-xl">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="font-black text-base text-white uppercase tracking-tight">
+              <h3 className="font-bold text-base text-white uppercase tracking-tight">
                 Aktivitas Chat: {namaBotAktif}
               </h3>
               <p className="text-xs text-slate-400 font-medium">Statistik performa bot {period === 'bulan' ? 'bulan ini' : 'minggu ini'}</p>
@@ -154,13 +160,22 @@ export const DashboardHome = () => {
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="bg-white/10 dark:bg-slate-900/10 border border-white/10 text-[9px] font-black uppercase tracking-widest rounded-lg px-3 py-1.5 outline-none cursor-pointer text-white"
+              className="bg-white/10 dark:bg-slate-900/10 border border-white/10 text-[9px] font-bold uppercase tracking-widest rounded-lg px-3 py-1.5 outline-none cursor-pointer text-white"
             >
               <option value="bulan" className="bg-brand-blue text-white">Bulan Ini</option>
               <option value="minggu" className="bg-brand-blue text-white">Minggu Ini</option>
             </select>
           </div>
-          <div className="h-[280px] w-full">
+          <div className="h-[280px] w-full relative">
+            {isChartLoading && (
+              <div className="absolute inset-0 z-10 bg-brand-blue/50 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-widest animate-pulse">Menghitung Data...</span>
+                </div>
+              </div>
+            )}
+            
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={dynamicChartData}>
                 <defs>
@@ -183,7 +198,7 @@ export const DashboardHome = () => {
         </div>
 
         <div className="bg-brand-blue p-6 rounded-[1.5rem] border border-white/10 shadow-xl">
-          <h3 className="font-black text-base text-white mb-6 uppercase tracking-tight">Top FAQ</h3>
+          <h3 className="font-bold text-base text-white mb-6 uppercase tracking-tight">Top FAQ</h3>
           <div className="space-y-4">
             {[
               { q: "Berapa harga produk ini?", count: 452, trend: "+5%" },
@@ -194,13 +209,13 @@ export const DashboardHome = () => {
             ].map((faq, idx) => (
               <div key={idx} className="flex items-center justify-between group cursor-pointer">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/10 dark:bg-slate-900/10 border border-white/10 flex items-center justify-center text-slate-400 font-black text-[10px] group-hover:bg-[#1800ad] group-hover:text-white transition-all">
+                  <div className="w-8 h-8 rounded-lg bg-white/10 dark:bg-slate-900/10 border border-white/10 flex items-center justify-center text-slate-400 font-bold text-[10px] group-hover:bg-[#1800ad] group-hover:text-white transition-all">
                     {idx + 1}
                   </div>
                   <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{faq.q}</span>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-black text-white">{faq.count}</p>
+                  <p className="text-xs font-bold text-white">{faq.count}</p>
                 </div>
               </div>
             ))}
@@ -214,7 +229,7 @@ export const DashboardHome = () => {
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-white/10 dark:bg-slate-900/10 rounded-full text-[9px] font-bold uppercase tracking-widest mb-3">
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Status: Aktif
           </div>
-          <h2 className="text-2xl font-extrabold mb-2">Bot {namaBotAktif} Sedang Bekerja! 🚀</h2>
+          <h2 className="text-2xl font-extrabold mb-2">Bot {namaBotAktif} Sedang Bekerja!</h2>
           <p className="text-blue-100 max-w-sm text-xs leading-relaxed">
             JagoBot telah menangani {stats?.totalChat || 0} chat. Semua pelanggan terlayani dengan baik.
           </p>

@@ -38,16 +38,16 @@ export const AnalyticsDashboard = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           {/* Penyesuaian: text-3xl -> text-xl */}
-          <h2 className="text-xl font-black text-brand-blue dark:text-white uppercase tracking-tighter">Analitik Performa</h2>
+          <h2 className="text-xl font-bold text-brand-blue dark:text-white uppercase tracking-tighter">Analitik Performa</h2>
           <p className="text-slate-400 text-[11px] font-medium">Pantau bagaimana JagoBot membantu bisnis Anda.</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Penyesuaian: px-5 py-3 -> px-4 py-2, text-xs -> text-[10px] */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-black text-brand-blue dark:text-white hover:bg-slate-50 dark:bg-slate-800/50 transition-all uppercase tracking-widest shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold text-brand-blue dark:text-white hover:bg-slate-50 dark:bg-slate-800/50 transition-all uppercase tracking-widest shadow-sm">
             <Calendar className="w-3.5 h-3.5 text-[#1800ad]" /> 1 Mar - 7 Mar 2026
           </button>
           {/* Penyesuaian: bg-brand-orange -> bg-[#1800ad] */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#1800ad] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-[#1800ad]/30">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#1800ad] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-[#1800ad]/30">
             <Download className="w-3.5 h-3.5" /> Ekspor Laporan
           </button>
         </div>
@@ -57,20 +57,20 @@ export const AnalyticsDashboard = () => {
       {/* Penyesuaian: gap-6 -> gap-4 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Percakapan", value: "1,480", icon: MessageCircle },
-          { label: "Tingkat Penyelesaian", value: "94%", icon: CheckCircle },
-          { label: "Waktu Respon", value: "0.8s", icon: Clock },
-          { label: "Kepuasan Pelanggan", value: "4.8/5", icon: TrendingUp },
+          { label: "Total Percakapan", value: "1,480", icon: MessageCircle, mobileVisible: true },
+          { label: "Tingkat Penyelesaian", value: "94%", icon: CheckCircle, mobileVisible: true },
+          { label: "Waktu Respon", value: "0.8s", icon: Clock, mobileVisible: true },
+          { label: "Kepuasan Pelanggan", value: "4.8/5", icon: TrendingUp, mobileVisible: false },
         ].map((stat, idx) => (
-          // Penyesuaian: p-6 -> p-4, rounded-[2rem] -> rounded-2xl
-          <div key={idx} className="bg-brand-blue p-4 rounded-2xl border border-white/5 shadow-xl group hover:shadow-2xl transition-all duration-300">
-            {/* Penyesuaian: w-12 h-12 -> w-9 h-9, text-brand-orange -> text-[#1800ad] */}
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3 bg-white/10 dark:bg-slate-900/10 text-[#1800ad] shadow-sm border border-white/10 group-hover:bg-[#1800ad] group-hover:text-white transition-all">
+          <div key={idx} className={cn(
+            "bg-brand-blue p-4 rounded-2xl border border-white/5 shadow-xl group hover:shadow-2xl transition-all duration-300",
+            !stat.mobileVisible && "hidden sm:block"
+          )}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3 bg-white/20 dark:bg-slate-900/10 text-white shadow-sm border border-white/10 group-hover:bg-[#1800ad] group-hover:text-white transition-all">
               <stat.icon className="w-5 h-5" />
             </div>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{stat.label}</p>
-            {/* Penyesuaian: text-3xl -> text-xl */}
-            <p className="text-xl font-black text-white tracking-tighter">{stat.value}</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{stat.label}</p>
+            <p className="text-xl font-bold text-white tracking-tighter">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -79,7 +79,7 @@ export const AnalyticsDashboard = () => {
         {/* Main Chart */}
         {/* Penyesuaian: p-8 -> p-5, rounded-[2.5rem] -> rounded-2xl */}
         <div className="lg:col-span-2 bg-brand-blue p-5 rounded-2xl border border-white/5 shadow-xl">
-          <h3 className="text-xs font-black text-white mb-6 uppercase tracking-tight flex items-center gap-2">
+          <h3 className="text-xs font-bold text-white mb-6 uppercase tracking-tight flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-[#1800ad]" /> Volume Chat Harian
           </h3>
           {/* Penyesuaian: h-[350px] -> h-[250px] */}
@@ -103,7 +103,7 @@ export const AnalyticsDashboard = () => {
         {/* Source Breakdown */}
         {/* Penyesuaian: p-8 -> p-5, rounded-[2.5rem] -> rounded-2xl */}
         <div className="bg-brand-blue p-5 rounded-2xl border border-white/5 shadow-xl">
-          <h3 className="text-xs font-black text-white mb-6 uppercase tracking-tight">Sumber Chat</h3>
+          <h3 className="text-xs font-bold text-white mb-6 uppercase tracking-tight">Sumber Chat</h3>
           {/* Penyesuaian: h-[250px] -> h-[180px] */}
           <div className="h-[180px] w-full relative">
             <ResponsiveContainer width="100%" height="100%">
@@ -127,8 +127,8 @@ export const AnalyticsDashboard = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total</p>
-              <p className="text-lg font-black text-white">100%</p>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
+              <p className="text-lg font-bold text-white">100%</p>
             </div>
           </div>
           {/* Penyesuaian: mt-8 -> mt-4, space-y-4 -> space-y-2 */}
@@ -137,9 +137,9 @@ export const AnalyticsDashboard = () => {
               <div key={item.name} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 dark:bg-slate-900/5 border border-white/10">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
-                  <span className="text-[10px] font-black text-white uppercase tracking-widest">{item.name}</span>
+                  <span className="text-[10px] font-bold text-white uppercase tracking-widest">{item.name}</span>
                 </div>
-                <span className="text-xs font-black text-[#1800ad]">{item.value}%</span>
+                <span className="text-xs font-bold text-[#1800ad]">{item.value}%</span>
               </div>
             ))}
           </div>

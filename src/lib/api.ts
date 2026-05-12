@@ -69,4 +69,12 @@ export const sendChat = (botId: number, customerName: string, message: string) =
     });
 };
 
+export const getUserBots = () => {
+    return api.get('/dashboard/user-bots');
+};
+
+export const createProject = (nama_bot: string) => {
+    return api.post('/dashboard/create-bot', { nama_bot });
+};
+
 export default api;

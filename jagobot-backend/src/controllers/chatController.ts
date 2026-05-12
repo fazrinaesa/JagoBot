@@ -71,8 +71,7 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
         }
 
         // --- ✅ PROSES GENERASI JAWABAN OLEH GEMINI ---
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        // 2. CONTEXT INJECTION: Menyuntikkan hasil pencarian ke dalam prompt
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });        // 2. CONTEXT INJECTION: Menyuntikkan hasil pencarian ke dalam prompt
         const prompt = `
             SISTEM / IDENTITAS:
             Anda adalah ${namaBot}, asisten cerdas untuk UMKM.
@@ -106,14 +105,15 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
         const duration = endTime - startTime;
 
         // 3. SIMPAN KE CHATLOG (Untuk memantau performa bot di Dashboard)
+        // ✅ Disesuaikan dengan field aktif di database
         const newChat = await prisma.chatLog.create({
             data: {
                 botId: Number(botId),
-                customer_name: customerName || "Pelanggan",
-                pertanyaan: message,
-                jawaban: aiResponse,
-                response_time: duration,
-                timestamp: new Date()
+                userMessage: message,                        // ✅ pertanyaan → userMessage
+                aiResponse: aiResponse,                      // ✅ jawaban → aiResponse
+                platform: customerName || "Pelanggan",       // ✅ customer_name → platform (sementara)
+                // createdAt otomatis diisi oleh @default(now()) di schema
+                // response_time & timestamp tidak ada di schema aktif
             }
         });
 

@@ -30,7 +30,13 @@ export const ChatbotPlayground = () => {
     if (!input.trim() || isLoading) return;
 
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    const activeBotId = storedUser.botId || storedUser.id;
+
+    // ✅ FIX: Coba semua kemungkinan key botId yang mungkin tersimpan di localStorage
+    const activeBotId = storedUser.botId || storedUser.bot_id || storedUser.activeBotId || storedUser.id;
+
+    // ✅ DEBUG: Log isi localStorage untuk memastikan key yang benar
+    console.log("DEBUG localStorage user:", storedUser);
+    console.log("DEBUG activeBotId yang dipakai:", activeBotId);
 
     if (!activeBotId) {
       console.error("DEBUG: botId tidak ditemukan di localStorage", storedUser);
@@ -51,24 +57,31 @@ export const ChatbotPlayground = () => {
     setIsLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
+
       const response = await fetch('http://localhost:5000/api/chat/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // ✅ FIX: Sertakan token autentikasi jika dibutuhkan backend
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           botId: Number(activeBotId),
-          customerName: storedUser.nama_lengkap || "User Jago",
+          customerName: storedUser.nama_lengkap || storedUser.nama_toko || "User Jago",
           message: currentInput
         })
       });
 
       const result = await response.json();
 
+      console.log("DEBUG response dari backend:", result); // ✅ DEBUG
+
       if (result.status === "success") {
         const botMsg: Message = {
           id: Date.now() + 1,
-          text: result.data.jawaban,
+          // ✅ FIX: Backend return aiResponse (bukan jawaban), fallback ke keduanya
+          text: result.data.aiResponse || result.data.jawaban || "Bot tidak memberikan respon.",
           sender: "bot",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -102,8 +115,8 @@ export const ChatbotPlayground = () => {
             <Bot className="text-white w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-white uppercase tracking-tight">Uji Coba Bot</h3>
-            <p className="text-[9px] text-emerald-400 font-black flex items-center gap-1 uppercase tracking-widest">
+            <h3 className="text-sm font-bold text-white uppercase tracking-tight">Uji Coba Bot</h3>
+            <p className="text-[9px] text-emerald-400 font-bold flex items-center gap-1 uppercase tracking-widest">
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Online
             </p>
           </div>
@@ -124,7 +137,7 @@ export const ChatbotPlayground = () => {
         <div className="bg-white/5 dark:bg-slate-900/5 p-4 rounded-xl flex gap-3 mb-2 border border-white/10">
           <Info className="w-4 h-4 text-[#1800ad] shrink-0" />
           <p className="text-[11px] text-slate-300 font-medium leading-relaxed">
-            Gunakan area ini untuk mencoba bagaimana bot Anda merespon pertanyaan pelanggan. Respon di sini menggunakan data dari Knowledge Base dan Kepribadian yang telah Anda atur.
+            Gunakan area ini untuk mencoba bagaimana bot Anda merespon pertanyaan pelanggan. Respon di sini menggunakan data dari Knowledge Base dan Profil Bot yang telah Anda atur.
           </p>
         </div>
 
@@ -139,7 +152,7 @@ export const ChatbotPlayground = () => {
             {/* Warna: orange -> #1800ad, Size: 10 -> 8 */}
             <div className={cn(
               "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
-              msg.sender === "bot" ? "bg-white/10 dark:bg-slate-900/10 text-[#1800ad] border border-white/10" : "bg-[#1800ad] text-white"
+              msg.sender === "bot" ? "bg-white/20 dark:bg-slate-900/10 text-white border border-white/10" : "bg-[#1800ad] text-white"
             )}>
               {msg.sender === "bot" ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
             </div>
@@ -153,7 +166,7 @@ export const ChatbotPlayground = () => {
               )}>
                 {msg.text}
               </div>
-              <p className={cn("text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-tighter", msg.sender === "user" ? "text-right" : "")}>
+              <p className={cn("text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter", msg.sender === "user" ? "text-right" : "")}>
                 {msg.timestamp}
               </p>
             </div>
@@ -161,8 +174,8 @@ export const ChatbotPlayground = () => {
         ))}
         {isLoading && (
           <div className="flex gap-3 max-w-[85%]">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/10 dark:bg-slate-900/10 border border-white/10">
-              <Bot className="w-5 h-5 text-[#1800ad] animate-bounce" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 dark:bg-slate-900/10 border border-white/10">
+              <Bot className="w-5 h-5 text-white animate-bounce" />
             </div>
             <div className="bg-white/10 dark:bg-slate-900/10 text-white px-4 py-3 rounded-[1rem] rounded-tl-none border border-white/10 text-[10px] italic">
               Bot sedang mengetik...

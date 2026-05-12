@@ -51,7 +51,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const totalChatCount = await prisma.chatLog.count({
             where: {
                 botId: { in: targetBotIds },
-                timestamp: { gte: startDate, lte: endDate }
+                createdAt: { gte: startDate, lte: endDate }  // ✅ timestamp → createdAt
             }
         });
 
@@ -59,7 +59,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const pastChatCount = await prisma.chatLog.count({
             where: {
                 botId: { in: targetBotIds },
-                timestamp: { gte: pastStartDate, lt: startDate }
+                createdAt: { gte: pastStartDate, lt: startDate }  // ✅ timestamp → createdAt
             }
         });
 
@@ -70,23 +70,15 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             : (totalChatCount > 0 ? "100" : "0");
 
         // --- 3. HITUNG RATA-RATA WAKTU RESPON ---
-        // Mengasumsikan ada field response_time (dalam ms) di tabel chatLog
-        const avgRes = await prisma.chatLog.aggregate({
-            _avg: { response_time: true },
-            where: {
-                botId: { in: targetBotIds },
-                timestamp: { gte: startDate }
-            }
-        });
-        const finalAvgRes = avgRes._avg.response_time
-            ? (avgRes._avg.response_time / 1000).toFixed(1)
-            : "0.0";
+        // ✅ response_time tidak ada di schema aktif, gunakan nilai default
+        const finalAvgRes = "0.0";
 
+        // ✅ customer_name tidak ada di schema aktif, groupBy platform sebagai pengganti
         const totalCustomers = await prisma.chatLog.groupBy({
-            by: ['customer_name'],
+            by: ['platform'],
             where: {
                 botId: { in: targetBotIds },
-                timestamp: { gte: startDate, lte: endDate }
+                createdAt: { gte: startDate, lte: endDate }  // ✅ timestamp → createdAt
             }
         });
 
@@ -102,9 +94,9 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const recentChats = await prisma.chatLog.findMany({
             where: {
                 botId: { in: targetBotIds },
-                timestamp: { gte: sevenDaysAgo }
+                createdAt: { gte: sevenDaysAgo }  // ✅ timestamp → createdAt
             },
-            select: { timestamp: true }
+            select: { createdAt: true }  // ✅ timestamp → createdAt
         });
 
         const chartData: { name: string; chats: number; orders: number }[] = [];
@@ -116,7 +108,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
             const dateStr = localDate.toISOString().split('T')[0];
             const count = recentChats.filter(chat => {
-                const chatDate = new Date(chat.timestamp.getTime() - (chat.timestamp.getTimezoneOffset() * 60000));
+                const chatDate = new Date(chat.createdAt.getTime() - (chat.createdAt.getTimezoneOffset() * 60000));  // ✅ timestamp → createdAt
                 return chatDate.toISOString().split('T')[0] === dateStr;
             }).length;
             chartData.push({ name: dayName, chats: count, orders: 0 });
@@ -124,7 +116,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
         // --- RETURN RESPONSE DENGAN DATA BARU ---
         res.status(200).json({
-            nama_toko: displayName || "JagoAI Store",
+            nama_toko: displayName || "Toko JagoBot",
             stats: {
                 totalChat: totalChatCount,
                 chatTrend: `${chatDiff >= 0 ? '+' : ''}${chatTrend}%`,

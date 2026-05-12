@@ -2,6 +2,7 @@ import { Bot, Mail, Lock, ArrowRight, Github } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
+import { Logo } from "../components/Logo";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -56,22 +57,17 @@ export const LoginPage = () => {
         className="w-full max-w-md relative z-10"
       >
         <div className="text-center mb-10">
-          <Link to="/" className="inline-flex flex-col items-center gap-2 mb-8 group">
-            {/* Penyesuaian: Menggunakan Logo Gambar seperti di Navbar */}
-            <img
-              src="/Logo_JagoAI.png"
-              alt="Logo JagoBot"
-              className="h-35 w-auto object-contain group-hover:scale-105 transition-transform"
-            />
+          <Link to="/" className="inline-flex justify-center mb-8 group">
+            <Logo iconSize={48} textSize="text-3xl" />
           </Link>
-          <h1 className="text-3xl font-black text-brand-blue dark:text-white tracking-tight">Selamat Datang Kembali</h1>
-          <p className="text-slate-400 mt-3 font-medium uppercase text-[10px] tracking-[0.2em]">Kelola Chatbot Pintar Anda</p>
+          <h1 className="text-3xl font-bold text-brand-blue dark:text-white tracking-tight">Selamat Datang Kembali</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-3 font-semibold uppercase text-[10px] tracking-[0.2em]">Kelola Chatbot Pintar Anda</p>
         </div>
 
         <div className="bg-white/80 dark:bg-slate-900/80 p-10 rounded-[2.5rem] shadow-2xl shadow-[#1800ad]/10 border border-white backdrop-blur-xl">
           <form onSubmit={handleSubmit} className="space-y-7">
             <div>
-              <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Email Bisnis</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 ml-1">Email Bisnis</label>
               <div className="relative group">
                 {/* Penyesuaian warna fokus ke #1800ad */}
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#1800ad] transition-colors" />
@@ -89,7 +85,7 @@ export const LoginPage = () => {
 
             <div>
               <div className="flex justify-between mb-3 ml-1">
-                <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Kata Sandi</label>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Kata Sandi</label>
                 <a href="#" className="text-xs font-bold text-[#1800ad] hover:opacity-80 transition-opacity">Lupa Password?</a>
               </div>
               <div className="relative group">
@@ -110,7 +106,7 @@ export const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-[#1800ad] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-[#1800ad]/30 transition-all flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
+              className={`w-full bg-[#1800ad] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-2xl shadow-[#1800ad]/30 transition-all flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
             >
               {isLoading ? "Mengecek..." : "Masuk Sekarang"} <ArrowRight className="w-5 h-5" />
             </button>
@@ -120,7 +116,7 @@ export const LoginPage = () => {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-100 dark:border-slate-800"></div>
             </div>
-            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.2em]">
+            <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-[0.2em]">
               <span className="px-4 bg-white dark:bg-slate-900 text-slate-400">Atau masuk dengan</span>
             </div>
           </div>
@@ -136,7 +132,7 @@ export const LoginPage = () => {
         </div>
 
         <p className="text-center mt-10 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-widest">
-          Belum punya akun? <Link to="/register" className="text-[#1800ad] font-black hover:underline ml-1">Daftar Gratis</Link>
+          Belum punya akun? <Link to="/register" className="text-[#1800ad] font-bold hover:underline ml-1">Daftar Gratis</Link>
         </p>
       </motion.div>
     </div>
