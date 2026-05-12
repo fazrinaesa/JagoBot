@@ -1,4 +1,4 @@
-import {
+﻿import {
   LayoutDashboard,
   Database,
   MessageSquare,
@@ -387,8 +387,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
-          <div className="max-w-7xl mx-auto">
+        <main className={cn("flex-1 custom-scrollbar", location.pathname === "/dashboard/playground" ? "p-0 overflow-hidden" : "p-6 lg:p-8 overflow-y-auto")}>
+          <div className={cn("mx-auto", location.pathname === "/dashboard/playground" ? "max-w-none h-full" : "max-w-7xl")}>
             {children}
           </div>
         </main>
