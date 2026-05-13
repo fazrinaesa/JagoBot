@@ -26,3 +26,56 @@ export const getActiveBot = async (req: any, res: any) => {
         res.status(500).json({ message: "Gagal mendeteksi bot" });
     }
 };
+
+export const getUserBots = async (req: any, res: any) => {
+    try {
+        const idDariToken = (req as any).user.userId || (req as any).user.id;
+
+        console.log("DEBUG getUserBots: User ID dari Token adalah:", idDariToken);
+
+        const bots = await prisma.bot.findMany({
+            where: {
+                userId: Number(idDariToken)
+            },
+            orderBy: { id: 'desc' }
+        });
+
+        res.status(200).json({ data: bots });
+    } catch (error: any) {
+        console.error("Error getUserBots:", error);
+        res.status(500).json({ message: "Gagal mengambil daftar bot", error: error.message });
+    }
+};
+
+export const createBot = async (req: any, res: any) => {
+    try {
+        const idDariToken = (req as any).user.userId || (req as any).user.id;
+        const { nama_bot } = req.body;
+
+        console.log("DEBUG createBot: User ID:", idDariToken);
+        console.log("DEBUG createBot: Bot Name:", nama_bot);
+
+        if (!nama_bot || nama_bot.trim() === '') {
+            return res.status(400).json({ message: "Nama bot tidak boleh kosong" });
+        }
+
+        const newBot = await prisma.bot.create({
+            data: {
+                userId: Number(idDariToken),
+                nama_bot: nama_bot.trim(),
+                personality: "Ramah",
+                whatsapp_linked: false
+            }
+        });
+
+        console.log("DEBUG createBot: Bot berhasil dibuat:", newBot);
+
+        res.status(201).json({
+            message: "Bot berhasil dibuat",
+            data: { bot: newBot }
+        });
+    } catch (error: any) {
+        console.error("Error createBot:", error);
+        res.status(500).json({ message: "Gagal membuat bot", error: error.message });
+    }
+};
