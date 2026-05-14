@@ -1,61 +1,88 @@
-import { Sparkles, MessageSquare, Save, Play, UserCircle2, Smile, Briefcase } from "lucide-react";
-import { useState } from "react";
+import { Sparkles, MessageSquare, Save, Play, UserCircle2, Smile, Briefcase, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "../lib/utils";
+import { updateBotSettings } from "../lib/api";
 
 export const CustomPersonality = () => {
   const [selectedPreset, setSelectedPreset] = useState("formal");
   const [customPrompt, setCustomPrompt] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [botName, setBotName] = useState("Bot Anda");
 
-  // --- FUNGSI HANDLE SAVE (PERBAIKAN VALIDASI JSON & DYNAMIC ID) ---
+  // ✅ Load data profil bot yang sudah tersimpan saat halaman dibuka
+  useEffect(() => {
+    const loadBotProfile = async () => {
+      try {
+        setIsLoading(true);
+        const activeBotId = localStorage.getItem('activeBotId');
+        const token = localStorage.getItem('token');
+
+        if (!activeBotId || !token) {
+          console.warn("⚠️ activeBotId atau token tidak ditemukan di localStorage");
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("🔵 [Profil Bot] Loading bot profile for botId:", activeBotId);
+
+        const response = await fetch(`http://localhost:5000/api/bot/profile?botId=${activeBotId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const bot = result.data;
+          console.log("✅ [Profil Bot] Data loaded:", bot);
+          if (bot.personality) setSelectedPreset(bot.personality);
+          if (bot.instructions) setCustomPrompt(bot.instructions);
+          if (bot.nama_bot) setBotName(bot.nama_bot);
+        } else {
+          console.warn("⚠️ [Profil Bot] Gagal load profile, response:", response.status);
+        }
+      } catch (error) {
+        console.error("❌ [Profil Bot] Error loading profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBotProfile();
+  }, []);
+
+  // ✅ FIX: Gunakan activeBotId dari localStorage + sertakan Authorization token
   const handleSave = async () => {
     try {
-      const storedUser = localStorage.getItem("user");
+      setIsSaving(true);
 
-      // Inisialisasi dynamicBotId sebagai null agar validasi lebih ketat
-      let dynamicBotId = null;
+      // ✅ FIX #1: Ambil botId dari localStorage (bukan dari user object)
+      const activeBotId = localStorage.getItem('activeBotId');
 
-      if (storedUser && storedUser !== "undefined") {
-        try {
-          const userData = JSON.parse(storedUser);
-          // Mengambil botId dari data login yang dikirim backend baru
-          dynamicBotId = userData?.botId || userData?.id;
-        } catch (parseError) {
-          console.error("Gagal parse data user:", parseError);
-        }
-      }
+      console.log("🔵 [Profil Bot] activeBotId dari localStorage:", activeBotId);
 
-      // Jika tetap tidak ditemukan, tampilkan peringatan agar user login ulang
-      if (!dynamicBotId) {
-        alert("Sesi login tidak valid atau ID Bot tidak ditemukan. Silakan Logout lalu Login kembali!");
+      if (!activeBotId) {
+        alert("❌ Tidak ada project yang aktif. Silakan pilih project dari Navbar terlebih dahulu.");
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/bot/settings', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          botId: dynamicBotId,
-          personality: selectedPreset,
-          instructions: customPrompt,
-        }),
-      });
+      console.log("📤 [Profil Bot] Menyimpan profil:", { botId: activeBotId, personality: selectedPreset });
 
-      const result = await response.json();
+      // ✅ FIX #2: Gunakan api utility yang sudah include token otomatis via interceptor
+      const response = await updateBotSettings(Number(activeBotId), selectedPreset, customPrompt);
 
-      if (response.ok) {
+      if (response.status === 200) {
         alert("✨ Profil Bot Berhasil Disimpan!");
-        console.log("Update Success for Bot ID:", dynamicBotId, result.data);
+        console.log("✅ [Profil Bot] Update success:", response.data);
       } else {
-        alert("Gagal menyimpan: " + (result.message || "Terjadi kesalahan"));
+        alert("Gagal menyimpan: " + (response.data?.message || "Terjadi kesalahan"));
       }
-    } catch (error) {
-      console.error("Error saat menyimpan:", error);
-      alert("Koneksi ke server gagal. Pastikan backend menyala!");
+    } catch (error: any) {
+      console.error("❌ [Profil Bot] Error saat menyimpan:", error);
+      alert("Koneksi ke server gagal: " + (error.response?.data?.message || error.message));
+    } finally {
+      setIsSaving(false);
     }
   };
-  // --------------------------------------------
 
   const presets = [
     {
@@ -80,6 +107,15 @@ export const CustomPersonality = () => {
       preview: "Halo! Saya di sini untuk membantu Anda. Silakan tanyakan apa saja tentang produk kami."
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] gap-3 text-slate-400">
+        <Loader2 className="w-6 h-6 animate-spin text-[#1800ad]" />
+        <span className="text-xs font-bold uppercase tracking-widest animate-pulse">Memuat Profil Bot...</span>
+      </div>
+    );
+  }
 
   return (
     // Penyesuaian: max-w-6xl agar lebih proporsional di layar 100%
@@ -138,9 +174,10 @@ export const CustomPersonality = () => {
           {/* Penyesuaian: padding p-6 dan radius 3xl */}
           <div className="bg-brand-blue rounded-3xl p-6 text-white shadow-2xl shadow-brand-blue/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-[#1800ad]/10 rounded-full blur-2xl -mr-12 -mt-12" />
-            <h3 className="font-bold mb-5 flex items-center gap-2 uppercase tracking-widest text-[10px] relative z-10">
+            <h3 className="font-bold mb-1 flex items-center gap-2 uppercase tracking-widest text-[10px] relative z-10">
               <MessageSquare className="w-3.5 h-3.5 text-white" /> Preview Suara Bot
             </h3>
+            <p className="text-[9px] text-slate-400 mb-4 font-medium relative z-10">{botName}</p>
             <div className="bg-white/10 dark:bg-slate-900/10 backdrop-blur-md rounded-xl p-4 italic text-xs leading-relaxed relative z-10 border border-white/10">
               "{presets.find(p => p.id === selectedPreset)?.preview}"
             </div>
@@ -157,10 +194,15 @@ export const CustomPersonality = () => {
 
           <button
             onClick={handleSave}
+            disabled={isSaving}
             // Penyesuaian: padding py-4 dan text-base
-            className="w-full bg-[#1800ad] text-white py-4 rounded-xl font-bold text-base shadow-xl shadow-[#1800ad]/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+            className="w-full bg-[#1800ad] text-white py-4 rounded-xl font-bold text-base shadow-xl shadow-[#1800ad]/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
           >
-            <Save className="w-5 h-5" /> Simpan Perubahan
+            {isSaving ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Menyimpan...</>
+            ) : (
+              <><Save className="w-5 h-5" /> Simpan Perubahan</>
+            )}
           </button>
 
           <button className="w-full bg-white dark:bg-slate-900 text-brand-blue dark:text-white border border-slate-200 dark:border-slate-800 py-4 rounded-xl font-bold text-sm hover:bg-slate-50 dark:bg-slate-800/50 transition-all flex items-center justify-center gap-2 shadow-sm">
