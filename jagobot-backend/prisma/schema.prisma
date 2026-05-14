@@ -55,10 +55,10 @@ model DocumentChunk {
 model ChatLog {
   id            Int      @id @default(autoincrement())
   botId         Int
-  customer_name String
-  pertanyaan    String
-  jawaban       String
+  aiResponse    String   // Sesuai kolom di Supabase
+  createdAt     DateTime @default(now()) // Sesuai kolom di Supabase
+  platform      String   // Sesuai kolom di Supabase
+  userMessage   String   // Sesuai kolom di Supabase
   response_time Int?
-  timestamp     DateTime @default(now())
   bot           Bot      @relation(fields: [botId], references: [id])
 }

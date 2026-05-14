@@ -17,22 +17,34 @@ export const KnowledgeBase = () => {
     try {
       setIsLoading(true);
 
-      // ✅ FIX: Ambil botId langsung dari localStorage, tidak perlu hit API yang 404
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-      const botId = storedUser.botId || storedUser.bot_id || storedUser.activeBotId;
+      // ✅ FIX: Ambil botId langsung dari activeBotId yang dikelola DashboardLayout
+      const storedActiveBotId = localStorage.getItem("activeBotId");
 
-      console.log("DEBUG KnowledgeBase - storedUser:", storedUser);
-      console.log("DEBUG KnowledgeBase - botId:", botId);
+      console.log("═══════════════════════════════════════════════════════");
+      console.log("📄 [KnowledgeBase] Loading knowledge base");
+      console.log("activeBotId from localStorage:", storedActiveBotId);
 
-      if (botId) {
-        setActiveBotId(Number(botId));
-        const fileRes = await getKnowledgeBaseList(Number(botId));
+      if (storedActiveBotId) {
+        const numericBotId = Number(storedActiveBotId);
+        console.log("🔵 Numeric Bot ID:", numericBotId);
+        console.log("📤 Fetching knowledge base list for botId:", numericBotId);
+        
+        setActiveBotId(numericBotId);
+        
+        // ✅ Panggil API dengan ID yang sudah pasti angka
+        const fileRes = await getKnowledgeBaseList(numericBotId);
+        console.log("📥 API Response:", fileRes);
+        console.log("📂 Files count:", fileRes.data.data?.length || 0);
+        
         setFiles(fileRes.data.data || []);
       } else {
-        console.error("botId tidak ditemukan di localStorage");
+        console.warn("⚠️ activeBotId tidak ditemukan di localStorage. Pastikan bot sudah dipilih.");
+        setFiles([]); // Pastikan list kosong jika bot tidak ditemukan
       }
+      console.log("═══════════════════════════════════════════════════════\n");
     } catch (error) {
-      console.error("Gagal memuat data:", error);
+      console.error("❌ Gagal memuat data:", error);
+      setFiles([]);
     } finally {
       setIsLoading(false);
     }
@@ -73,14 +85,16 @@ export const KnowledgeBase = () => {
     <div className="space-y-5 max-w-7xl mx-auto px-4 pb-10">
       {/* Header Info Tip */}
       <div className="bg-[#1800ad]/5 border border-[#1800ad]/10 p-4 rounded-2xl flex gap-3">
-        <Info className="w-5 h-5 text-[#1800ad] shrink-0 mt-0.5" />
+        <div className="p-2 bg-[#1800ad]/10 rounded-lg h-fit">
+            <Info className="w-5 h-5 text-[#1800ad] shrink-0" />
+        </div>
         <p className="text-xs text-brand-blue dark:text-white leading-relaxed">
           <strong className="font-bold uppercase tracking-tighter mr-1">💡 Tips:</strong> Semakin detail informasi yang Anda berikan, semakin pintar bot Anda menjawab pertanyaan pelanggan. Unggah katalog produk atau tulis FAQ toko Anda di sini.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT COLUMN: File List (SPACIOUS) */}
+        {/* LEFT COLUMN: File List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl min-h-[400px] flex flex-col">
             <div className="flex items-center justify-between mb-6">
@@ -137,7 +151,6 @@ export const KnowledgeBase = () => {
                           )}>
                             {file.status === 'ready' ? '✓ TERSINKRON' : '⏳ DIPROSES'}
                           </span>
-                          {/* Badge penanda inputan manual */}
                           {isManualFile(file) && (
                             <span className="text-[8px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tighter shrink-0 bg-violet-500/20 text-violet-300 border border-violet-500/30">
                               ✏️ MANUAL
@@ -147,7 +160,6 @@ export const KnowledgeBase = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      {/* Tombol edit HANYA muncul untuk file manual */}
                       {isManualFile(file) && (
                         <button
                           onClick={() => setEditingFile(file)}
@@ -182,7 +194,6 @@ export const KnowledgeBase = () => {
 
         {/* RIGHT COLUMN: Guide / Info */}
         <div className="space-y-6">
-          {/* Information Card - ✅ tombol redundan dihapus, diganti teks panduan saja */}
           <div className="bg-brand-blue p-6 rounded-[2rem] border border-white/5 shadow-xl">
             <h3 className="text-base font-bold text-white mb-4 uppercase tracking-tight">📚 Kelola Pengetahuan</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
@@ -190,7 +201,6 @@ export const KnowledgeBase = () => {
             </p>
           </div>
 
-          {/* Guidelines Card */}
           <div className="bg-emerald-500/5 border border-emerald-500/10 p-5 rounded-[2rem]">
             <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-3">✅ Panduan</h4>
             <ul className="text-[10px] text-slate-400 space-y-2.5 list-disc ml-4 font-medium">
@@ -202,7 +212,6 @@ export const KnowledgeBase = () => {
             </ul>
           </div>
 
-          {/* Statistics Card */}
           <div className="bg-blue-500/5 border border-blue-500/10 p-5 rounded-[2rem]">
             <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">📊 Status</h4>
             <div className="space-y-2">
@@ -261,31 +270,23 @@ const EditManualModal = ({ file, onClose, onSuccess }: EditManualModalProps) => 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingContent, setIsLoadingContent] = useState(true);
 
-  // Fetch konten terkini saat modal dibuka
   useEffect(() => {
     const fetchContent = async () => {
       try {
         setIsLoadingContent(true);
         console.log("🔍 Fetching KB content for ID:", file.id);
-        
         const res = await api.get(`/knowledge/${file.id}`);
-        
-        console.log("✅ Response received:", res.data);
-        
         const fetchedData = res.data.data;
         setTitle(fetchedData?.nama_sumber || file.nama_sumber || "");
         setContent(fetchedData?.isi_teks || file.isi_teks || "");
-        
       } catch (error: any) {
         console.error("❌ Gagal memuat konten:", error.message);
-        // Gunakan fallback data dari file object
         setTitle(file.nama_sumber || file.name || "");
         setContent(file.isi_teks || file.content || "");
       } finally {
         setIsLoadingContent(false);
       }
     };
-    
     fetchContent();
   }, [file.id, file.nama_sumber, file.isi_teks]);
 
@@ -296,17 +297,10 @@ const EditManualModal = ({ file, onClose, onSuccess }: EditManualModalProps) => 
     }
     try {
       setIsSaving(true);
-      console.log("💾 Saving KB with ID:", file.id);
-      console.log("📝 Title:", title);
-      console.log("📄 Content length:", content.length);
-      
       const response = await api.put(`/knowledge/${file.id}`, {
         title,
         content,
       });
-      
-      console.log("✅ Save response:", response.data);
-      
       if (response.data.success) {
         alert("✅ Konten berhasil diperbarui!");
         onSuccess({ 
@@ -329,56 +323,37 @@ const EditManualModal = ({ file, onClose, onSuccess }: EditManualModalProps) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="relative w-full max-w-2xl bg-white dark:bg-slate-900 shadow-2xl rounded-3xl flex flex-col border border-white/10 overflow-hidden max-h-[85vh]"
       >
-        {/* Header */}
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-[#1800ad] to-blue-600">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
               <Pencil className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white uppercase tracking-tight">
-                Edit Konten Manual
-              </h3>
+              <h3 className="text-base font-bold text-white uppercase tracking-tight">Edit Konten Manual</h3>
               <p className="text-xs text-blue-100">Perbarui judul dan isi informasi</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            title="Tutup"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
-
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-4">
           {isLoadingContent ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="w-8 h-8 text-[#1800ad] animate-spin" />
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Memuat konten...
-              </p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Memuat konten...</p>
             </div>
           ) : (
             <>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                  Judul
-                </label>
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Judul</label>
                 <input
                   type="text"
                   value={title}
@@ -388,9 +363,7 @@ const EditManualModal = ({ file, onClose, onSuccess }: EditManualModalProps) => 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                  Isi Konten
-                </label>
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Isi Konten</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -401,25 +374,14 @@ const EditManualModal = ({ file, onClose, onSuccess }: EditManualModalProps) => 
             </>
           )}
         </div>
-
-        {/* Footer */}
         <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-          >
-            Batal
-          </button>
+          <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Batal</button>
           <button
             onClick={handleSave}
             disabled={isSaving}
             className="px-8 py-3.5 bg-[#1800ad] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-[#1800ad]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50"
           >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4" />
-            )}
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Simpan & Perbarui
           </button>
         </div>

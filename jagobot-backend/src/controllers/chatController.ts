@@ -24,24 +24,43 @@ const generateWithRetry = async (model: any, prompt: string, maxRetries = 3) => 
 
 export const handleIncomingChat = async (req: Request, res: Response) => {
     try {
+        console.log("═══════════════════════════════════════════════════════");
+        console.log("💬 [Backend] Chat Request Received");
+        console.log("═══════════════════════════════════════════════════════");
+        
         const { botId, customerName, message } = req.body;
+
+        console.log("🤖 Bot ID:", botId);
+        console.log("👤 Customer Name:", customerName);
+        console.log("💭 Message:", message);
 
         const startTime = Date.now();
 
         // 1. AMBIL DATA IDENTITAS BOT TERBARU (Personality & Instructions)
+        console.log("📋 Fetching bot data from database...");
         const botData = await prisma.bot.findUnique({
             where: { id: Number(botId) }
         });
+
+        if (!botData) {
+            console.error("❌ Bot not found with ID:", botId);
+            return res.status(404).json({ status: "error", message: "Bot tidak ditemukan" });
+        }
 
         const namaBot = botData?.nama_bot || "JagoBot";
         const gayaBahasa = botData?.personality || "Ramah";
         const instruksiKhusus = botData?.instructions || "Jawab dengan sopan.";
 
+        console.log("✅ Bot data found:", { namaBot, gayaBahasa });
+
         // --- ✅ PROSES RAG: MENGAMBIL KONTEKS TERBARU DARI DATABASE ---
         // Kita mengambil knowledge yang statusnya 'ready' milik bot ini
+        console.log("📚 Fetching knowledge base for bot...");
         const allKbs = await prisma.knowledgeBase.findMany({
             where: { botId: Number(botId), status: "ready" }
         });
+
+        console.log("📂 Knowledge Base count:", allKbs.length);
 
         let contextText = "";
         if (allKbs.length > 0) {
@@ -101,29 +120,43 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
         const response = await result.response;
         const aiResponse = response.text();
 
+        console.log("🤖 AI Response generated");
+        console.log("💬 Response text:", aiResponse.substring(0, 100) + "...");
+
         const endTime = Date.now();
         const duration = endTime - startTime;
 
+        console.log("⏱️  Response time:", duration, "ms");
+
         // 3. SIMPAN KE CHATLOG (Untuk memantau performa bot di Dashboard)
         // ✅ Disesuaikan dengan field aktif di database
+        console.log("💾 Saving chat log to database...");
         const newChat = await prisma.chatLog.create({
             data: {
                 botId: Number(botId),
-                userMessage: message,                        // ✅ pertanyaan → userMessage
-                aiResponse: aiResponse,                      // ✅ jawaban → aiResponse
-                platform: customerName || "Pelanggan",       // ✅ customer_name → platform (sementara)
-                // createdAt otomatis diisi oleh @default(now()) di schema
-                // response_time & timestamp tidak ada di schema aktif
+                userMessage: message,
+                aiResponse: aiResponse,
+                platform: customerName || "Pelanggan",
             }
         });
 
-        res.status(200).json({
+        console.log("✅ Chat log saved with ID:", newChat.id);
+
+        const responsePayload = {
             status: "success",
             data: newChat
-        });
+        };
+
+        console.log("📤 Sending response:", responsePayload.status);
+        console.log("═══════════════════════════════════════════════════════\n");
+
+        res.status(200).json(responsePayload);
 
     } catch (error: any) {
-        console.error("Chat Error:", error.message);
+        console.error("═══════════════════════════════════════════════════════");
+        console.error("❌ [Backend] Chat Error:", error.message);
+        console.error("Error Stack:", error.stack);
+        console.error("═══════════════════════════════════════════════════════\n");
         res.status(500).json({ message: "Gagal memproses pesan", error: error.message });
     }
 };

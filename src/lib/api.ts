@@ -118,12 +118,22 @@ export const sendChat = (botId: number, customerName: string, message: string) =
     });
 };
 
-export const getUserBots = () => {
-    return api.get('/dashboard/user-bots');
+export const getUserBots = async () => {
+    const response = await api.get('/dashboard/user-bots');
+    return response.data?.data ?? response.data;
 };
 
 export const createProject = (nama_bot: string) => {
-    return api.post('/dashboard/create-bot', { nama_bot });
+    console.log("📤 [API] Sending POST /dashboard/create-bot with nama_bot:", nama_bot);
+    return api.post('/dashboard/create-bot', { nama_bot })
+        .then(response => {
+            console.log("📥 [API] Received response from /dashboard/create-bot:", response);
+            return response;
+        })
+        .catch(error => {
+            console.error("❌ [API] Error from /dashboard/create-bot:", error);
+            throw error;
+        });
 };
 
 export default api;

@@ -1,4 +1,3 @@
-// backend/src/controllers/dashboard.controller.ts
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -49,16 +48,27 @@ export const getUserBots = async (req: any, res: any) => {
 
 export const createBot = async (req: any, res: any) => {
     try {
+        console.log("═══════════════════════════════════════════════════════");
+        console.log("🟦 [Backend] CreateBot Request Received");
+        console.log("═══════════════════════════════════════════════════════");
+        
+        // Ambil userId dari token sesuai struktur middleware auth kamu
         const idDariToken = (req as any).user.userId || (req as any).user.id;
+        // Ambil nama_bot dari request body
         const { nama_bot } = req.body;
 
-        console.log("DEBUG createBot: User ID:", idDariToken);
-        console.log("DEBUG createBot: Bot Name:", nama_bot);
+        console.log("👤 User ID dari Token:", idDariToken);
+        console.log("🏷️  Bot Name dari Request Body:", nama_bot);
+        console.log("📦 Full Request Body:", req.body);
 
         if (!nama_bot || nama_bot.trim() === '') {
+            console.error("❌ Bot name is empty!");
             return res.status(400).json({ message: "Nama bot tidak boleh kosong" });
         }
 
+        console.log("✅ Validasi nama bot OK, creating bot in database...");
+
+        // Simpan bot baru ke database
         const newBot = await prisma.bot.create({
             data: {
                 userId: Number(idDariToken),
@@ -68,14 +78,31 @@ export const createBot = async (req: any, res: any) => {
             }
         });
 
-        console.log("DEBUG createBot: Bot berhasil dibuat:", newBot);
+        console.log("✅ Bot created successfully in database");
+        console.log("🔑 New Bot ID:", newBot.id);
+        console.log("📋 New Bot Data:", newBot);
 
-        res.status(201).json({
+        // Mengembalikan status 201 (Created) beserta data bot (termasuk ID baru)
+        const responsePayload = {
             message: "Bot berhasil dibuat",
-            data: { bot: newBot }
-        });
+            data: { bot: newBot },
+            id: newBot.id
+        };
+
+        console.log("📤 Sending response:", responsePayload);
+        console.log("═══════════════════════════════════════════════════════\n");
+
+        res.status(201).json(responsePayload);
     } catch (error: any) {
-        console.error("Error createBot:", error);
-        res.status(500).json({ message: "Gagal membuat bot", error: error.message });
+        console.error("═══════════════════════════════════════════════════════");
+        console.error("🔴 [Backend] Error in createBot:");
+        console.error("Error Message:", error.message);
+        console.error("Error Stack:", error.stack);
+        console.error("═══════════════════════════════════════════════════════\n");
+        
+        res.status(500).json({ 
+            message: "Internal Server Error", 
+            error: error.message 
+        });
     }
 };

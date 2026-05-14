@@ -74,6 +74,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           nama: userData.nama || "Admin",
           toko: savedStore || "Toko JagoBot"
         });
+        console.log("✅ Profile loaded:", { nama: userData.nama, toko: savedStore });
       } catch (error) {
         console.error("Error loading profile:", error);
         setProfile({ nama: "Admin", toko: "Toko JagoBot" });
@@ -82,17 +83,24 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
     const fetchBots = async () => {
       try {
-        const response = await getUserBots();
-        const bots = response.data;
-        setUserBots(bots);
-        
-        if (!localStorage.getItem('activeBotId') && bots.length > 0) {
-          const firstBotId = bots[0].id.toString();
+        console.log("🔵 [FetchBots] Fetching user bots...");
+        const bots = await getUserBots();
+        console.log("🟢 [FetchBots] Bots data:", bots);
+        console.log("🟢 [FetchBots] Bots count:", bots?.length || 0);
+
+        const normalizedBots = Array.isArray(bots) ? bots : [];
+        setUserBots(normalizedBots);
+
+        if (!localStorage.getItem('activeBotId') && normalizedBots.length > 0) {
+          const firstBotId = normalizedBots[0].id.toString();
+          console.log("🟢 [FetchBots] Setting first bot as active:", firstBotId);
           localStorage.setItem('activeBotId', firstBotId);
           setActiveBotId(firstBotId);
+        } else if (localStorage.getItem('activeBotId')) {
+          console.log("🟢 [FetchBots] Active bot already set:", localStorage.getItem('activeBotId'));
         }
       } catch (error) {
-        console.error("Gagal mengambil daftar bot:", error);
+        console.error("🔴 [FetchBots] Gagal mengambil daftar bot:", error);
       }
     };
 
@@ -120,21 +128,36 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
       return;
     }
 
+    console.log("🔵 [CreateBot] Mulai membuat project dengan nama:", newBotName);
     setIsCreatingBot(true);
     try {
+      console.log("🔵 [CreateBot] Mengirim request ke /api/dashboard/create-bot");
       const response = await createProject(newBotName);
-      const newBotId = response.data.bot.id.toString();
+      
+      console.log("🟢 [CreateBot] Response dari backend:", response);
+      console.log("🟢 [CreateBot] Response data:", response.data);
+      console.log("🟢 [CreateBot] Bot object:", response.data.data?.bot);
+      
+      // Struktur respons bisa: { data: { bot: { id } } } atau { bot: { id } } atau { id }
+      const newBotId = (response.data.data?.bot?.id || response.data.bot?.id || response.data.id).toString();
+      
+      console.log("🟢 [CreateBot] New Bot ID extracted:", newBotId);
+      console.log("🟢 [CreateBot] Menyimpan ke localStorage dengan key 'activeBotId':", newBotId);
       
       localStorage.setItem('activeBotId', newBotId);
       setActiveBotId(newBotId);
       setIsModalOpen(false);
       setNewBotName("");
       
+      console.log("🟢 [CreateBot] Modal ditutup, menunggu 500ms sebelum reload...");
+      
       setTimeout(() => {
+        console.log("🟢 [CreateBot] Executing window.location.reload()");
         window.location.reload();
       }, 500);
     } catch (error: any) {
-      console.error("Gagal membuat project:", error);
+      console.error("🔴 [CreateBot] Error:", error);
+      console.error("🔴 [CreateBot] Error response:", error.response);
       alert(error.response?.data?.message || "Gagal membuat project baru. Silakan coba lagi.");
     } finally {
       setIsCreatingBot(false);
@@ -204,34 +227,47 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               {menuItems.find(item => item.href === location.pathname)?.label || "Dashboard"}
             </h1>
 
-            {userBots.length > 0 && (
-              <div className="flex items-center gap-2 ml-4 pl-4 border-l border-slate-100 dark:border-slate-800">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Project:</span>
-                <div className="flex items-center gap-2">
-                  <div className="relative group">
-                    <select
-                      value={activeBotId || ''}
-                      onChange={(e) => handleProjectSwitch(e.target.value)}
-                      className="appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-[#1800ad] dark:text-blue-400 py-1.5 pl-3 pr-8 rounded-lg outline-none cursor-pointer hover:border-[#1800ad]/30 transition-all shadow-sm min-w-[140px]"
-                    >
-                      {userBots.map((bot) => (
-                        <option key={bot.id} value={bot.id.toString()}>
-                          {bot.nama_bot}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none transition-transform group-hover:text-[#1800ad]" />
-                  </div>
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shrink-0"
-                    title="Tambah Project Baru"
+            <div className="flex items-center gap-2 ml-4 pl-4 border-l border-slate-100 dark:border-slate-800">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Project:</span>
+              <div className="flex items-center gap-2">
+                <div className="relative group">
+                  <select
+                    value={activeBotId || ''}
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+                      if (selectedValue === 'new_project') {
+                        setIsModalOpen(true);
+                        return;
+                      }
+                      handleProjectSwitch(selectedValue);
+                    }}
+                    className="appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-[#1800ad] dark:text-blue-400 py-1.5 pl-3 pr-8 rounded-lg outline-none cursor-pointer hover:border-[#1800ad]/30 transition-all shadow-sm min-w-[180px]"
                   >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                    {userBots.length === 0 && (
+                      <option value="" disabled>
+                        Belum ada project
+                      </option>
+                    )}
+                    {userBots.map((bot) => (
+                      <option key={bot.id} value={bot.id.toString()}>
+                        {bot.nama_bot}
+                      </option>
+                    ))}
+                    <option value="new_project" className="font-bold text-blue-600">
+                      + Tambah Project Baru
+                    </option>
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none transition-transform group-hover:text-[#1800ad]" />
                 </div>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shrink-0"
+                  title="Tambah Project Baru"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -367,6 +403,18 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                       <User size={14} />
                       Profil Saya
                     </Link>
+                    
+                    {/* PENAMBAHAN VISUAL TOMBOL TAMBAH PROJECT DI DROPDOWN */}
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        setIsModalOpen(true);
+                      }}
+                      className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all w-full text-left border-t border-slate-100 dark:border-slate-800 mt-1 pt-3"
+                    >
+                      <Plus size={14} />
+                      + Tambah Project Baru
+                    </button>
                     
                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2" />
                     

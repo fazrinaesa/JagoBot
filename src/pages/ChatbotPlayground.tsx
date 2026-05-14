@@ -29,20 +29,29 @@ export const ChatbotPlayground = () => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("💬 [Playground] Sending message");
+    
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-    // ✅ FIX: Coba semua kemungkinan key botId yang mungkin tersimpan di localStorage
-    const activeBotId = storedUser.botId || storedUser.bot_id || storedUser.activeBotId || storedUser.id;
+    // ✅ FIX: Ambil activeBotId dari localStorage (bukan dari user object)
+    const storedActiveBotId = localStorage.getItem("activeBotId");
+    const activeBotId = storedActiveBotId ? Number(storedActiveBotId) : null;
 
-    // ✅ DEBUG: Log isi localStorage untuk memastikan key yang benar
-    console.log("DEBUG localStorage user:", storedUser);
-    console.log("DEBUG activeBotId yang dipakai:", activeBotId);
+    // ✅ DEBUG: Log untuk memastikan botId diambil dengan benar
+    console.log("👤 User from localStorage:", storedUser);
+    console.log("🔑 Stored activeBotId:", storedActiveBotId);
+    console.log("🤖 Numeric activeBotId:", activeBotId);
 
     if (!activeBotId) {
-      console.error("DEBUG: botId tidak ditemukan di localStorage", storedUser);
+      console.error("❌ activeBotId tidak ditemukan di localStorage");
       alert("Sesi tidak valid, silakan login ulang.");
       return;
     }
+
+    console.log("✅ Bot ID valid, proceeding with message...");
+    console.log("💭 Message content:", input);
+    console.log("═══════════════════════════════════════════════════════\n");
 
     const userMsg: Message = {
       id: Date.now(),
@@ -59,29 +68,36 @@ export const ChatbotPlayground = () => {
     try {
       const token = localStorage.getItem("token");
 
+      const requestBody = {
+        botId: activeBotId,
+        customerName: storedUser.nama_lengkap || storedUser.nama_toko || "User Jago",
+        message: currentInput
+      };
+
+      console.log("📤 [Playground] Sending request to /api/chat/send");
+      console.log("📦 Request payload:", requestBody);
+
       const response = await fetch('http://localhost:5000/api/chat/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // ✅ FIX: Sertakan token autentikasi jika dibutuhkan backend
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({
-          botId: Number(activeBotId),
-          customerName: storedUser.nama_lengkap || storedUser.nama_toko || "User Jago",
-          message: currentInput
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log("📥 [Playground] Response status:", response.status);
       const result = await response.json();
 
-      console.log("DEBUG response dari backend:", result); // ✅ DEBUG
+      console.log("📥 [Playground] Response data:", result);
 
       if (result.status === "success") {
+        const botResponse = result.data.aiResponse || result.data.jawaban || "Bot tidak memberikan respon.";
+        console.log("✅ [Playground] Bot response extracted:", botResponse);
+        
         const botMsg: Message = {
           id: Date.now() + 1,
-          // ✅ FIX: Backend return aiResponse (bukan jawaban), fallback ke keduanya
-          text: result.data.aiResponse || result.data.jawaban || "Bot tidak memberikan respon.",
+          text: botResponse,
           sender: "bot",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -90,7 +106,7 @@ export const ChatbotPlayground = () => {
         throw new Error(result.message);
       }
     } catch (error: any) {
-      console.error("Gagal mengirim pesan:", error);
+      console.error("❌ [Playground] Gagal mengirim pesan:", error);
       const errorMsg: Message = {
         id: Date.now() + 2,
         text: "Maaf, terjadi gangguan koneksi ke otak bot. Silakan coba lagi.",
@@ -100,6 +116,7 @@ export const ChatbotPlayground = () => {
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
+      console.log("═══════════════════════════════════════════════════════\n");
     }
   };
 
