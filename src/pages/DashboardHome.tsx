@@ -63,12 +63,35 @@ export const DashboardHome = () => {
       if (isFilterChange) setIsChartLoading(true);
       if (silent) setIsRefreshing(true);
 
-      const botResponse = await getActiveBot();
-      const activeBot = botResponse.data;
+      // ✅ FIX ROOT CAUSE: Baca activeBotId dari localStorage sebagai sumber utama
+      const storedBotId = localStorage.getItem('activeBotId');
+      console.log("🔵 [DashboardHome] activeBotId dari localStorage:", storedBotId);
 
-      if (activeBot && activeBot.id) {
-        const response = await getDashboardStats(activeBot.id, currentPeriod);
-        setDashboardData({ ...response.data, activeBotId: activeBot.id });
+      let resolvedBotId: number | null = null;
+
+      if (storedBotId) {
+        // Path utama: gunakan activeBotId dari localStorage langsung
+        resolvedBotId = Number(storedBotId);
+        console.log("✅ [DashboardHome] Menggunakan botId dari localStorage:", resolvedBotId);
+      } else {
+        // Fallback: panggil getActiveBot jika localStorage belum ada botId
+        console.warn("⚠️ [DashboardHome] activeBotId tidak ada di localStorage, fallback ke getActiveBot()");
+        const botResponse = await getActiveBot();
+        const activeBot = botResponse.data;
+        if (activeBot && activeBot.id) {
+          resolvedBotId = activeBot.id;
+          // Simpan ke localStorage agar ke depannya tidak fallback lagi
+          localStorage.setItem('activeBotId', String(resolvedBotId));
+          console.log("✅ [DashboardHome] Fallback berhasil, botId:", resolvedBotId);
+        }
+      }
+
+      if (resolvedBotId) {
+        console.log("📤 [DashboardHome] Fetching stats untuk botId:", resolvedBotId, "period:", currentPeriod);
+        const response = await getDashboardStats(resolvedBotId, currentPeriod);
+        setDashboardData({ ...response.data, activeBotId: resolvedBotId });
+      } else {
+        console.error("❌ [DashboardHome] Tidak dapat menentukan botId. Data tidak dapat dimuat.");
       }
     } catch (err) {
       console.error("Gagal ambil data:", err);

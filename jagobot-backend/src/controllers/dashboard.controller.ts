@@ -1,25 +1,47 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 export const getActiveBot = async (req: any, res: any) => {
     try {
-        // Samakan pengambilan ID dengan getDashboardStats
         const idDariToken = (req as any).user.userId || (req as any).user.id;
+        const { botId } = req.query;
 
-        // Tambahkan log ini untuk memastikan ID yang terbaca benar (Cek di terminal backend)
         console.log("DEBUG: User ID dari Token adalah:", idDariToken);
-        console.log("DEBUG: Query botId dari Frontend adalah:", req.query.botId);
-        const bot = await prisma.bot.findFirst({
-            where: {
-                userId: Number(idDariToken)
-            },
-            // Urutkan agar bot terbaru/teraktif yang diambil
-            orderBy: { id: 'desc' }
-        });
+        console.log("DEBUG: Query botId dari Frontend adalah:", botId);
+
+        let bot;
+
+        if (botId) {
+            // ✅ FIX: Jika frontend mengirim botId, kembalikan bot tersebut
+            // dengan verifikasi kepemilikan (ownership) untuk keamanan
+            bot = await prisma.bot.findFirst({
+                where: {
+                    id: Number(botId),
+                    userId: Number(idDariToken) // pastikan bot milik user ini
+                }
+            });
+
+            if (!bot) {
+                console.warn(`⚠️ Bot ID ${botId} tidak ditemukan atau bukan milik user ${idDariToken}`);
+                // Fallback: ambil bot pertama milik user jika botId tidak valid
+                bot = await prisma.bot.findFirst({
+                    where: { userId: Number(idDariToken) },
+                    orderBy: { id: 'asc' }
+                });
+            } else {
+                console.log(`✅ Bot ditemukan via query botId: ${bot.id} - ${bot.nama_bot}`);
+            }
+        } else {
+            // Fallback behaviour: ambil bot pertama milik user (jika tidak ada botId)
+            bot = await prisma.bot.findFirst({
+                where: { userId: Number(idDariToken) },
+                orderBy: { id: 'asc' }
+            });
+        }
 
         if (!bot) {
             return res.status(404).json({ message: "Bot tidak ditemukan" });
         }
+
         res.json(bot);
     } catch (error) {
         res.status(500).json({ message: "Gagal mendeteksi bot" });

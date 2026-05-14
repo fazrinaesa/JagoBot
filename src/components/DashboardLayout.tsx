@@ -1,4 +1,4 @@
-﻿import {
+import {
   LayoutDashboard,
   Database,
   MessageSquare,
@@ -403,18 +403,6 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                       <User size={14} />
                       Profil Saya
                     </Link>
-                    
-                    {/* PENAMBAHAN VISUAL TOMBOL TAMBAH PROJECT DI DROPDOWN */}
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        setIsModalOpen(true);
-                      }}
-                      className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all w-full text-left border-t border-slate-100 dark:border-slate-800 mt-1 pt-3"
-                    >
-                      <Plus size={14} />
-                      + Tambah Project Baru
-                    </button>
                     
                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2" />
                     
