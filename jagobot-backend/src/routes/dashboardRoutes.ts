@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDashboardStats } from '../controllers/dashboardController';
+import { getDashboardStats, getAnalyticsStats } from '../controllers/dashboardController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { getActiveBot, getUserBots, createBot } from '../controllers/dashboard.controller';
 
@@ -7,6 +7,9 @@ const router = Router();
 
 // Endpoint: GET /api/dashboard/stats
 router.get('/stats', verifyToken, getDashboardStats);
+
+// Endpoint: GET /api/dashboard/analytics
+router.get('/analytics', verifyToken, getAnalyticsStats);
 
 // Endpoint: GET /api/dashboard/active-bot
 router.get('/active-bot', verifyToken, getActiveBot);

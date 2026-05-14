@@ -137,6 +137,7 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
                 userMessage: message,
                 aiResponse: aiResponse,
                 platform: customerName || "Pelanggan",
+                response_time_ms: duration
             }
         });
 

@@ -53,12 +53,13 @@ model DocumentChunk {
 }
 
 model ChatLog {
-  id            Int      @id @default(autoincrement())
-  botId         Int
-  aiResponse    String   // Sesuai kolom di Supabase
-  createdAt     DateTime @default(now()) // Sesuai kolom di Supabase
-  platform      String   // Sesuai kolom di Supabase
-  userMessage   String   // Sesuai kolom di Supabase
-  bot           Bot      @relation(fields: [botId], references: [id])
+  id               Int      @id @default(autoincrement())
+  botId            Int
+  aiResponse       String   // Sesuai kolom di Supabase
+  createdAt        DateTime @default(now()) // Sesuai kolom di Supabase
+  platform         String   // Sesuai kolom di Supabase
+  userMessage      String   // Sesuai kolom di Supabase
+  response_time_ms Int?     // Waktu respon AI dalam milidetik (nullable untuk data lama)
+  bot              Bot      @relation(fields: [botId], references: [id])
 }
 

@@ -27,6 +27,10 @@ export const getDashboardStats = (botId: number, period: string = 'bulan') => {
     return api.get(`/dashboard/stats?botId=${botId}&period=${period}`);
 };
 
+export const getAnalyticsStats = (botId: number, period: string = 'bulan') => {
+    return api.get(`/dashboard/analytics?botId=${botId}&period=${period}`);
+};
+
 export const getActiveBot = (botId?: number) => {
     const url = botId ? `/dashboard/active-bot?botId=${botId}` : '/dashboard/active-bot';
     return api.get(url);

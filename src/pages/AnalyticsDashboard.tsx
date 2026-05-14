@@ -6,61 +6,100 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell
 } from "recharts";
 import { Download, Calendar, Filter, TrendingUp, MessageCircle, Clock, CheckCircle } from "lucide-react";
-
-const chatData = [
-  { name: "01 Mar", chats: 120 },
-  { name: "02 Mar", chats: 150 },
-  { name: "03 Mar", chats: 200 },
-  { name: "04 Mar", chats: 180 },
-  { name: "05 Mar", chats: 250 },
-  { name: "06 Mar", chats: 300 },
-  { name: "07 Mar", chats: 280 },
-];
-
-const sourceData = [
-  { name: "WhatsApp", value: 65, color: "#10b981" },
-  { name: "Website", value: 25, color: "#1800ad" }, // Warna diganti ke #1800ad
-  { name: "Lainnya", value: 10, color: "#94a3b8" },
-];
+import { useState, useEffect } from "react";
+import { cn } from "../lib/utils";
+import { getAnalyticsStats, getActiveBot } from "../lib/api";
 
 export const AnalyticsDashboard = () => {
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("bulan");
+
+  const fetchData = async () => {
+    try {
+      const storedBotId = localStorage.getItem('activeBotId');
+      let resolvedBotId: number | null = null;
+
+      if (storedBotId) {
+        resolvedBotId = Number(storedBotId);
+      } else {
+        const botResponse = await getActiveBot();
+        const activeBot = botResponse.data;
+        if (activeBot && activeBot.id) {
+          resolvedBotId = activeBot.id;
+          localStorage.setItem('activeBotId', String(resolvedBotId));
+        }
+      }
+
+      if (resolvedBotId) {
+        const response = await getAnalyticsStats(resolvedBotId, period);
+        setAnalyticsData(response.data.data);
+      }
+    } catch (error) {
+      console.error("Gagal ambil data analitik:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000); // Polling tiap 30 detik
+    return () => clearInterval(interval);
+  }, [period]);
+
+  if (loading && !analyticsData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] text-slate-500 font-bold italic animate-pulse uppercase tracking-widest text-xs">
+        Memuat Data Analitik...
+      </div>
+    );
+  }
+
+  const chatData = analyticsData?.chatData || [];
+  const sourceData = analyticsData?.sourceData || [];
+  
+  const totalChats = analyticsData?.totalChats || 0;
+  const completionRate = analyticsData?.completionRate || "0%";
+  const responseTime = analyticsData?.responseTime || "0.0s";
+
   return (
-    // Penyesuaian: space-y-8 -> space-y-5
     <div className="space-y-5 max-w-6xl mx-auto pb-10">
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          {/* Penyesuaian: text-3xl -> text-xl */}
           <h2 className="text-xl font-bold text-brand-blue dark:text-white uppercase tracking-tighter">Analitik Performa</h2>
           <p className="text-slate-400 text-[11px] font-medium">Pantau bagaimana JagoBot membantu bisnis Anda.</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Penyesuaian: px-5 py-3 -> px-4 py-2, text-xs -> text-[10px] */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold text-brand-blue dark:text-white hover:bg-slate-50 dark:bg-slate-800/50 transition-all uppercase tracking-widest shadow-sm">
-            <Calendar className="w-3.5 h-3.5 text-[#1800ad]" /> 1 Mar - 7 Mar 2026
-          </button>
-          {/* Penyesuaian: bg-brand-orange -> bg-[#1800ad] */}
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold uppercase tracking-widest rounded-xl px-4 py-2 outline-none cursor-pointer text-brand-blue shadow-sm"
+          >
+            <option value="bulan">Bulan Ini</option>
+            <option value="minggu">Minggu Ini</option>
+          </select>
           <button className="flex items-center gap-2 px-4 py-2 bg-[#1800ad] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-[#1800ad]/30">
-            <Download className="w-3.5 h-3.5" /> Ekspor Laporan
+            <Download className="w-3.5 h-3.5" /> Ekspor
           </button>
         </div>
       </div>
 
       {/* Key Metrics */}
-      {/* Penyesuaian: gap-6 -> gap-4 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Percakapan", value: "1,480", icon: MessageCircle, mobileVisible: true },
-          { label: "Tingkat Penyelesaian", value: "94%", icon: CheckCircle, mobileVisible: true },
-          { label: "Waktu Respon", value: "0.8s", icon: Clock, mobileVisible: true },
-          { label: "Kepuasan Pelanggan", value: "4.8/5", icon: TrendingUp, mobileVisible: false },
+          { label: "Total Percakapan", value: totalChats.toLocaleString(), icon: MessageCircle, mobileVisible: true },
+          { label: "Tingkat Penyelesaian", value: completionRate, icon: CheckCircle, mobileVisible: true },
+          { label: "Waktu Respon", value: responseTime, icon: Clock, mobileVisible: true },
+          { label: "Kepuasan Pelanggan", value: "N/A", icon: TrendingUp, mobileVisible: false },
         ].map((stat, idx) => (
           <div key={idx} className={cn(
             "bg-brand-blue p-4 rounded-2xl border border-white/5 shadow-xl group hover:shadow-2xl transition-all duration-300",
@@ -77,12 +116,10 @@ export const AnalyticsDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Chart */}
-        {/* Penyesuaian: p-8 -> p-5, rounded-[2.5rem] -> rounded-2xl */}
         <div className="lg:col-span-2 bg-brand-blue p-5 rounded-2xl border border-white/5 shadow-xl">
           <h3 className="text-xs font-bold text-white mb-6 uppercase tracking-tight flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-[#1800ad]" /> Volume Chat Harian
           </h3>
-          {/* Penyesuaian: h-[350px] -> h-[250px] */}
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chatData}>
@@ -101,10 +138,8 @@ export const AnalyticsDashboard = () => {
         </div>
 
         {/* Source Breakdown */}
-        {/* Penyesuaian: p-8 -> p-5, rounded-[2.5rem] -> rounded-2xl */}
         <div className="bg-brand-blue p-5 rounded-2xl border border-white/5 shadow-xl">
           <h3 className="text-xs font-bold text-white mb-6 uppercase tracking-tight">Sumber Chat</h3>
-          {/* Penyesuaian: h-[250px] -> h-[180px] */}
           <div className="h-[180px] w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -117,7 +152,7 @@ export const AnalyticsDashboard = () => {
                   paddingAngle={8}
                   dataKey="value"
                 >
-                  {sourceData.map((entry, index) => (
+                  {sourceData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                   ))}
                 </Pie>
@@ -131,9 +166,8 @@ export const AnalyticsDashboard = () => {
               <p className="text-lg font-bold text-white">100%</p>
             </div>
           </div>
-          {/* Penyesuaian: mt-8 -> mt-4, space-y-4 -> space-y-2 */}
           <div className="space-y-2 mt-4">
-            {sourceData.map((item) => (
+            {sourceData.map((item: any) => (
               <div key={item.name} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 dark:bg-slate-900/5 border border-white/10">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
@@ -142,11 +176,14 @@ export const AnalyticsDashboard = () => {
                 <span className="text-xs font-bold text-[#1800ad]">{item.value}%</span>
               </div>
             ))}
+            {sourceData.length === 0 && (
+              <div className="text-center text-xs text-slate-400 font-bold uppercase tracking-widest py-2">
+                Belum ada data sumber
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-import { cn } from "../lib/utils";

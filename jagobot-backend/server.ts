@@ -10,6 +10,7 @@ import botRoutes from './src/routes/botRoutes';
 
 dotenv.config();
 console.log("DEBUG API KEY:", process.env.GEMINI_API_KEY ? "ADA ✅" : "KOSONG ❌");
+console.log("Starting server..."); // Trigger restart
 const app = express();
 
 app.use(cors());
