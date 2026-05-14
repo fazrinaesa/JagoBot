@@ -59,6 +59,6 @@ model ChatLog {
   createdAt     DateTime @default(now()) // Sesuai kolom di Supabase
   platform      String   // Sesuai kolom di Supabase
   userMessage   String   // Sesuai kolom di Supabase
-  response_time Int?
   bot           Bot      @relation(fields: [botId], references: [id])
 }
+
