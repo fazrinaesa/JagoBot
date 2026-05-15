@@ -1,18 +1,12 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-
-// Setup Supabase Client
-const supabaseUrl = process.env.SUPABASE_URL || 'https://evkphxqdswcvjmsfsduk.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const getProfile = async (req: any, res: Response) => {
     try {
         const userId = req.user.userId;
         const user = await prisma.user.findUnique({
-            where: { id: userId },
+            where: { id: Number(userId) },
             select: {
                 id: true,
                 nama_toko: true,
@@ -52,7 +46,7 @@ export const updateProfile = async (req: any, res: Response) => {
         }
 
         const updatedUser = await prisma.user.update({
-            where: { id: userId },
+            where: { id: Number(userId) },
             data: {
                 nama_lengkap,
                 email,
@@ -80,54 +74,38 @@ export const updateProfile = async (req: any, res: Response) => {
 };
 
 export const uploadAvatar = async (req: any, res: Response) => {
-    try {
-        const userId = req.user.userId;
-        const file = req.file;
+  try {
+    const userId = req.user.userId;
+    const file = req.file;
+    const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_SERVICE_KEY || '');
 
-        if (!file) {
-            return res.status(400).json({ message: "File gambar tidak ditemukan" });
-        }
+    if (!file) return res.status(400).json({ message: "File tidak ditemukan" });
 
-        if (!supabaseKey) {
-            return res.status(500).json({ message: "Konfigurasi SUPABASE_ANON_KEY belum diatur di server. Tambahkan di file .env backend Anda." });
-        }
+    const fileName = `avatar-${userId}-${Date.now()}`;
 
-        const fileName = `avatar-${userId}-${Date.now()}`;
-        const fileBuffer = fs.readFileSync(file.path);
-        
-        // Upload file to Supabase Storage "avatars" bucket
-        const { data, error } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, fileBuffer, {
-                contentType: file.mimetype,
-                upsert: true
-            });
+    // ✅ Pakai file.buffer langsung karena uploadImage pakai memoryStorage
+    const { error: storageError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file.buffer, { contentType: file.mimetype, upsert: true });
 
-        // Clean up temp file
-        fs.unlinkSync(file.path);
+    if (storageError) throw storageError;
 
-        if (error) {
-            throw error;
-        }
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
 
-        // Get public URL
-        const { data: publicUrlData } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(fileName);
+    await prisma.user.update({
+      where: {
+        id: Number(userId)
+      },
+      data: {
+        avatarUrl: publicUrl
+      }
+    });
 
-        const avatarUrl = publicUrlData.publicUrl;
-
-        // Save URL to User table
-        await prisma.user.update({
-            where: { id: userId },
-            data: { avatarUrl }
-        });
-
-        res.json({ message: "Foto profil berhasil diunggah", avatarUrl });
-    } catch (error: any) {
-        console.error("Error uploadAvatar:", error);
-        res.status(500).json({ message: "Gagal mengunggah foto profil", error: error.message });
-    }
+    res.json({ message: "Berhasil", avatarUrl: publicUrl });
+  } catch (error: any) {
+    console.error("DETAIL ERROR BACKEND:", error);
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const deleteAccount = async (req: any, res: Response) => {
@@ -136,7 +114,7 @@ export const deleteAccount = async (req: any, res: Response) => {
         
         // Prisma Cascade delete will handle Bot and related data deletion automatically
         await prisma.user.delete({
-            where: { id: userId }
+            where: { id: Number(userId) }
         });
 
         res.json({ message: "Akun berhasil dihapus secara permanen" });

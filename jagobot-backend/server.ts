@@ -11,6 +11,10 @@ import userRoutes from './src/routes/userRoutes';
 
 dotenv.config();
 console.log("DEBUG API KEY:", process.env.GEMINI_API_KEY ? "ADA ✅" : "KOSONG ❌");
+dotenv.config();
+// Tambahkan baris ini untuk cek kunci Supabase
+console.log("DEBUG SUPABASE URL:", process.env.SUPABASE_URL ? "ADA ✅" : "KOSONG ❌");
+console.log("DEBUG SUPABASE KEY:", process.env.SUPABASE_ANON_KEY ? "ADA ✅" : "KOSONG ❌");
 console.log("Starting server..."); // Trigger restart
 const app = express();
 
