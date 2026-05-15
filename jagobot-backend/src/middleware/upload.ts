@@ -22,5 +22,16 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
     }
 };
 
+const imageFileFilter = (req: any, file: Express.Multer.File, cb: any) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Format tidak didukung. Gunakan JPG, PNG, atau WEBP.'), false);
+    }
+}
+
 // ✅ TAMBAH fileFilter ke multer
 export const upload = multer({ storage, fileFilter });
+export const uploadImage = multer({ storage, fileFilter: imageFileFilter });

@@ -140,4 +140,35 @@ export const createProject = (nama_bot: string) => {
         });
 };
 
+/**
+ * 6. User Profile APIs
+ */
+export const getUserProfile = () => {
+    return api.get('/user/profile');
+};
+
+export const updateUserProfile = (data: {
+    nama_lengkap?: string;
+    email?: string;
+    nama_toko?: string;
+    whatsapp?: string;
+    alamat?: string;
+}) => {
+    return api.put('/user/profile', data);
+};
+
+export const uploadAvatar = (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/user/avatar', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
+
+export const deleteUserAccount = () => {
+    return api.delete('/user/account');
+};
+
 export default api;

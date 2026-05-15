@@ -6,6 +6,7 @@ import dashboardRoutes from './src/routes/dashboardRoutes';
 import chatRoutes from './src/routes/chatRoutes'; // <-- TAMBAHKA
 import knowledgeRoutes from './src/routes/knowledgeRoutes';
 import botRoutes from './src/routes/botRoutes';
+import userRoutes from './src/routes/userRoutes';
 
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/bot', botRoutes);
+app.use('/api/user', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`));

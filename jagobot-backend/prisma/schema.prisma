@@ -9,12 +9,16 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  nama_toko String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  bots      Bot[]
+  id           Int      @id @default(autoincrement())
+  nama_toko    String
+  email        String   @unique
+  password     String
+  nama_lengkap String?
+  whatsapp     String?
+  alamat       String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  bots         Bot[]
 }
 
 model Bot {
@@ -24,7 +28,7 @@ model Bot {
   personality     String          @default("Ramah")
   whatsapp_linked Boolean         @default(false)
   instructions    String?
-  user            User            @relation(fields: [userId], references: [id])
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   chatLogs        ChatLog[]
   knowledgeBases  KnowledgeBase[]
 }
