@@ -167,13 +167,13 @@ export const ProfilePage = () => {
         </div>
       )}
 
-      <div className="bg-brand-blue rounded-3xl border border-white/5 shadow-xl overflow-hidden">
+      <div className="bg-brand-blue rounded-3xl border border-white/5 shadow-xl overflow-visible">
         {/* Profile Header - Twitter/X Style */}
-        <div className="h-40 bg-[#1800ad]/20 relative overflow-hidden">
+        <div className="h-40 bg-[#1800ad]/20 relative overflow-visible">
           <div className="absolute inset-x-0 top-0 h-full bg-[radial-gradient(circle_at_top,_rgba(24,0,173,0.28),_transparent_45%)]" />
           <div className="absolute -bottom-8 left-6 w-44 h-44 rounded-full bg-[#1800ad] opacity-80 blur-2xl" />
           <div className="absolute -bottom-6 left-10 w-32 h-32 rounded-full bg-[#0f255d] opacity-70 blur-2xl" />
-          <div className="absolute -bottom-12 left-6">
+          <div className="absolute -bottom-16 left-6 z-20">
             <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
               <div className="w-24 h-24 rounded-full bg-white/10 p-1 shadow-xl border-4 border-white/10 backdrop-blur-sm">
                 {formData.avatarUrl ? (
