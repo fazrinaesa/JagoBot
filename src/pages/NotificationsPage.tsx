@@ -1,8 +1,12 @@
-import { Bell, MessageSquare, Zap, Settings, Info, Check } from "lucide-react";
+import { ArrowLeft, Bell, MessageSquare, Zap, Settings, Info, Check } from "lucide-react";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { cn } from "../lib/utils";
 
 export const NotificationsPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isSettings = searchParams.get('tab') === 'settings';
+
   // Penyesuaian: Memfilter data agar fokus ke notifikasi tipe 'chat' saja
   const [notifications, setNotifications] = useState([
     {
@@ -40,18 +44,40 @@ export const NotificationsPage = () => {
     }
   };
 
+  const handleBackToInbox = () => {
+    setSearchParams({});
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-10">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-brand-blue dark:text-white">Notifikasi Chat</h2>
-        <button className="text-xs font-bold text-[#1800ad] hover:underline">
-          Tandai semua sudah dibaca
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-brand-blue dark:text-white">{isSettings ? 'Pengaturan Notifikasi' : 'Notifikasi Chat'}</h2>
+          <p className="text-sm text-slate-400 mt-1">{isSettings ? 'Sesuaikan jenis notifikasi yang ingin Anda terima.' : 'Lihat daftar notifikasi masuk terbaru untuk aktivitas pelanggan.'}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {isSettings ? (
+            <button
+              onClick={handleBackToInbox}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" /> Kembali ke Notifikasi
+            </button>
+          ) : (
+            <button
+              onClick={() => setSearchParams({ tab: 'settings' })}
+              className="rounded-full bg-[#1800ad] text-white px-4 py-2 text-sm font-semibold hover:bg-[#120e70] transition-all"
+            >
+              Pengaturan Notifikasi
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="bg-brand-blue rounded-2xl border border-white/5 shadow-xl overflow-hidden">
-        <div className="divide-y divide-white/10">
-          {notifications.map((notif) => (
+      {!isSettings ? (
+        <div className="bg-brand-blue rounded-2xl border border-white/5 shadow-xl overflow-hidden">
+          <div className="divide-y divide-white/10">
+            {notifications.map((notif) => (
             <div
               key={notif.id}
               className={cn(
@@ -76,30 +102,30 @@ export const NotificationsPage = () => {
           ))}
         </div>
       </div>
-
-      {/* Notification Settings - Fokus ke on/off chat dan laporan mingguan */}
-      <div className="bg-brand-blue p-6 rounded-2xl border border-white/5 shadow-xl">
-        <h3 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
-          <Settings className="w-4 h-4 text-[#1800ad]" /> Pengaturan Notifikasi
-        </h3>
-        <div className="space-y-5">
-          {[
-            { label: "Notifikasi Chat Masuk", desc: "Dapatkan pemberitahuan instan saat ada pelanggan yang bertanya." },
-            { label: "Laporan Mingguan", desc: "Terima ringkasan performa bot Anda setiap hari Senin." },
-          ].map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold text-white">{item.label}</p>
-                <p className="text-[10px] text-slate-400">{item.desc}</p>
+      ) : (
+        <div className="bg-brand-blue p-6 rounded-2xl border border-white/5 shadow-xl">
+          <h3 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
+            <Settings className="w-4 h-4 text-[#1800ad]" /> Pengaturan Notifikasi
+          </h3>
+          <div className="space-y-5">
+            {[
+              { label: "Notifikasi Chat Masuk", desc: "Dapatkan pemberitahuan instan saat ada pelanggan yang bertanya." },
+              { label: "Laporan Mingguan", desc: "Terima ringkasan performa bot Anda setiap hari Senin." },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-white">{item.label}</p>
+                  <p className="text-[10px] text-slate-400">{item.desc}</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" defaultChecked className="sr-only peer" />
+                  <div className="w-9 h-5 bg-white/10 dark:bg-slate-900/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-slate-900 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1800ad]"></div>
+                </label>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-9 h-5 bg-white/10 dark:bg-slate-900/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-slate-900 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1800ad]"></div>
-              </label>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

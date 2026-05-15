@@ -31,7 +31,7 @@ interface SidebarItemProps {
   active?: boolean;
 }
 
-const SidebarItem = ({ icon: Icon, label, href, active }: SidebarItemProps) => (
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, href, active }) => (
   <Link
     to={href}
     className={cn(

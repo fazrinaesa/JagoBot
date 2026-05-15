@@ -1,5 +1,5 @@
-import { User, Mail, Store, Phone, MapPin, Camera, Save, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, User, Mail, Store, Phone, MapPin, Camera, Save, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserProfile, updateUserProfile, uploadAvatar, deleteUserAccount } from "../lib/api";
 
@@ -91,7 +91,7 @@ export const ProfilePage = () => {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -149,6 +149,14 @@ export const ProfilePage = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-10 relative">
+      <button
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white bg-slate-900/50 dark:bg-slate-950/60 px-3 py-2 rounded-full border border-white/10 transition"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Kembali
+      </button>
+
       {/* Toast Notification */}
       {toast && (
         <div className={`fixed top-20 right-8 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-xl animate-in slide-in-from-right-5 fade-in duration-300 ${
@@ -161,10 +169,13 @@ export const ProfilePage = () => {
 
       <div className="bg-brand-blue rounded-3xl border border-white/5 shadow-xl overflow-hidden">
         {/* Profile Header - Twitter/X Style */}
-        <div className="h-40 bg-[#1800ad]/20 relative">
+        <div className="h-40 bg-[#1800ad]/20 relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-full bg-[radial-gradient(circle_at_top,_rgba(24,0,173,0.28),_transparent_45%)]" />
+          <div className="absolute -bottom-8 left-6 w-44 h-44 rounded-full bg-[#1800ad] opacity-80 blur-2xl" />
+          <div className="absolute -bottom-6 left-10 w-32 h-32 rounded-full bg-[#0f255d] opacity-70 blur-2xl" />
           <div className="absolute -bottom-12 left-6">
             <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-              <div className="w-24 h-24 rounded-full bg-brand-blue p-1 shadow-xl border-4 border-brand-blue">
+              <div className="w-24 h-24 rounded-full bg-white/10 p-1 shadow-xl border-4 border-white/10 backdrop-blur-sm">
                 {formData.avatarUrl ? (
                   <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover border border-white/5 bg-white" />
                 ) : (
