@@ -9,9 +9,6 @@ import botRoutes from './src/routes/botRoutes';
 import userRoutes from './src/routes/userRoutes';
 import integrasiRoutes from './src/routes/integrasiRoutes';
 
-
-
-
 dotenv.config();
 console.log("DEBUG API KEY:", process.env.GEMINI_API_KEY ? "ADA ✅" : "KOSONG ❌");
 dotenv.config();
@@ -21,6 +18,11 @@ console.log("DEBUG SUPABASE KEY:", process.env.SUPABASE_ANON_KEY ? "ADA ✅" : "
 console.log("Starting server..."); // Trigger restart
 const app = express();
 
+// =======================================================
+// PENYESUAIAN LANGKAH 3: MENYAJIKAN FILE STATIS (PUBLIC)
+// =======================================================
+app.use(express.static('public'));
+
 app.use(cors({
     origin: '*', // Mengizinkan semua website luar mengakses endpoint backend kamu
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -28,7 +30,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
 
 // Pintu utama API
 app.use('/api/auth', authRoutes);
