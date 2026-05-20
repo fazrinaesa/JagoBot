@@ -75,19 +75,19 @@ export const handlePublicChat = async (req: Request, res: Response) => {
 
         // 4. Menyusun Prompt System Instruction terstruktur untuk Gemini AI
         const aiSystemInstruction = `
-Anda adalah ${bot.nama_bot}, sebuah asisten AI resmi untuk toko online ini.
-Personality/Gaya Bahasa Anda: ${bot.personality}.
-Instruksi tambahan: ${bot.instructions || 'Layani pelanggan dengan ramah, santun, dan solutif.'}.
+    Anda adalah ${bot.nama_bot}, sebuah asisten AI resmi untuk toko online ini.
+    Personality/Gaya Bahasa Anda: ${bot.personality}.
+    Instruksi tambahan: ${bot.instructions || 'Layani pelanggan dengan ramah, santun, dan solutif.'}.
 
-Gunakan informasi di bawah ini (KONTEKS TOKO) untuk menjawab pertanyaan pelanggan secara akurat.
-Aturan Penting:
-1. Jawablah hanya berdasarkan fakta yang tertulis di dalam KONTEKS TOKO di bawah.
-2. Jika informasi atau jawaban dari pertanyaan pelanggan TIDAK ADA di dalam KONTEKS TOKO, jawablah dengan sopan bahwa Anda belum mengetahui informasi tersebut dan arahkan pelanggan untuk langsung menghubungi admin/owner toko melalui WhatsApp.
-3. Jangan pernah mengarang data atau berhalusinasi di luar konteks yang diberikan.
+    Gunakan informasi di bawah ini (KONTEKS TOKO) untuk menjawab pertanyaan pelanggan secara akurat.
+    Aturan Penting:
+    1. Jawablah hanya berdasarkan fakta yang tertulis di dalam KONTEKS TOKO di bawah.
+    2. Jika informasi atau jawaban dari pertanyaan pelanggan TIDAK ADA di dalam KONTEKS TOKO, jawablah dengan sopan bahwa Anda belum mengetahui informasi tersebut dan arahkan pelanggan untuk langsung menghubungi admin/owner toko melalui WhatsApp.
+    3. Jangan pernah mengarang data atau berhalusinasi di luar konteks yang diberikan.
 
-KONTEKS TOKO:
-${contextText}
-        `.trim();
+    KONTEKS TOKO:
+    ${contextText}
+            `.trim();
 
         // Memeriksa kesiapan API Key di environment system
         const apiKey = process.env.GEMINI_API_KEY;
