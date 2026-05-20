@@ -7,6 +7,9 @@ import chatRoutes from './src/routes/chatRoutes'; // <-- TAMBAHKA
 import knowledgeRoutes from './src/routes/knowledgeRoutes';
 import botRoutes from './src/routes/botRoutes';
 import userRoutes from './src/routes/userRoutes';
+import integrasiRoutes from './src/routes/integrasiRoutes';
+
+
 
 
 dotenv.config();
@@ -18,7 +21,12 @@ console.log("DEBUG SUPABASE KEY:", process.env.SUPABASE_ANON_KEY ? "ADA ✅" : "
 console.log("Starting server..."); // Trigger restart
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: '*', // Mengizinkan semua website luar mengakses endpoint backend kamu
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 
@@ -29,6 +37,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/bot', botRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/public', integrasiRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`));
