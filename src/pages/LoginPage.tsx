@@ -86,7 +86,7 @@ export const LoginPage = () => {
             <div>
               <div className="flex justify-between mb-3 ml-1">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Kata Sandi</label>
-                <a href="#" className="text-xs font-bold text-[#1800ad] hover:opacity-80 transition-opacity">Lupa Password?</a>
+                <Link to="/forgot-password" className="text-xs font-bold text-[#1800ad] hover:opacity-80 transition-opacity">Lupa Password?</Link>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#1800ad] transition-colors" />
