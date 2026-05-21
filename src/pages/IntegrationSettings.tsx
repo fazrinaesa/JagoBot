@@ -3,9 +3,6 @@ import { useState, useEffect } from "react";
 import { cn } from "../lib/utils";
 
 export const IntegrationSettings = () => {
-  const [copied, setCopied] = useState(false);
-  const widgetCode = `<script src="https://cdn.jagobot.id/widget.js" data-id="JB-9921-X"></script>`;
-
   // ==========================================
   // STEP 1: IDENTIFIKASI DATA BOT AKTIF
   // ==========================================
@@ -48,12 +45,6 @@ export const IntegrationSettings = () => {
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(widgetCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="space-y-5 max-w-5xl mx-auto px-4 pb-10">
 
@@ -65,7 +56,7 @@ export const IntegrationSettings = () => {
             Bot Id Teridentifikasi:
           </span>
         </div>
-        <span className="text-xs font-mono font-bold text-[#1800ad] bg-white/10 dark:bg-slate-900/10 px-3 py-1 rounded-lg border border-white/10">
+        <span className="text-xs font-mono font-bold text-white bg-white/10 dark:bg-slate-900/40 px-3 py-1 rounded-lg border border-white/20 shadow-inner">
           {activeBotId || "BELUM MEMILIH PROJECT"}
         </span>
       </div>
@@ -109,13 +100,14 @@ export const IntegrationSettings = () => {
           </p>
 
           <div className="space-y-3">
+            {/* BOX PREVIEW KODE: Telah disesuaikan agar menampilkan kode dinamis nyata */}
             <div className="p-4 rounded-xl bg-black/20 text-blue-100 font-mono text-[9px] relative group/code border border-white/10">
-              <code className="break-all">{widgetCode}</code>
+              <code className="break-all">{snippetCode}</code>
               <button
-                onClick={handleCopy}
+                onClick={handleCopyCode}
                 className="absolute right-1.5 top-1.5 p-1.5 bg-white/10 dark:bg-slate-900/10 hover:bg-white/20 dark:bg-slate-900/20 rounded-lg transition-all"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-[#1800ad]" /> : <Copy className="w-3.5 h-3.5" />}
+                {isCopied ? <Check className="w-3.5 h-3.5 text-[#1800ad]" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
 
@@ -161,7 +153,7 @@ export const IntegrationSettings = () => {
       </div>
 
       {/* ======================================================= */}
-      // STEP 4, 5, & 6: IMPLEMENTASI STRUKTUR UTAMA MODAL DIALOG
+      {/* STEP 4, 5, & 6: IMPLEMENTASI STRUKTUR UTAMA MODAL DIALOG */}
       {/* ======================================================= */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
