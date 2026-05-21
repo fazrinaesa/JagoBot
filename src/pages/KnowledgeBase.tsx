@@ -314,7 +314,7 @@ const EditManualModal = ({ file, onClose, onSuccess }: EditManualModalProps) => 
       }
     } catch (error: any) {
       console.error("❌ Gagal menyimpan:", error);
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Gagal memperbarui konten.";
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || "Gagal memperbarui konten.";
       alert("❌ " + errorMsg);
     } finally {
       setIsSaving(false);

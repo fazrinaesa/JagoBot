@@ -105,18 +105,16 @@ export const ingestPDF = async (req: Request, res: Response) => {
             where: { knowledgeBaseId: kb.id }
         });
 
-        // 3. Simpan Vektor
-        await Promise.all(
-            chunks.map(async (chunkContent) => {
-                const vector = await generateEmbedding(chunkContent);
-                const vectorString = `[${vector.join(',')}]`;
+        // 3. Simpan Vektor (Sequential to avoid rate limit)
+        for (const chunkContent of chunks) {
+            const vector = await generateEmbedding(chunkContent);
+            const vectorString = `[${vector.join(',')}]`;
 
-                return prisma.$executeRaw`
-                    INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                    VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
-                `;
-            })
-        );
+            await prisma.$executeRaw`
+                INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
+                VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+            `;
+        }
 
         if (file && fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
@@ -213,18 +211,16 @@ export const ingestManualText = async (req: any, res: any) => {
         });
         const chunks = await splitter.splitText(content);
 
-        // 4. Generate Embedding dan Simpan ke DocumentChunk (Data Vektor)
-        await Promise.all(
-            chunks.map(async (chunkContent) => {
-                const vector = await generateEmbedding(chunkContent);
-                const vectorString = `[${vector.join(',')}]`;
+        // 4. Generate Embedding dan Simpan ke DocumentChunk (Sequential)
+        for (const chunkContent of chunks) {
+            const vector = await generateEmbedding(chunkContent);
+            const vectorString = `[${vector.join(',')}]`;
 
-                return prisma.$executeRaw`
-                    INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                    VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
-                `;
-            })
-        );
+            await prisma.$executeRaw`
+                INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
+                VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+            `;
+        }
 
         res.status(200).json({
             success: true,
@@ -326,18 +322,16 @@ export const updateKnowledgeBase = async (req: Request, res: Response) => {
 
         console.log("DEBUG: Total chunks created:", chunks.length);
 
-        // 4. Simpan chunk baru dengan embedding
-        await Promise.all(
-            chunks.map(async (chunkContent) => {
-                const vector = await generateEmbedding(chunkContent);
-                const vectorString = `[${vector.join(',')}]`;
+        // 4. Simpan chunk baru dengan embedding (Sequential)
+        for (const chunkContent of chunks) {
+            const vector = await generateEmbedding(chunkContent);
+            const vectorString = `[${vector.join(',')}]`;
 
-                return prisma.$executeRaw`
-                    INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                    VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
-                `;
-            })
-        );
+            await prisma.$executeRaw`
+                INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
+                VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+            `;
+        }
 
         console.log("DEBUG: All chunks inserted successfully");
 
