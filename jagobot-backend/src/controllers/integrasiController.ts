@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai'; // ← Diperbaiki menggunakan SDK Google resmi yang stabil
 
 /**
  * Controller untuk menangani interaksi chat publik dari Widget Web (Live Chat)
@@ -29,15 +29,13 @@ export const handlePublicChat = async (req: Request, res: Response) => {
         }
 
         // 3. Logika RAG (Retrieval-Augmented Generation) - Mengambil Konteks Knowledge Base
-        // PENYESUAIAN STABIL: Ambil semua ID sumber basis pengetahuan yang terikat dengan botId ini
-        // + sekaligus ambil isi_teks sebagai fallback untuk tipe manual-input
         const knowledgeBases = await prisma.knowledgeBase.findMany({
             where: {
                 botId: Number(botId)
             },
             select: {
                 id: true,
-                isi_teks: true  // ← DITAMBAHKAN: untuk fallback manual-input
+                isi_teks: true
             }
         });
 
@@ -50,25 +48,24 @@ export const handlePublicChat = async (req: Request, res: Response) => {
             relevantChunks = await prisma.documentChunk.findMany({
                 where: {
                     knowledgeBaseId: {
-                        in: kbIds // Menggunakan operator 'in' untuk mencocokkan ID secara langsung
+                        in: kbIds
                     }
                 },
-                take: 10 // Dikembalikan untuk menjaga stabilitas connection pool Supabase
+                take: 10
             });
         }
 
         // PENYESUAIAN UTAMA: Selalu gabungkan isi_teks + DocumentChunk sebagai konteks
-        // Tidak lagi either/or, tapi keduanya digabung agar konteks selengkap mungkin
         const isiTeksContext = knowledgeBases
             .map(kb => kb.isi_teks)
-            .filter(Boolean) // Buang nilai null/undefined
+            .filter(Boolean)
             .join("\n");
 
         const chunkContext = relevantChunks
             .map(chunk => chunk.content)
             .join("\n");
 
-        // Gabungkan keduanya — isi_teks sebagai dasar utama, chunk sebagai pelengkap
+        // Gabungkan keduanya
         const contextText = [isiTeksContext, chunkContext]
             .filter(Boolean)
             .join("\n") || "Tidak ada data spesifik mengenai pertanyaan ini di dokumen internal toko.";
@@ -83,7 +80,7 @@ export const handlePublicChat = async (req: Request, res: Response) => {
     Aturan Penting:
     1. Jawablah hanya berdasarkan fakta yang tertulis di dalam KONTEKS TOKO di bawah.
     2. Jika informasi atau jawaban dari pertanyaan pelanggan TIDAK ADA di dalam KONTEKS TOKO, jawablah dengan sopan bahwa Anda belum mengetahui informasi tersebut dan arahkan pelanggan untuk langsung menghubungi admin/owner toko melalui WhatsApp.
-    3. Jangan pernah mengarang data atau berhalusinasi di luar konteks yang diberikan.
+    3. Jangan pernah mengarang data atau berhalusunasi di luar konteks yang diberikan.
 
     KONTEKS TOKO:
     ${contextText}
@@ -96,21 +93,23 @@ export const handlePublicChat = async (req: Request, res: Response) => {
             return res.status(500).json({ message: "Konfigurasi API Key server belum lengkap." });
         }
 
-        // Inisialisasi Google Gen AI client SDK
-        const aiProvider = new GoogleGenAI({ apiKey: apiKey });
+        // Inisialisasi Google Gen AI client menggunakan SDK resmi @google/generative-ai
+        const aiProvider = new GoogleGenerativeAI(apiKey);
+        const model = aiProvider.getGenerativeModel({
+            model: 'gemini-2.5-flash',
+            systemInstruction: aiSystemInstruction
+        });
 
         // Memanggil API Google Gemini untuk melakukan pemrosesan jawaban
-        const aiResponse = await aiProvider.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: message,
-            config: {
-                systemInstruction: aiSystemInstruction,
-                temperature: 0.4 // Nilai rendah agar respon terfokus ke data (tidak kreatif berlebihan)
+        const aiResponse = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: message }] }],
+            generationConfig: {
+                temperature: 0.4
             }
         });
 
         // Ekstraksi teks balasan dari object response SDK Gemini
-        const replyMessage = aiResponse.text || "Maaf, saya sedang tidak bisa memproses pesan Anda.";
+        const replyMessage = aiResponse.response.text() || "Maaf, saya sedang tidak bisa memproses pesan Anda.";
 
         // 5. Menyimpan riwayat obrolan pelanggan (ChatLog) ke dalam database untuk analitik dashboard
         await prisma.chatLog.create({
@@ -119,7 +118,6 @@ export const handlePublicChat = async (req: Request, res: Response) => {
                 platform: "widget_web",
                 userMessage: message,
                 aiResponse: replyMessage
-                // Nilai createdAt akan otomatis terisi DateTime.now() berdasarkan schema.prisma
             }
         });
 
@@ -131,7 +129,6 @@ export const handlePublicChat = async (req: Request, res: Response) => {
         });
 
     } catch (error: any) {
-        // Logging error sedetail mungkin di terminal VS Code backend untuk mempermudah debugging
         console.error("❌ ERROR PUBLIC CHAT INTERACTION:", error);
 
         return res.status(500).json({
