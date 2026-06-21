@@ -91,13 +91,22 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         const normalizedBots = Array.isArray(bots) ? bots : [];
         setUserBots(normalizedBots);
 
-        if (!localStorage.getItem('activeBotId') && normalizedBots.length > 0) {
-          const firstBotId = normalizedBots[0].id.toString();
-          console.log("🟢 [FetchBots] Setting first bot as active:", firstBotId);
-          localStorage.setItem('activeBotId', firstBotId);
-          setActiveBotId(firstBotId);
-        } else if (localStorage.getItem('activeBotId')) {
-          console.log("🟢 [FetchBots] Active bot already set:", localStorage.getItem('activeBotId'));
+        const storedId = localStorage.getItem('activeBotId');
+
+        if (normalizedBots.length > 0) {
+          // Validasi: pastikan activeBotId yang tersimpan benar-benar ada di list bot user ini
+          const isStoredIdValid = storedId && normalizedBots.some(b => b.id.toString() === storedId);
+
+          if (!isStoredIdValid) {
+            // activeBotId tidak valid (sisa sesi lama / user berbeda) → reset ke bot pertama
+            const firstBotId = normalizedBots[0].id.toString();
+            console.log("🔄 [FetchBots] activeBotId tidak valid, reset ke bot pertama:", firstBotId);
+            localStorage.setItem('activeBotId', firstBotId);
+            setActiveBotId(firstBotId);
+          } else {
+            console.log("🟢 [FetchBots] Active bot valid:", storedId);
+            setActiveBotId(storedId);
+          }
         }
       } catch (error) {
         console.error("🔴 [FetchBots] Gagal mengambil daftar bot:", error);

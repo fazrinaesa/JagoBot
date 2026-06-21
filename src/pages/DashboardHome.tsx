@@ -223,13 +223,13 @@ export const DashboardHome = () => {
         <div className="bg-brand-blue p-6 rounded-[1.5rem] border border-white/10 shadow-xl">
           <h3 className="font-bold text-base text-white mb-6 uppercase tracking-tight">Top FAQ</h3>
           <div className="space-y-4">
-            {[
+            {(stats?.topFaq || [
               { q: "Berapa harga produk ini?", count: 452, trend: "+5%" },
               { q: "Apakah ada promo hari ini?", count: 321, trend: "+12%" },
               { q: "Bisa kirim ke luar kota?", count: 289, trend: "-2%" },
               { q: "Jam berapa toko buka?", count: 156, trend: "+1%" },
               { q: "Metode pembayaran apa saja?", count: 98, trend: "+8%" },
-            ].map((faq, idx) => (
+            ]).map((faq: any, idx: number) => (
               <div key={idx} className="flex items-center justify-between group cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/10 dark:bg-slate-900/10 border border-white/10 flex items-center justify-center text-slate-400 font-bold text-[10px] group-hover:bg-[#1800ad] group-hover:text-white transition-all">

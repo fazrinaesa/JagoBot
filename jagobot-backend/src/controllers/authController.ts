@@ -36,29 +36,34 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    // SESUAIKAN: Tambahkan 'include: { bots: true }' agar data bot ikut diambil dari database
-    const user = await prisma.user.findUnique({
-        where: { email },
-        include: { bots: true }
-    });
+    try {
+        // SESUAIKAN: Tambahkan 'include: { bots: true }' agar data bot ikut diambil dari database
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: { bots: true }
+        });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: "Email atau Password Salah" });
-    }
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' });
-
-    // SESUAIKAN: Kirimkan objek user yang berisi botId agar bisa disimpan oleh Frontend
-    res.json({
-        token,
-        nama_toko: user.nama_toko,
-        user: {
-            id: user.id,
-            email: user.email,
-            nama_toko: user.nama_toko,
-            botId: user.bots[0]?.id // Mengambil ID bot pertama milik user (seperti ID 3 untuk Elianour)
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ message: "Email atau Password Salah" });
         }
-    });
+
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' });
+
+        // SESUAIKAN: Kirimkan objek user yang berisi botId agar bisa disimpan oleh Frontend
+        res.json({
+            token,
+            nama_toko: user.nama_toko,
+            user: {
+                id: user.id,
+                email: user.email,
+                nama_toko: user.nama_toko,
+                botId: user.bots[0]?.id // Mengambil ID bot pertama milik user
+            }
+        });
+    } catch (err) {
+        console.error("Login error:", err);
+        res.status(500).json({ message: "Terjadi kesalahan pada server. Silakan coba beberapa saat lagi." });
+    }
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {

@@ -349,12 +349,60 @@ export const LandingPage = () => {
 
             <div className="relative">
               <div className="absolute -inset-4 bg-[#1800ad]/10 dark:bg-blue-500/10 rounded-[2rem] blur-2xl" />
-              <img
-                src="https://picsum.photos/seed/setup/450/450"
-                alt="Setup Process"
-                className="relative rounded-[2rem] shadow-2xl border-4 border-white dark:border-slate-800 aspect-square object-cover"
-                referrerPolicy="no-referrer"
-              />
+              <div className="relative grid grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 bg-slate-900/40 rounded-[2rem] border border-white/10 shadow-2xl backdrop-blur-md">
+                
+                {/* Connecting Arrows (Visible on larger screens) */}
+                <svg className="hidden sm:block absolute top-[25%] left-1/2 w-6 h-6 text-white z-10 -translate-x-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+                <svg className="hidden sm:block absolute top-1/2 left-1/2 w-6 h-6 text-white z-10 -translate-x-1/2 -translate-y-1/2 rotate-[135deg]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+                <svg className="hidden sm:block absolute top-[75%] left-1/2 w-6 h-6 text-white z-10 -translate-x-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+
+                {/* Panel 1 */}
+                <div className="bg-slate-800 rounded-xl overflow-hidden shadow-lg border border-slate-700 flex flex-col group">
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    <img src="/panel1.png" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Daftar" />
+                  </div>
+                  <div className="py-3 text-center bg-slate-900 border-t border-slate-800">
+                    <p className="text-[10px] sm:text-xs font-bold text-white tracking-widest uppercase">1. Proses Mudah</p>
+                  </div>
+                </div>
+
+                {/* Panel 2 */}
+                <div className="bg-slate-800 rounded-xl overflow-hidden shadow-lg border border-slate-700 flex flex-col group">
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    <img src="/panel2.png" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Latih" />
+                  </div>
+                  <div className="py-3 text-center bg-slate-900 border-t border-slate-800">
+                    <p className="text-[10px] sm:text-xs font-bold text-white tracking-widest uppercase">2. Input Data</p>
+                  </div>
+                </div>
+
+                {/* Panel 3 */}
+                <div className="bg-slate-800 rounded-xl overflow-hidden shadow-lg border border-slate-700 flex flex-col group">
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    <img src="/panel3.png" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Atur Profil" />
+                  </div>
+                  <div className="py-3 text-center bg-slate-900 border-t border-slate-800">
+                    <p className="text-[10px] sm:text-xs font-bold text-white tracking-widest uppercase">3. Personalisasi</p>
+                  </div>
+                </div>
+
+                {/* Panel 4 */}
+                <div className="bg-slate-800 rounded-xl overflow-hidden shadow-lg border border-slate-700 flex flex-col group">
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    <img src="/panel4.png" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Hubungkan" />
+                  </div>
+                  <div className="py-3 text-center bg-slate-900 border-t border-slate-800">
+                    <p className="text-[10px] sm:text-xs font-bold text-white tracking-widest uppercase">4. Live & Responsif</p>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
         </div>

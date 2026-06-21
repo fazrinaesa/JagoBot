@@ -41,4 +41,4 @@ app.use('/api/user', userRoutes);
 app.use('/api/public', integrasiRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`));// Trigger restart

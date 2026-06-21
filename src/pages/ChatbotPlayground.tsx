@@ -121,8 +121,8 @@ export const ChatbotPlayground = () => {
   };
 
   return (
-    // Penyesuaian: Mengurangi height (180px -> 220px) dan radius (2.5rem -> 1.5rem)
-    <div className="h-[calc(100vh-220px)] flex flex-col max-w-4xl mx-auto bg-brand-blue rounded-[1.5rem] border border-white/5 shadow-2xl shadow-brand-blue/20 overflow-hidden">
+    // Penyesuaian: Memperbesar container dengan menyisakan sedikit margin (space) di sisi kiri & kanan
+    <div className="h-[calc(100vh-120px)] w-[calc(100%-2rem)] lg:w-[calc(100%-4rem)] mx-auto flex flex-col bg-brand-blue rounded-[1.5rem] border border-white/5 shadow-2xl shadow-brand-blue/20 overflow-hidden">
       {/* Chat Header */}
       {/* Penyesuaian: Mengurangi padding (py-5 -> py-3, px-8 -> px-6) */}
       <div className="px-6 py-3 border-b border-white/10 flex items-center justify-between bg-white/5 dark:bg-slate-900/5 backdrop-blur-md">

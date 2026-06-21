@@ -123,6 +123,33 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             chartData.push({ name: dayName, chats: count, orders: 0 });
         }
 
+        // --- 4. TOP FAQ DINAMIS ---
+        const topFaqQuery = await prisma.chatLog.groupBy({
+            by: ['userMessage'],
+            _count: {
+                userMessage: true
+            },
+            where: {
+                botId: { in: targetBotIds },
+                createdAt: { gte: startDate, lte: endDate },
+                userMessage: { not: '' } // Abaikan pesan kosong
+            },
+            orderBy: {
+                _count: {
+                    userMessage: 'desc'
+                }
+            },
+            take: 5
+        });
+
+        let topFaq = topFaqQuery.map((faq) => ({
+            q: faq.userMessage,
+            count: faq._count.userMessage,
+            trend: "+5%" // Placeholder trend stat
+        }));
+
+        console.log("SENDING TOP FAQ:", topFaq);
+
         // --- RETURN RESPONSE DENGAN DATA BARU ---
         res.status(200).json({
             nama_toko: displayName || "Toko JagoBot",
@@ -133,7 +160,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                 pelangganBaru: customerCount,
                 tingkatKonversi: `${conversionRate}%`,
                 avgResponse: `${finalAvgRes}s`, // Waktu respon real-time
-                chartData: chartData
+                chartData: chartData,
+                topFaq: topFaq
             }
         });
 
