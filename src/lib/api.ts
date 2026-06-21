@@ -1,7 +1,6 @@
 import axios, { InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
-console.log("BUILD CHECK:", (import.meta as any).env?.VITE_API_URL, (import.meta as any).env?.VITE_TEST); const envApiUrl = (import.meta as any).env?.VITE_API_URL;
-
+const envApiUrl = (import.meta as any).env?.VITE_API_URL;
 const BASE_URL = envApiUrl
     ? `${envApiUrl}/api`
     : 'http://localhost:5000/api';
