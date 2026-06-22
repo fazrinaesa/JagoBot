@@ -1,19 +1,21 @@
 (function () {
-    // 1. AMBIL DATA ATTRIBUT DARI SCRIPT YANG DI-INJECT KLIEN
-    const scriptTag = document.currentScript;
-    const botId = scriptTag.getAttribute('data-bot-id');
+  // 1. AMBIL DATA ATTRIBUT DARI SCRIPT YANG DI-INJECT KLIEN
+  const scriptTag = document.currentScript;
+  const botId = scriptTag.getAttribute('data-bot-id');
 
-    if (!botId) {
-        console.error('JagoBot Widget Error: Atribut data-bot-id tidak ditemukan!');
-        return;
-    }
+  if (!botId) {
+    console.error('JagoBot Widget Error: Atribut data-bot-id tidak ditemukan!');
+    return;
+  }
 
-    // CONFIGURATION URL BACKEND
-    const BACKEND_URL = 'http://localhost:5000';
+  // CONFIGURATION URL BACKEND
+  const BACKEND_URL = (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+    ? 'https://jago-bot-upla.vercel.app'
+    : 'http://localhost:5000';
 
-    // 2. INJECT CSS LANGSUNG LEWAT JAVASCRIPT
-    const style = document.createElement('style');
-    style.innerHTML = `
+  // 2. INJECT CSS LANGSUNG LEWAT JAVASCRIPT
+  const style = document.createElement('style');
+  style.innerHTML = `
     #jagobot-widget-container {
       position: fixed;
       bottom: 20px;
@@ -135,13 +137,13 @@
       background-color: #13008a;
     }
   `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 
-    // 3. BUAT STRUKTUR DOM KOTAK CHAT DAN FLOATING BUTTON
-    const widgetContainer = document.createElement('div');
-    widgetContainer.id = 'jagobot-widget-container';
+  // 3. BUAT STRUKTUR DOM KOTAK CHAT DAN FLOATING BUTTON
+  const widgetContainer = document.createElement('div');
+  widgetContainer.id = 'jagobot-widget-container';
 
-    widgetContainer.innerHTML = `
+  widgetContainer.innerHTML = `
     <div id="jagobot-floating-button">
       <svg viewBox="0 0 24 24">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -162,85 +164,85 @@
       </div>
     </div>
   `;
-    document.body.appendChild(widgetContainer);
+  document.body.appendChild(widgetContainer);
 
-    // 4. LOGIKA INTERAKSI TOMBOL (BUKA/TUTUP)
-    const floatingButton = document.getElementById('jagobot-floating-button');
-    const chatbox = document.getElementById('jagobot-chatbox');
-    const closeButton = document.getElementById('jagobot-close');
-    const sendButton = document.getElementById('jagobot-send-btn');
-    const inputField = document.getElementById('jagobot-input-field');
-    const messagesContainer = document.getElementById('jagobot-messages-container');
+  // 4. LOGIKA INTERAKSI TOMBOL (BUKA/TUTUP)
+  const floatingButton = document.getElementById('jagobot-floating-button');
+  const chatbox = document.getElementById('jagobot-chatbox');
+  const closeButton = document.getElementById('jagobot-close');
+  const sendButton = document.getElementById('jagobot-send-btn');
+  const inputField = document.getElementById('jagobot-input-field');
+  const messagesContainer = document.getElementById('jagobot-messages-container');
 
-    floatingButton.addEventListener('click', () => {
-        chatbox.style.display = chatbox.style.display === 'flex' ? 'none' : 'flex';
-    });
+  floatingButton.addEventListener('click', () => {
+    chatbox.style.display = chatbox.style.display === 'flex' ? 'none' : 'flex';
+  });
 
-    closeButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        chatbox.style.display = 'none';
-    });
+  closeButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    chatbox.style.display = 'none';
+  });
 
-    // 5. LOGIKA FUNGSI KIRIM PESAN KE API PUBLIC BACKEND
-    async function sendMessage() {
-        const messageText = inputField.value.trim();
-        if (!messageText) return;
+  // 5. LOGIKA FUNGSI KIRIM PESAN KE API PUBLIC BACKEND
+  async function sendMessage() {
+    const messageText = inputField.value.trim();
+    if (!messageText) return;
 
-        // Tampilkan pesan User di chatbox
-        appendMessage(messageText, 'user');
-        inputField.value = '';
+    // Tampilkan pesan User di chatbox
+    appendMessage(messageText, 'user');
+    inputField.value = '';
 
-        // Tampilkan placeholder loading untuk Bot
-        const loadingId = 'jago-loading-' + Date.now();
-        appendMessage('Sedang mengetik...', 'bot', loadingId);
+    // Tampilkan placeholder loading untuk Bot
+    const loadingId = 'jago-loading-' + Date.now();
+    appendMessage('Sedang mengetik...', 'bot', loadingId);
 
-        try {
-            // Fetch data ke API Public 
-            const response = await fetch(`${BACKEND_URL}/api/public/chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    botId: botId,
-                    message: messageText
-                })
-            });
+    try {
+      // Fetch data ke API Public 
+      const response = await fetch(`${BACKEND_URL}/api/public/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          botId: botId,
+          message: messageText
+        })
+      });
 
-            const data = await response.json();
+      const data = await response.json();
 
-            // Hapus loading text
-            const loadingEl = document.getElementById(loadingId);
-            if (loadingEl) loadingEl.remove();
+      // Hapus loading text
+      const loadingEl = document.getElementById(loadingId);
+      if (loadingEl) loadingEl.remove();
 
-            // Tampilkan balasan AI resmi dari backend
-            if (data && data.reply) {
-                appendMessage(data.reply, 'bot');
-            } else {
-                appendMessage('Maaf, sistem sedang mengalami kendala. Coba lagi nanti.', 'bot');
-            }
+      // Tampilkan balasan AI resmi dari backend
+      if (data && data.reply) {
+        appendMessage(data.reply, 'bot');
+      } else {
+        appendMessage('Maaf, sistem sedang mengalami kendala. Coba lagi nanti.', 'bot');
+      }
 
-        } catch (error) {
-            console.error('Widget Chat Error:', error);
-            const loadingEl = document.getElementById(loadingId);
-            if (loadingEl) loadingEl.remove();
-            appendMessage('Gagal terhubung ke server JagoBot.', 'bot');
-        }
+    } catch (error) {
+      console.error('Widget Chat Error:', error);
+      const loadingEl = document.getElementById(loadingId);
+      if (loadingEl) loadingEl.remove();
+      appendMessage('Gagal terhubung ke server JagoBot.', 'bot');
     }
+  }
 
-    function appendMessage(text, sender, id = null) {
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('jago-msg', sender);
-        if (id) msgDiv.id = id;
-        msgDiv.innerText = text;
-        messagesContainer.appendChild(msgDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
+  function appendMessage(text, sender, id = null) {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('jago-msg', sender);
+    if (id) msgDiv.id = id;
+    msgDiv.innerText = text;
+    messagesContainer.appendChild(msgDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
 
-    // Trigger klik button kirim atau tekan Enter
-    sendButton.addEventListener('click', sendMessage);
-    inputField.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+  // Trigger klik button kirim atau tekan Enter
+  sendButton.addEventListener('click', sendMessage);
+  inputField.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
 
 })();
