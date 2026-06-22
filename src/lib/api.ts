@@ -1,6 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
-const envApiUrl = (import.meta as any).env?.VITE_API_URL;
+// @ts-ignore
+const envApiUrl = import.meta.env.VITE_API_URL;
 const BASE_URL = envApiUrl
     ? `${envApiUrl}/api`
     : 'http://localhost:5000/api';
