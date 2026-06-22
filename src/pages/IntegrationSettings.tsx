@@ -27,7 +27,8 @@ export const IntegrationSettings = () => {
   // ==========================================
   // STEP 5: BUAT STRING KODE SNIPPET SECARA DINAMIS
   // ==========================================
-  const snippetCode = `<script \n  src="http://localhost:5000/widget/jagobot.js" \n  data-bot-id="${activeBotId || 'JB-PENDING'}"></script>`;
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const snippetCode = `<script \n  src="${apiUrl}/widget/jagobot.js" \n  data-bot-id="${activeBotId || 'JB-PENDING'}"></script>`;
 
   // ==========================================
   // STEP 6: LOGIKA "COPY TO CLIPBOARD" DENGAN FEEDBACK VISUAL

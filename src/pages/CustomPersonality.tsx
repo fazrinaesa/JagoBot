@@ -26,7 +26,8 @@ export const CustomPersonality = () => {
 
         console.log("🔵 [Profil Bot] Loading bot profile for botId:", activeBotId);
 
-        const response = await fetch(`http://localhost:5000/api/bot/profile?botId=${activeBotId}`, {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${apiUrl}/api/bot/profile?botId=${activeBotId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
