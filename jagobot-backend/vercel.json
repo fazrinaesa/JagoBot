@@ -2,11 +2,19 @@
     "version": 2,
     "builds": [
         {
+            "src": "public/**",
+            "use": "@vercel/static"
+        },
+        {
             "src": "server.ts",
             "use": "@vercel/node"
         }
     ],
     "routes": [
+        {
+            "src": "/widget/(.*)",
+            "dest": "/public/widget/$1"
+        },
         {
             "src": "/(.*)",
             "dest": "server.ts"
