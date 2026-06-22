@@ -40,5 +40,10 @@ app.use('/api/bot', botRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/public', integrasiRoutes);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`));// Trigger restart
+// Untuk development local
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`));
+}
+
+export default app;
