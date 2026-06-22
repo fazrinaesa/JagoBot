@@ -1,10 +1,10 @@
 import axios, { InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
 // @ts-ignore
-const envApiUrl = import.meta.env.VITE_API_URL;
-const BASE_URL = envApiUrl
-    ? `${envApiUrl}/api`
+const BASE_URL = import.meta.env.PROD
+    ? 'https://jago-bot-upla.vercel.app/api'
     : 'http://localhost:5000/api';
+
 const api = axios.create({
     baseURL: BASE_URL,
 });
