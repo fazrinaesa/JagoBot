@@ -27,7 +27,7 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
         console.log("═══════════════════════════════════════════════════════");
         console.log("💬 [Backend] Chat Request Received");
         console.log("═══════════════════════════════════════════════════════");
-        
+
         const { botId, customerName, message } = req.body;
 
         console.log("🤖 Bot ID:", botId);
@@ -90,8 +90,7 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
         }
 
         // --- ✅ PROSES GENERASI JAWABAN OLEH GEMINI ---
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });        // 2. CONTEXT INJECTION: Menyuntikkan hasil pencarian ke dalam prompt
-        const prompt = `
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); const prompt = `
             SISTEM / IDENTITAS:
             Anda adalah ${namaBot}, asisten cerdas untuk UMKM.
             Gaya bahasa yang WAJIB Anda gunakan: ${gayaBahasa}.
