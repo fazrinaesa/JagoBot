@@ -90,7 +90,7 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
         }
 
         // --- ✅ PROSES GENERASI JAWABAN OLEH GEMINI ---
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); const prompt = `
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); const prompt = `
             SISTEM / IDENTITAS:
             Anda adalah ${namaBot}, asisten cerdas untuk UMKM.
             Gaya bahasa yang WAJIB Anda gunakan: ${gayaBahasa}.
