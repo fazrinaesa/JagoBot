@@ -68,10 +68,21 @@ export const ingestPDF = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "botId harus berupa angka" });
         }
 
-        const fullText = await extractText(file.path, file.originalname);
+        // ✅ PERUBAHAN: Baca dari buffer (memory) bukan dari file.path
+        let fullText = "";
+        const ext = path.extname(file.originalname).toLowerCase();
+
+        if (ext === '.pdf') {
+            const pdfData = await pdf(file.buffer);
+            fullText = pdfData.text || "";
+        } else if (ext === '.docx') {
+            const result = await mammoth.extractRawText({ buffer: file.buffer });
+            fullText = result.value || "";
+        } else {
+            return res.status(400).json({ message: `Format file tidak didukung: ${ext}. Gunakan PDF atau DOCX.` });
+        }
 
         if (!fullText.trim()) {
-            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
             throw new Error("File kosong atau tidak bisa dibaca teksnya.");
         }
 
@@ -81,31 +92,28 @@ export const ingestPDF = async (req: Request, res: Response) => {
         });
         const chunks = await splitter.splitText(fullText);
 
-        // ✅ Gunakan UPSERT agar tidak error jika file dengan nama yang sama sudah ada
         const kb = await prisma.knowledgeBase.upsert({
             where: {
                 botId_nama_sumber: { botId: parsedBotId, nama_sumber: file.originalname }
             },
             update: {
-                file_path: file.path,
+                file_path: "cloud-upload",
                 status: "ready",
                 tipe_sumber: "file"
             },
             create: {
                 botId: parsedBotId,
                 nama_sumber: file.originalname,
-                file_path: file.path,
+                file_path: "cloud-upload",
                 status: "ready",
                 tipe_sumber: "file"
             }
         });
 
-        // 2. Bersihkan Chunk lama (Penting agar data tidak ganda saat diupload ulang)
         await prisma.documentChunk.deleteMany({
             where: { knowledgeBaseId: kb.id }
         });
 
-        // 3. Simpan Vektor (Sequential to avoid rate limit)
         for (const chunkContent of chunks) {
             const vector = await generateEmbedding(chunkContent);
             const vectorString = `[${vector.join(',')}]`;
@@ -116,8 +124,6 @@ export const ingestPDF = async (req: Request, res: Response) => {
             `;
         }
 
-        if (file && fs.existsSync(file.path)) fs.unlinkSync(file.path);
-
         res.status(200).json({
             success: true,
             message: "Knowledge base berhasil diproses!",
@@ -126,13 +132,10 @@ export const ingestPDF = async (req: Request, res: Response) => {
 
     } catch (error: any) {
         console.error("❌ Error Ingestion:", error.message);
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: error.message || "Terjadi kesalahan saat memproses dokumen",
-            error: error.message 
+            error: error.message
         });
     }
 };
@@ -243,9 +246,9 @@ export const getKnowledgeBaseById = async (req: Request, res: Response) => {
         console.log("DEBUG: Fetching KB with ID:", id);
 
         if (!id) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "ID dokumen diperlukan" 
+                message: "ID dokumen diperlukan"
             });
         }
 
@@ -256,9 +259,9 @@ export const getKnowledgeBaseById = async (req: Request, res: Response) => {
         });
 
         if (!document) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: "Dokumen tidak ditemukan" 
+                message: "Dokumen tidak ditemukan"
             });
         }
 
@@ -271,10 +274,10 @@ export const getKnowledgeBaseById = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error('❌ Fetch KB By ID Error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Gagal mengambil dokumen',
-            error: error.message 
+            error: error.message
         });
     }
 };
@@ -288,9 +291,9 @@ export const updateKnowledgeBase = async (req: Request, res: Response) => {
         console.log("DEBUG Update KB - ID:", id, "Title:", title, "Content length:", content?.length);
 
         if (!id || !title || !content) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "ID, title, dan content diperlukan" 
+                message: "ID, title, dan content diperlukan"
             });
         }
 
@@ -344,10 +347,10 @@ export const updateKnowledgeBase = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error('❌ Update KB Error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Gagal memperbarui dokumen', 
-            error: error.message 
+            message: 'Gagal memperbarui dokumen',
+            error: error.message
         });
     }
 };
