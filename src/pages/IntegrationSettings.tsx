@@ -27,7 +27,7 @@ export const IntegrationSettings = () => {
   // ==========================================
   // STEP 5: BUAT STRING KODE SNIPPET SECARA DINAMIS
   // ==========================================
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   const snippetCode = `<script \n  src="${apiUrl}/widget/jagobot.js" \n  data-bot-id="${activeBotId || 'JB-PENDING'}"></script>`;
 
   // ==========================================

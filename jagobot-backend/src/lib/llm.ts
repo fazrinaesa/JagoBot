@@ -7,8 +7,13 @@
  * - The embedding dimension MUST be consistent across all DocumentChunk rows.
  *   If you switch embedding models, you must regenerate ALL existing vectors.
  *
+ * IMPORTANT: env vars are read LAZILY (at call time), NOT at module load.
+ * This makes the module safe regardless of when dotenv.config() runs —
+ * server.ts calls dotenv.config() AFTER imports are hoisted, so module-load
+ * reads would always see undefined.
+ *
  * Env vars:
- *   NINEROUTER_BASE_URL  — e.g. https://your-9router.com/v1
+ *   NINEROUTER_BASE_URL  — e.g. https://9router.jagoai.dev/v1
  *   NINEROUTER_API_KEY   — API key for 9router
  *   NINEROUTER_CHAT_MODEL — model name for chat (default: first available)
  *   NINEROUTER_EMBED_MODEL — model name for embeddings (default: text-embedding-3-small)
@@ -18,29 +23,28 @@
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// ─── 9router OpenAI-compatible client ───
-const nineRouterUrl = process.env.NINEROUTER_BASE_URL;
-const nineRouterKey = process.env.NINEROUTER_API_KEY;
+// ─── Lazy config getters (read env at call time) ───
 
-let nineRouter: OpenAI | null = null;
-if (nineRouterUrl && nineRouterKey) {
-    nineRouter = new OpenAI({
-        baseURL: nineRouterUrl,
-        apiKey: nineRouterKey,
+const getNineRouter = (): OpenAI | null => {
+    const url = process.env.NINEROUTER_BASE_URL;
+    const key = process.env.NINEROUTER_API_KEY;
+    if (!url || !key) return null;
+    return new OpenAI({
+        baseURL: url,
+        apiKey: key,
         timeout: 30000,
         maxRetries: 0, // We handle retries manually with fallback
     });
-}
+};
 
-// ─── Gemini fallback client ───
-const geminiKey = process.env.GEMINI_API_KEY;
-let genAI: GoogleGenerativeAI | null = null;
-if (geminiKey) {
-    genAI = new GoogleGenerativeAI(geminiKey);
-}
+const getGenAI = (): GoogleGenerativeAI | null => {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) return null;
+    return new GoogleGenerativeAI(key);
+};
 
-const CHAT_MODEL = process.env.NINEROUTER_CHAT_MODEL || '';
-const EMBED_MODEL = process.env.NINEROUTER_EMBED_MODEL || 'text-embedding-3-small';
+const getChatModel = (): string => process.env.NINEROUTER_CHAT_MODEL || '';
+const getEmbedModel = (): string => process.env.NINEROUTER_EMBED_MODEL || 'text-embedding-3-small';
 const GEMINI_CHAT_MODEL = 'gemini-2.5-flash';
 const GEMINI_EMBED_MODEL = 'gemini-embedding-001';
 
@@ -76,11 +80,13 @@ interface ChatOptions {
 }
 
 export const generateChatCompletion = async (opts: ChatOptions): Promise<string> => {
+    const nineRouter = getNineRouter();
+
     // Try 9router first
     if (nineRouter) {
         try {
             const completion = await nineRouter.chat.completions.create({
-                model: CHAT_MODEL,
+                model: getChatModel(),
                 messages: opts.messages as any,
                 temperature: opts.temperature ?? 0.4,
                 max_tokens: opts.maxTokens,
@@ -99,6 +105,7 @@ export const generateChatCompletion = async (opts: ChatOptions): Promise<string>
     }
 
     // Fallback to Gemini
+    const genAI = getGenAI();
     if (!genAI) throw new Error('No LLM provider available. Set NINEROUTER_* or GEMINI_API_KEY.');
 
     const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_MODEL });
@@ -127,11 +134,13 @@ export const generateChatCompletion = async (opts: ChatOptions): Promise<string>
  * If you change EMBED_MODEL, you must regenerate ALL existing vectors.
  */
 export const generateEmbedding = async (text: string): Promise<number[]> => {
+    const nineRouter = getNineRouter();
+
     // Try 9router embeddings first
     if (nineRouter) {
         try {
             const embedding = await nineRouter.embeddings.create({
-                model: EMBED_MODEL,
+                model: getEmbedModel(),
                 input: text,
             });
             const values = embedding.data?.[0]?.embedding;
@@ -148,6 +157,7 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
     }
 
     // Fallback to Gemini embeddings
+    const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) throw new Error('No embedding provider available. Set NINEROUTER_* or GEMINI_API_KEY.');
 
     const modelName = GEMINI_EMBED_MODEL;
@@ -174,13 +184,14 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
 // ─── Health Check ───
 
 export const llmHealthCheck = async (): Promise<{ chat: string; embedding: string }> => {
+    const nineRouter = getNineRouter();
     const result = { chat: 'unknown', embedding: 'unknown' };
 
     // Test chat
     try {
         if (nineRouter) {
             await nineRouter.chat.completions.create({
-                model: CHAT_MODEL,
+                model: getChatModel(),
                 messages: [{ role: 'user', content: 'hi' }],
                 max_tokens: 5,
             });
@@ -196,7 +207,7 @@ export const llmHealthCheck = async (): Promise<{ chat: string; embedding: strin
     try {
         if (nineRouter) {
             const emb = await nineRouter.embeddings.create({
-                model: EMBED_MODEL,
+                model: getEmbedModel(),
                 input: 'test',
             });
             result.embedding = emb.data?.[0]?.embedding?.length ? '9router' : '9router-empty';

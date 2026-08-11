@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import { DEFAULT_PERSONALITY, DEFAULT_INSTRUCTIONS } from '../lib/jagobotPersona';
 
 export const getActiveBot = async (req: any, res: any) => {
     try {
@@ -90,12 +91,13 @@ export const createBot = async (req: any, res: any) => {
 
         console.log("✅ Validasi nama bot OK, creating bot in database...");
 
-        // Simpan bot baru ke database
+        // Simpan bot baru ke database — dengan persona default JagoBot
         const newBot = await prisma.bot.create({
             data: {
                 userId: Number(idDariToken),
                 nama_bot: nama_bot.trim(),
-                personality: "Ramah",
+                personality: DEFAULT_PERSONALITY,
+                instructions: DEFAULT_INSTRUCTIONS,
                 whatsapp_linked: false
             }
         });

@@ -77,7 +77,7 @@ export const ChatbotPlayground = () => {
       console.log("📤 [Playground] Sending request to /api/chat/send");
       console.log("📦 Request payload:", requestBody);
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${apiUrl}/api/chat/send`, {
         method: 'POST',
         headers: {

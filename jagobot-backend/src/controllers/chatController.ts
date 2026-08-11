@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { generateEmbedding, generateChatCompletion } from '../lib/llm';
 import { recordTokenUsage, estimateTokens } from '../middleware/quotaMiddleware';
+import { DEFAULT_INSTRUCTIONS } from '../lib/jagobotPersona';
 
 export const handleIncomingChat = async (req: Request, res: Response) => {
     try {
@@ -30,7 +31,7 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
 
         const namaBot = botData?.nama_bot || "JagoBot";
         const gayaBahasa = botData?.personality || "Ramah";
-        const instruksiKhusus = botData?.instructions || "Jawab dengan sopan.";
+        const instruksiKhusus = botData?.instructions?.trim() || DEFAULT_INSTRUCTIONS;
 
         console.log("✅ Bot data found:", { namaBot, gayaBahasa });
 

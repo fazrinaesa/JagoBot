@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
 // @ts-ignore
-const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5005') + '/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5006') + '/api';
 
 const api = axios.create({
     baseURL: BASE_URL,

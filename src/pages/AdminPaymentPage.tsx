@@ -233,7 +233,7 @@ export const AdminPaymentPage: React.FC = () => {
                             <div>
                                 <p className="text-slate-400 text-sm mb-2">Bukti Transfer:</p>
                                 <img
-                                    src={`http://localhost:5000${selectedProof.proofUrl}`}
+                                    src={`${import.meta.env.VITE_API_URL || ''}${selectedProof.proofUrl}`}
                                     alt="Bukti transfer"
                                     className="rounded-xl border border-slate-700 max-h-64 object-contain w-full"
                                 />

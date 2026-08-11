@@ -4,7 +4,7 @@ import { cn } from "../lib/utils";
 import { updateBotSettings } from "../lib/api";
 
 export const CustomPersonality = () => {
-  const [selectedPreset, setSelectedPreset] = useState("formal");
+  const [selectedPreset, setSelectedPreset] = useState("casual");
   const [customPrompt, setCustomPrompt] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +26,7 @@ export const CustomPersonality = () => {
 
         console.log("🔵 [Profil Bot] Loading bot profile for botId:", activeBotId);
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const apiUrl = import.meta.env.VITE_API_URL || '';
         const response = await fetch(`${apiUrl}/api/bot/profile?botId=${activeBotId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
