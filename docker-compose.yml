@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./jagobot-backend
+      dockerfile: Dockerfile
+    container_name: jagobot-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./jagobot-backend/.env
+    volumes:
+      # Persist uploaded files (payment proofs, knowledge base files)
+      - uploads_data:/app/uploads
+    networks:
+      - jagobot-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jagobot-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - jagobot-net
+
+volumes:
+  uploads_data:
+    driver: local
+
+networks:
+  jagobot-net:
+    driver: bridge

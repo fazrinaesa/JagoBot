@@ -8,6 +8,9 @@ import knowledgeRoutes from './src/routes/knowledgeRoutes';
 import botRoutes from './src/routes/botRoutes';
 import userRoutes from './src/routes/userRoutes';
 import integrasiRoutes from './src/routes/integrasiRoutes';
+import paymentRoutes from './src/routes/paymentRoutes';
+import sheetsRoutes from './src/routes/sheetsRoutes';
+import { startSheetPolling } from './src/lib/googleSheets';
 
 dotenv.config();
 console.log("DEBUG API KEY:", process.env.GEMINI_API_KEY ? "ADA ✅" : "KOSONG ❌");
@@ -22,6 +25,8 @@ const app = express();
 // PENYESUAIAN LANGKAH 3: MENYAJIKAN FILE STATIS (PUBLIC)
 // =======================================================
 app.use(express.static('public'));
+// Serve uploaded files (payment proofs, etc.) — path matches /uploads/...
+app.use('/uploads', express.static('uploads'));
 
 app.use(cors({
     origin: '*', // Mengizinkan semua website luar mengakses endpoint backend kamu
@@ -39,11 +44,24 @@ app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/bot', botRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/public', integrasiRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/sheets', sheetsRoutes);
+app.use('/api/health', (_req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Untuk development local
 if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`));
+    const PORT = process.env.PORT || 5005;
+    app.listen(PORT, () => {
+        console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`);
+        // Start Google Sheets polling if GOOGLE_CLIENT_ID is configured
+        if (process.env.GOOGLE_CLIENT_ID) {
+            startSheetPolling();
+        } else {
+            console.log('[Sheets] Google Sheets integration disabled (GOOGLE_CLIENT_ID not set)');
+        }
+    });
 }
 
 export default app;

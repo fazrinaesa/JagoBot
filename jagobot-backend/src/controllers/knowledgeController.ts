@@ -6,7 +6,7 @@ import prisma from '../lib/prisma';
 // @ts-ignore
 import pdf from 'pdf-parse-fork';
 import mammoth from 'mammoth';
-import { generateEmbedding } from '../lib/gemini';
+import { generateEmbedding } from '../lib/llm';
 
 // ✅ FUNGSI BARU: ekstrak teks berdasarkan tipe file
 const extractText = async (filePath: string, originalName: string): Promise<string> => {

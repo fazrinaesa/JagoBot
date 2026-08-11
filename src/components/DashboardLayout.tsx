@@ -8,6 +8,7 @@ import {
   Bell,
   LogOut,
   Menu,
+  CreditCard,
   X,
   Bot,
   Sun,
@@ -180,6 +181,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     { icon: MessageSquare, label: "Playground", href: "/dashboard/playground" },
     { icon: Settings, label: "Integrasi", href: "/dashboard/integration" },
     { icon: BarChart3, label: "Analitik", href: "/dashboard/analytics" },
+    { icon: CreditCard, label: "Pembayaran", href: "/dashboard/payment" },
   ];
 
   return (

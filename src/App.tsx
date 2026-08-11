@@ -19,6 +19,8 @@ import { IntegrationSettings } from "./pages/IntegrationSettings";
 import { AnalyticsDashboard } from "./pages/AnalyticsDashboard";
 import { ProfilePage } from "./pages/ProfilePage";
 import { NotificationsPage } from "./pages/NotificationsPage";
+import { PaymentPage } from "./pages/PaymentPage";
+import { AdminPaymentPage } from "./pages/AdminPaymentPage";
 
 export default function App() {
   return (
@@ -71,6 +73,16 @@ export default function App() {
           <Route path="/dashboard/notifications" element={
             <DashboardLayout>
               <NotificationsPage />
+            </DashboardLayout>
+          } />
+          <Route path="/dashboard/payment" element={
+            <DashboardLayout>
+              <PaymentPage />
+            </DashboardLayout>
+          } />
+          <Route path="/dashboard/admin/payment" element={
+            <DashboardLayout>
+              <AdminPaymentPage />
             </DashboardLayout>
           } />
 

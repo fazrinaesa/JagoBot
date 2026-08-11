@@ -1,26 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
-import { generateEmbedding } from '../lib/gemini';
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-const generateWithRetry = async (model: any, prompt: string, maxRetries = 3) => {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            const result = await model.generateContent(prompt);
-            return result;
-        } catch (error: any) {
-            if (error.message?.includes('429') && i < maxRetries - 1) {
-                const waitTime = (i + 1) * 10000;
-                console.log(`Rate limited. Retrying in ${waitTime / 1000}s... (attempt ${i + 1}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-            } else {
-                throw error;
-            }
-        }
-    }
-};
+import { generateEmbedding, generateChatCompletion } from '../lib/llm';
+import { recordTokenUsage, estimateTokens } from '../middleware/quotaMiddleware';
 
 export const handleIncomingChat = async (req: Request, res: Response) => {
     try {
@@ -89,8 +70,8 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
             contextText = allMatches.slice(0, 5).map((m: any) => m.content).join("\n\n");
         }
 
-        // --- ✅ PROSES GENERASI JAWABAN OLEH GEMINI ---
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); const prompt = `
+        // --- ✅ PROSES GENERASI JAWABAN OLEH LLM (9router → Gemini fallback) ---
+        const systemPrompt = `
             SISTEM / IDENTITAS:
             Anda adalah ${namaBot}, asisten cerdas untuk UMKM.
             Gaya bahasa yang WAJIB Anda gunakan: ${gayaBahasa}.
@@ -101,10 +82,6 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
             ${contextText || "Tidak ada dokumen spesifik yang ditemukan di database."}
             ---
 
-            PENGGUNA:
-            Nama Customer: ${customerName || "Pelanggan"}
-            Pertanyaan: "${message}"
-
             TUGAS & ATURAN:
             1. Jika jawaban ada di REFERENSI UTAMA, jawablah dengan detail menggunakan gaya bahasa ${gayaBahasa}.
             2. Jika jawaban TIDAK ADA di referensi, jawablah: "Mohon maaf, saya belum memiliki informasi mengenai hal tersebut," lalu tawarkan bantuan lain sesuai gaya ${gayaBahasa}.
@@ -112,12 +89,13 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
             4. Selalu ikuti instruksi khusus: "${instruksiKhusus}".
         `;
 
-        const result = await generateWithRetry(model, prompt);
-
-        if (!result) throw new Error("Gagal mendapatkan respon dari AI");
-
-        const response = await result.response;
-        const aiResponse = response.text();
+        const aiResponse = await generateChatCompletion({
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: message }
+            ],
+            temperature: 0.4,
+        });
 
         console.log("🤖 AI Response generated");
         console.log("💬 Response text:", aiResponse.substring(0, 100) + "...");
@@ -130,15 +108,25 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
         // 3. SIMPAN KE CHATLOG (Untuk memantau performa bot di Dashboard)
         // ✅ Disesuaikan dengan field aktif di database
         console.log("💾 Saving chat log to database...");
+        const tokenCount = estimateTokens(message) + estimateTokens(aiResponse);
         const newChat = await prisma.chatLog.create({
             data: {
                 botId: Number(botId),
                 userMessage: message,
                 aiResponse: aiResponse,
                 platform: customerName || "Pelanggan",
-                response_time_ms: duration
+                response_time_ms: duration,
+                tokenCount
             }
         });
+
+        // Record token usage against subscription quota
+        const userId = (req as any).user?.id || (req as any).user?.userId;
+        if (userId) {
+            recordTokenUsage(Number(userId), tokenCount).catch(err =>
+                console.warn('[Quota] Failed to record token usage:', err.message)
+            );
+        }
 
         console.log("✅ Chat log saved with ID:", newChat.id);
 

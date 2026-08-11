@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
 // @ts-ignore
-const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5005') + '/api';
 
 const api = axios.create({
     baseURL: BASE_URL,
@@ -170,6 +170,41 @@ export const uploadAvatar = (file: File) => {
 
 export const deleteUserAccount = () => {
     return api.delete('/user/account');
+};
+
+/**
+ * 7. Payment & Subscription APIs
+ */
+export const getMySubscription = () => {
+    return api.get('/payment/subscription');
+};
+
+export const getMyPaymentProofs = () => {
+    return api.get('/payment/proofs');
+};
+
+export const getTokenQuota = () => {
+    return api.get('/payment/quota');
+};
+
+export const submitPaymentProof = (formData: FormData) => {
+    return api.post('/payment/submit', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
+
+// Admin payment APIs
+export const adminGetPaymentProofs = (status?: string) => {
+    const url = status ? `/payment/admin/proofs?status=${status}` : '/payment/admin/proofs';
+    return api.get(url);
+};
+
+export const adminReviewPayment = (proofId: number, action: 'approve' | 'reject', adminNote?: string) => {
+    return api.post('/payment/admin/review', { proofId, action, adminNote });
+};
+
+export const adminGetSubscriptions = () => {
+    return api.get('/payment/admin/subscriptions');
 };
 
 export default api;

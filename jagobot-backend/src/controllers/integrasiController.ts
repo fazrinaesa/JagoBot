@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
-import { GoogleGenerativeAI } from '@google/generative-ai'; // ← Diperbaiki menggunakan SDK Google resmi yang stabil
+import { generateChatCompletion } from '../lib/llm';
 
 /**
  * Controller untuk menangani interaksi chat publik dari Widget Web (Live Chat)
@@ -70,7 +70,7 @@ export const handlePublicChat = async (req: Request, res: Response) => {
             .filter(Boolean)
             .join("\n") || "Tidak ada data spesifik mengenai pertanyaan ini di dokumen internal toko.";
 
-        // 4. Menyusun Prompt System Instruction terstruktur untuk Gemini AI
+        // 4. Menyusun Prompt System Instruction terstruktur untuk LLM (9router → Gemini fallback)
         const aiSystemInstruction = `
     Anda adalah ${bot.nama_bot}, sebuah asisten AI resmi untuk toko online ini.
     Personality/Gaya Bahasa Anda: ${bot.personality}.
@@ -86,30 +86,14 @@ export const handlePublicChat = async (req: Request, res: Response) => {
     ${contextText}
             `.trim();
 
-        // Memeriksa kesiapan API Key di environment system
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            console.error("❌ ERROR: GEMINI_API_KEY belum terkonfigurasi di file .env");
-            return res.status(500).json({ message: "Konfigurasi API Key server belum lengkap." });
-        }
-
-        // Inisialisasi Google Gen AI client menggunakan SDK resmi @google/generative-ai
-        const aiProvider = new GoogleGenerativeAI(apiKey);
-        const model = aiProvider.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            systemInstruction: aiSystemInstruction
-        });
-
-        // Memanggil API Google Gemini untuk melakukan pemrosesan jawaban
-        const aiResponse = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: message }] }],
-            generationConfig: {
-                temperature: 0.4
-            }
-        });
-
-        // Ekstraksi teks balasan dari object response SDK Gemini
-        const replyMessage = aiResponse.response.text() || "Maaf, saya sedang tidak bisa memproses pesan Anda.";
+        // Memanggil LLM (9router primary → Gemini fallback)
+        const replyMessage = await generateChatCompletion({
+            messages: [
+                { role: 'system', content: aiSystemInstruction },
+                { role: 'user', content: message }
+            ],
+            temperature: 0.4,
+        }).catch(() => "Maaf, saya sedang tidak bisa memproses pesan Anda.");
 
         // 5. Menyimpan riwayat obrolan pelanggan (ChatLog) ke dalam database untuk analitik dashboard
         await prisma.chatLog.create({

@@ -42,3 +42,18 @@ export const upload = multer({ storage, fileFilter });
 
 // ✅ uploadImage pakai memoryStorage agar file.buffer tersedia langsung tanpa tulis ke disk
 export const uploadImage = multer({ storage: multer.memoryStorage(), fileFilter: imageFileFilter });
+
+// Payment proof upload — saves to disk for self-hosted deployment
+const proofStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, '../../uploads/proofs');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        cb(null, `proof_${Date.now()}${ext}`);
+    }
+});
+
+export const uploadProof = multer({ storage: proofStorage, fileFilter: imageFileFilter }).single('proof');
