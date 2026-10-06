@@ -1,7 +1,8 @@
-import { Sparkles, MessageSquare, Save, Play, UserCircle2, Smile, Briefcase, Loader2 } from "lucide-react";
+import { Sparkles, MessageSquare, Save, Play, UserCircle2, Smile, Briefcase, Loader2, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "../lib/utils";
 import { updateBotSettings } from "../lib/api";
+import { Badge, Button, Card, Textarea } from "../components/ui";
 
 export const CustomPersonality = () => {
   const [selectedPreset, setSelectedPreset] = useState("casual");
@@ -10,13 +11,13 @@ export const CustomPersonality = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [botName, setBotName] = useState("Bot Anda");
 
-  // ✅ Load data profil bot yang sudah tersimpan saat halaman dibuka
+  // Load data profil bot yang sudah tersimpan saat halaman dibuka
   useEffect(() => {
     const loadBotProfile = async () => {
       try {
         setIsLoading(true);
-        const activeBotId = localStorage.getItem('activeBotId');
-        const token = localStorage.getItem('token');
+        const activeBotId = localStorage.getItem("activeBotId");
+        const token = localStorage.getItem("token");
 
         if (!activeBotId || !token) {
           console.warn("⚠️ activeBotId atau token tidak ditemukan di localStorage");
@@ -24,17 +25,14 @@ export const CustomPersonality = () => {
           return;
         }
 
-        console.log("🔵 [Profil Bot] Loading bot profile for botId:", activeBotId);
-
-        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const apiUrl = import.meta.env.VITE_API_URL || "";
         const response = await fetch(`${apiUrl}/api/bot/profile?botId=${activeBotId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (response.ok) {
           const result = await response.json();
           const bot = result.data;
-          console.log("✅ [Profil Bot] Data loaded:", bot);
           if (bot.personality) setSelectedPreset(bot.personality);
           if (bot.instructions) setCustomPrompt(bot.instructions);
           if (bot.nama_bot) setBotName(bot.nama_bot);
@@ -51,29 +49,21 @@ export const CustomPersonality = () => {
     loadBotProfile();
   }, []);
 
-  // ✅ FIX: Gunakan activeBotId dari localStorage + sertakan Authorization token
   const handleSave = async () => {
     try {
       setIsSaving(true);
 
-      // ✅ FIX #1: Ambil botId dari localStorage (bukan dari user object)
-      const activeBotId = localStorage.getItem('activeBotId');
-
-      console.log("🔵 [Profil Bot] activeBotId dari localStorage:", activeBotId);
+      const activeBotId = localStorage.getItem("activeBotId");
 
       if (!activeBotId) {
         alert("❌ Tidak ada project yang aktif. Silakan pilih project dari Navbar terlebih dahulu.");
         return;
       }
 
-      console.log("📤 [Profil Bot] Menyimpan profil:", { botId: activeBotId, personality: selectedPreset });
-
-      // ✅ FIX #2: Gunakan api utility yang sudah include token otomatis via interceptor
       const response = await updateBotSettings(Number(activeBotId), selectedPreset, customPrompt);
 
       if (response.status === 200) {
         alert("✨ Profil Bot Berhasil Disimpan!");
-        console.log("✅ [Profil Bot] Update success:", response.data);
       } else {
         alert("Gagal menyimpan: " + (response.data?.message || "Terjadi kesalahan"));
       }
@@ -91,124 +81,175 @@ export const CustomPersonality = () => {
       name: "Formal & Sopan",
       icon: Briefcase,
       desc: "Cocok untuk bisnis profesional, jasa hukum, atau instansi.",
-      preview: "Selamat siang Bapak/Ibu. Ada yang bisa saya bantu terkait layanan kami hari ini?"
+      preview: "Selamat siang Bapak/Ibu. Ada yang bisa saya bantu terkait layanan kami hari ini?",
     },
     {
       id: "casual",
       name: "Ramah & Profesional",
       icon: Smile,
       desc: "Cocok untuk toko baju, cafe, atau produk anak muda.",
-      preview: "Halo Kak! 👋 Wah, seneng banget bisa ketemu Kakak. Mau cari produk apa nih hari ini?"
+      preview: "Halo Kak! 👋 Wah, seneng banget bisa ketemu Kakak. Mau cari produk apa nih hari ini?",
     },
     {
       id: "helpful",
       name: "Asisten Ramah",
       icon: UserCircle2,
       desc: "Gaya bicara yang membantu dan fokus pada solusi.",
-      preview: "Halo! Saya di sini untuk membantu Anda. Silakan tanyakan apa saja tentang produk kami."
-    }
+      preview: "Halo! Saya di sini untuk membantu Anda. Silakan tanyakan apa saja tentang produk kami.",
+    },
   ];
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] gap-3 text-slate-400">
-        <Loader2 className="w-6 h-6 animate-spin text-[#1800ad]" />
-        <span className="text-xs font-bold uppercase tracking-widest animate-pulse">Memuat Profil Bot...</span>
+      <div className="flex min-h-[400px] items-center justify-center gap-3 text-neutral-400">
+        <Loader2 className="h-6 w-6 animate-spin text-accent-blue dark:text-accent-blue-light" />
+        <span className="animate-pulse text-xs font-semibold uppercase tracking-widest">Memuat Profil Bot...</span>
       </div>
     );
   }
 
   return (
-    // Penyesuaian: max-w-6xl agar lebih proporsional di layar 100%
-    <div className="space-y-5 max-w-6xl mx-auto px-4 pb-10">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Presets Selection */}
-        <div className="lg:col-span-2 space-y-5">
-          {/* Penyesuaian: padding dikurangi (p-5) dan rounded (rounded-2xl) */}
-          <div className="bg-brand-blue p-5 rounded-3xl border border-white/5 shadow-xl">
-            <h3 className="text-base font-bold text-white mb-5 flex items-center gap-2 uppercase tracking-tight">
-              <Sparkles className="w-4 h-4 text-white" /> Pilih Gaya Bahasa
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {presets.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => setSelectedPreset(preset.id)}
-                  className={cn(
-                    "p-4 rounded-xl border-2 text-left transition-all duration-300",
-                    selectedPreset === preset.id
-                      ? "border-[#1800ad] bg-[#1800ad]/10 shadow-lg shadow-[#1800ad]/10"
-                      : "border-white/10 hover:border-[#1800ad]/30 bg-white/5 dark:bg-slate-900/5"
-                  )}
-                >
-                  <div className={cn(
-                    "w-9 h-9 rounded-lg flex items-center justify-center mb-3 transition-colors",
-                    selectedPreset === preset.id ? "bg-[#1800ad] text-white shadow-lg shadow-[#1800ad]/30" : "bg-white/20 dark:bg-slate-900/10 text-white shadow-sm"
-                  )}>
-                    <preset.icon className="w-4 h-4" />
-                  </div>
-                  <h4 className={cn(
-                    "text-sm font-bold mb-1",
-                    selectedPreset === preset.id ? "text-[#1800ad]" : "text-white"
-                  )}>{preset.name}</h4>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter leading-tight">{preset.desc}</p>
-                </button>
-              ))}
+    <div className="mx-auto max-w-6xl space-y-5 pb-10">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-2">
+          {/* Pilih gaya bahasa */}
+          <Card className="p-6">
+            <div className="mb-5 flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-violet/10 text-accent-violet dark:bg-accent-violet/15 dark:text-accent-violet-light">
+                <Sparkles className="h-4.5 w-4.5" />
+              </div>
+              <h3 className="font-display text-base font-bold tracking-tight text-neutral-900 dark:text-white">
+                Pilih Gaya Bahasa
+              </h3>
             </div>
-          </div>
 
-          <div className="bg-brand-blue p-5 rounded-3xl border border-white/5 shadow-xl">
-            <h3 className="text-base font-bold text-white mb-3 uppercase tracking-tight">Instruksi Khusus</h3>
-            <p className="text-xs text-slate-400 mb-3 font-medium leading-relaxed">Berikan instruksi tambahan bagaimana bot harus bersikap. Contoh: "Selalu gunakan kata 'Kak' saat menyapa" atau "Jangan gunakan emoji".</p>
-            <textarea
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {presets.map((preset) => {
+                const isSelected = selectedPreset === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => setSelectedPreset(preset.id)}
+                    aria-pressed={isSelected}
+                    className={cn(
+                      "relative rounded-2xl border-2 p-4 text-left transition-all duration-200 focus-ring",
+                      isSelected
+                        ? "border-accent-blue bg-gradient-to-br from-accent-blue/[0.07] to-accent-violet/[0.05] shadow-card ring-2 ring-accent-blue/30 ring-offset-2 ring-offset-white dark:from-accent-blue/15 dark:to-accent-violet/10 dark:ring-offset-neutral-900"
+                        : "border-border-subtle bg-white hover:-translate-y-0.5 hover:border-accent-blue/50 hover:shadow-soft dark:border-neutral-800 dark:bg-neutral-900/50"
+                    )}
+                  >
+                    {/* Check indicator di pojok */}
+                    {isSelected && (
+                      <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-accent-blue to-accent-violet text-white shadow-soft ring-2 ring-white dark:ring-neutral-900">
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                      </span>
+                    )}
+
+                    <div
+                      className={cn(
+                        "mb-3 flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200",
+                        isSelected
+                          ? "bg-gradient-to-br from-accent-blue to-accent-violet text-white shadow-soft"
+                          : "bg-neutral-100 text-neutral-500 ring-1 ring-inset ring-neutral-200/70 dark:bg-neutral-800 dark:text-neutral-400 dark:ring-neutral-700"
+                      )}
+                    >
+                      <preset.icon className="h-4.5 w-4.5" />
+                    </div>
+                    <h4
+                      className={cn(
+                        "mb-1 text-sm font-bold",
+                        isSelected ? "text-accent-blue dark:text-accent-blue-light" : "text-neutral-900 dark:text-white"
+                      )}
+                    >
+                      {preset.name}
+                    </h4>
+                    <p className="text-[11px] font-medium leading-relaxed text-neutral-500 dark:text-neutral-400">
+                      {preset.desc}
+                    </p>
+
+                    <span
+                      className={cn(
+                        "mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                        isSelected
+                          ? "bg-accent-blue text-white"
+                          : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500"
+                      )}
+                    >
+                      {isSelected ? "✓ Dipilih" : "Pilih gaya"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Instruksi khusus */}
+          <Card className="p-6">
+            <h3 className="font-display text-base font-bold tracking-tight text-neutral-900 dark:text-white">
+              Instruksi Khusus
+            </h3>
+            <p className="mb-3 mt-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+              Berikan instruksi tambahan bagaimana bot harus bersikap. Contoh: "Selalu gunakan kata
+              'Kak' saat menyapa" atau "Jangan gunakan emoji".
+            </p>
+            <Textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder="Tulis instruksi khusus di sini..."
-              // Penyesuaian: padding p-4 dan min-h berkurang agar pas
-              className="w-full p-4 rounded-xl bg-white/5 dark:bg-slate-900/5 border border-white/10 focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-white text-sm resize-none min-h-[120px] font-medium placeholder:text-slate-500 dark:text-slate-400"
+              className="min-h-[130px]"
             />
-          </div>
+          </Card>
         </div>
 
-        {/* Preview Section */}
+        {/* Preview */}
         <div className="space-y-5">
-          {/* Penyesuaian: padding p-6 dan radius 3xl */}
-          <div className="bg-brand-blue rounded-3xl p-6 text-white shadow-2xl shadow-brand-blue/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1800ad]/10 rounded-full blur-2xl -mr-12 -mt-12" />
-            <h3 className="font-bold mb-1 flex items-center gap-2 uppercase tracking-widest text-[10px] relative z-10">
-              <MessageSquare className="w-3.5 h-3.5 text-white" /> Preview Suara Bot
-            </h3>
-            <p className="text-[9px] text-slate-400 mb-4 font-medium relative z-10">{botName}</p>
-            <div className="bg-white/10 dark:bg-slate-900/10 backdrop-blur-md rounded-xl p-4 italic text-xs leading-relaxed relative z-10 border border-white/10">
-              "{presets.find(p => p.id === selectedPreset)?.preview}"
-            </div>
-            <div className="mt-6 space-y-3 relative z-10">
-              <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-blue-200">
-                <span>Kreativitas</span>
-                <span>Tinggi</span>
-              </div>
-              <div className="h-1.5 w-full bg-white/10 dark:bg-slate-900/10 rounded-full overflow-hidden">
-                <div className="h-full w-3/4 bg-[#1800ad] shadow-[0_0_15px_rgba(24,0,173,0.5)]" />
-              </div>
-            </div>
-          </div>
+          <Card className="relative overflow-hidden">
+            <div className="absolute -right-12 -top-12 h-24 w-24 rounded-full bg-accent-violet/10 blur-2xl" />
 
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            // Penyesuaian: padding py-4 dan text-base
-            className="w-full bg-[#1800ad] text-white py-4 rounded-xl font-bold text-base shadow-xl shadow-[#1800ad]/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
-          >
+            <div className="relative z-10 p-6">
+              <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                <MessageSquare className="h-3.5 w-3.5" /> Preview Suara Bot
+              </div>
+              <p className="mb-4 text-[11px] font-medium text-neutral-400">{botName}</p>
+
+              <div className="rounded-2xl border border-border-subtle bg-neutral-50 p-4 text-xs italic leading-relaxed text-neutral-700 dark:border-neutral-800 dark:bg-neutral-800/50 dark:text-neutral-200">
+                "{presets.find((p) => p.id === selectedPreset)?.preview}"
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <div className="flex justify-between text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                  <span>Kreativitas</span>
+                  <span className="text-accent-blue dark:text-accent-blue-light">Tinggi</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                  <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-accent-blue to-accent-violet" />
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center gap-2 rounded-xl bg-accent-green/5 px-3 py-2.5">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-accent-green" />
+                <span className="text-[11px] font-semibold text-accent-green-dark dark:text-accent-green-light">
+                  Bot siap merespon pelanggan
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          <Button onClick={handleSave} disabled={isSaving} className="w-full py-3.5 text-sm">
             {isSaving ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Menyimpan...</>
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" /> Menyimpan...
+              </>
             ) : (
-              <><Save className="w-5 h-5" /> Simpan Perubahan</>
+              <>
+                <Save className="h-4.5 w-4.5" /> Simpan Perubahan
+              </>
             )}
-          </button>
+          </Button>
 
-          <button className="w-full bg-white dark:bg-slate-900 text-brand-blue dark:text-white border border-slate-200 dark:border-slate-800 py-4 rounded-xl font-bold text-sm hover:bg-slate-50 dark:bg-slate-800/50 transition-all flex items-center justify-center gap-2 shadow-sm">
-            <Play className="w-4 h-4 text-[#1800ad]" /> Coba di Playground
-          </button>
+          <Button variant="secondary" className="w-full py-3.5 text-sm">
+            <Play className="h-4 w-4 text-accent-blue dark:text-accent-blue-light" /> Coba di Playground
+          </Button>
         </div>
       </div>
     </div>

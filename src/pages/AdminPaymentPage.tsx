@@ -1,283 +1,329 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, XCircle, Clock, Search, Eye } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Search, Eye, Wallet, UserCheck } from "lucide-react";
 import {
-    adminGetPaymentProofs,
-    adminReviewPayment,
-    adminGetSubscriptions,
+  adminGetPaymentProofs,
+  adminReviewPayment,
+  adminGetSubscriptions,
 } from "../lib/api";
+import { Badge, Button, Card, EmptyState, Input, PageHeader, Textarea } from "../components/ui";
+
+const STATUS_BADGE: Record<string, { variant: "warning" | "success" | "danger" | "neutral"; label: string }> = {
+  pending: { variant: "warning", label: "Menunggu" },
+  approved: { variant: "success", label: "Disetujui" },
+  rejected: { variant: "danger", label: "Ditolak" },
+};
+
+const SUB_STATUS_BADGE: Record<string, { variant: "success" | "warning" | "neutral"; label: string }> = {
+  active: { variant: "success", label: "Aktif" },
+  expired: { variant: "warning", label: "Kedaluwarsa" },
+};
 
 export const AdminPaymentPage: React.FC = () => {
-    const [proofs, setProofs] = useState<any[]>([]);
-    const [subscriptions, setSubscriptions] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<string>("pending");
-    const [reviewing, setReviewing] = useState<number | null>(null);
-    const [adminNote, setAdminNote] = useState("");
-    const [selectedProof, setSelectedProof] = useState<any>(null);
-    const [showDetail, setShowDetail] = useState(false);
+  const [proofs, setProofs] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>("pending");
+  const [reviewing, setReviewing] = useState<number | null>(null);
+  const [adminNote, setAdminNote] = useState("");
+  const [selectedProof, setSelectedProof] = useState<any>(null);
+  const [showDetail, setShowDetail] = useState(false);
 
-    const fetchData = async () => {
-        try {
-            const [proofsRes, subsRes] = await Promise.all([
-                adminGetPaymentProofs(filter),
-                adminGetSubscriptions(),
-            ]);
-            setProofs(proofsRes.data?.data || []);
-            setSubscriptions(subsRes.data?.data || []);
-        } catch (err) {
-            console.error("Admin payment fetch error:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        setLoading(true);
-        fetchData();
-    }, [filter]);
-
-    const handleReview = async (proofId: number, action: "approve" | "reject") => {
-        setReviewing(proofId);
-        try {
-            await adminReviewPayment(proofId, action, adminNote || undefined);
-            alert(action === "approve" ? "Pembayaran disetujui!" : "Pembayaran ditolak.");
-            setAdminNote("");
-            fetchData();
-        } catch (err: any) {
-            alert(err?.response?.data?.message || "Gagal memproses review.");
-        } finally {
-            setReviewing(null);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-slate-400">Memuat data pembayaran...</div>
-            </div>
-        );
+  const fetchData = async () => {
+    try {
+      const [proofsRes, subsRes] = await Promise.all([
+        adminGetPaymentProofs(filter),
+        adminGetSubscriptions(),
+      ]);
+      setProofs(proofsRes.data?.data || []);
+      setSubscriptions(subsRes.data?.data || []);
+    } catch (err) {
+      console.error("Admin payment fetch error:", err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
+    setLoading(true);
+    fetchData();
+  }, [filter]);
+
+  const handleReview = async (proofId: number, action: "approve" | "reject") => {
+    setReviewing(proofId);
+    try {
+      await adminReviewPayment(proofId, action, adminNote || undefined);
+      alert(action === "approve" ? "Pembayaran disetujui!" : "Pembayaran ditolak.");
+      setAdminNote("");
+      fetchData();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Gagal memproses review.");
+    } finally {
+      setReviewing(null);
+    }
+  };
+
+  if (loading) {
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-2xl font-bold text-white">Admin — Pembayaran</h1>
-                <p className="text-slate-400 mt-1">Tinjau bukti transfer dan kelola langganan pengguna.</p>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex gap-2">
-                {["pending", "approved", "rejected", ""].map((f) => (
-                    <button
-                        key={f || "all"}
-                        onClick={() => setFilter(f)}
-                        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                            filter === f
-                                ? "bg-blue-500 text-white"
-                                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                        }`}
-                    >
-                        {f === "" ? "Semua" : f === "pending" ? "Menunggu" : f === "approved" ? "Disetujui" : "Ditolak"}
-                    </button>
-                ))}
-            </div>
-
-            {/* Pending Proofs Table */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
-                <div className="p-4 border-b border-slate-700">
-                    <h3 className="text-white font-semibold">Bukti Pembayaran</h3>
-                </div>
-                {proofs.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400">Tidak ada data.</div>
-                ) : (
-                    <div className="divide-y divide-slate-700">
-                        {proofs.map((p: any) => (
-                            <div key={p.id} className="p-4 flex items-center justify-between gap-4">
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                            {p.user?.nama_toko?.[0]?.toUpperCase() || "U"}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-white font-medium truncate">{p.user?.nama_toko}</p>
-                                            <p className="text-slate-400 text-xs truncate">{p.user?.email}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-right shrink-0">
-                                    <p className="text-white font-semibold">Rp{p.amount.toLocaleString("id-ID")}</p>
-                                    <p className="text-slate-400 text-xs">
-                                        {new Date(p.createdAt).toLocaleDateString("id-ID")}
-                                    </p>
-                                    {p.subscription && (
-                                        <p className="text-slate-500 text-xs">Plan: {p.subscription.planType}</p>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    {p.proofUrl && (
-                                        <button
-                                            onClick={() => {
-                                                setSelectedProof(p);
-                                                setShowDetail(true);
-                                            }}
-                                            className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300"
-                                            title="Lihat bukti"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                    {p.status === "pending" && (
-                                        <>
-                                            <button
-                                                onClick={() => handleReview(p.id, "approve")}
-                                                disabled={reviewing === p.id}
-                                                className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50"
-                                                title="Setujui"
-                                            >
-                                                <CheckCircle className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleReview(p.id, "reject")}
-                                                disabled={reviewing === p.id}
-                                                className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 disabled:opacity-50"
-                                                title="Tolak"
-                                            >
-                                                <XCircle className="w-4 h-4" />
-                                            </button>
-                                        </>
-                                    )}
-                                    {p.status !== "pending" && (
-                                        <span
-                                            className={`text-xs px-2 py-0.5 rounded-full ${
-                                                p.status === "approved"
-                                                    ? "bg-emerald-500/20 text-emerald-300"
-                                                    : "bg-red-500/20 text-red-300"
-                                            }`}
-                                        >
-                                            {p.status === "approved" ? "Disetujui" : "Ditolak"}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Active Subscriptions */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
-                <div className="p-4 border-b border-slate-700">
-                    <h3 className="text-white font-semibold">Semua Langganan</h3>
-                </div>
-                {subscriptions.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400">Tidak ada langganan.</div>
-                ) : (
-                    <div className="divide-y divide-slate-700">
-                        {subscriptions.map((s: any) => (
-                            <div key={s.id} className="p-4 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                        {s.user?.nama_toko?.[0]?.toUpperCase() || "U"}
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-medium">{s.user?.nama_toko}</p>
-                                        <p className="text-slate-400 text-xs">{s.user?.email}</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-white text-sm font-semibold">
-                                        {s.planType}
-                                    </p>
-                                    <p className="text-slate-400 text-xs">
-                                        Kuota: {s.tokensUsedToday?.toLocaleString() || 0}/{s.dailyTokenQuota?.toLocaleString()}
-                                    </p>
-                                </div>
-                                <span
-                                    className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                                        s.status === "active"
-                                            ? "bg-emerald-500/20 text-emerald-300"
-                                            : s.status === "expired"
-                                            ? "bg-amber-500/20 text-amber-300"
-                                            : "bg-slate-600 text-slate-300"
-                                    }`}
-                                >
-                                    {s.status}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Detail Modal */}
-            {showDetail && selectedProof && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-lg space-y-4">
-                        <h2 className="text-xl font-bold text-white">Detail Pembayaran</h2>
-                        <div className="space-y-2 text-sm">
-                            <p className="text-slate-300">
-                                <span className="text-slate-500">User:</span> {selectedProof.user?.nama_toko} ({selectedProof.user?.email})
-                            </p>
-                            <p className="text-slate-300">
-                                <span className="text-slate-500">Jumlah:</span> Rp{selectedProof.amount.toLocaleString("id-ID")}
-                            </p>
-                            <p className="text-slate-300">
-                                <span className="text-slate-500">Plan:</span> {selectedProof.subscription?.planType}
-                            </p>
-                            <p className="text-slate-300">
-                                <span className="text-slate-500">Tanggal:</span>{" "}
-                                {new Date(selectedProof.createdAt).toLocaleString("id-ID")}
-                            </p>
-                        </div>
-                        {selectedProof.proofUrl && (
-                            <div>
-                                <p className="text-slate-400 text-sm mb-2">Bukti Transfer:</p>
-                                <img
-                                    src={`${import.meta.env.VITE_API_URL || ''}${selectedProof.proofUrl}`}
-                                    alt="Bukti transfer"
-                                    className="rounded-xl border border-slate-700 max-h-64 object-contain w-full"
-                                />
-                            </div>
-                        )}
-                        {selectedProof.status === "pending" && (
-                            <div className="space-y-3 pt-2">
-                                <textarea
-                                    value={adminNote}
-                                    onChange={(e) => setAdminNote(e.target.value)}
-                                    placeholder="Catatan admin (opsional)"
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm resize-none"
-                                    rows={2}
-                                />
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => handleReview(selectedProof.id, "approve")}
-                                        disabled={reviewing === selectedProof.id}
-                                        className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 disabled:opacity-50 transition-colors"
-                                    >
-                                        {reviewing === selectedProof.id ? "Memproses..." : "Setujui"}
-                                    </button>
-                                    <button
-                                        onClick={() => handleReview(selectedProof.id, "reject")}
-                                        disabled={reviewing === selectedProof.id}
-                                        className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors"
-                                    >
-                                        {reviewing === selectedProof.id ? "Memproses..." : "Tolak"}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                        <button
-                            onClick={() => {
-                                setShowDetail(false);
-                                setSelectedProof(null);
-                            }}
-                            className="w-full py-2.5 rounded-xl bg-slate-700 text-white text-sm font-semibold hover:bg-slate-600 transition-colors"
-                        >
-                            Tutup
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-neutral-200 border-t-accent-blue dark:border-neutral-700 dark:border-t-accent-blue-light" />
+      </div>
     );
+  }
+
+  const tabs: { id: string; label: string }[] = [
+    { id: "pending", label: "Menunggu" },
+    { id: "approved", label: "Disetujui" },
+    { id: "rejected", label: "Ditolak" },
+    { id: "", label: "Semua" },
+  ];
+
+  return (
+    <div className="space-y-6 pb-10">
+      <PageHeader
+        title="Admin — Pembayaran"
+        description="Tinjau bukti transfer dan kelola langganan pengguna."
+      />
+
+      {/* Filter tabs */}
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id || "all"}
+            onClick={() => setFilter(tab.id)}
+            className={cnx(
+              "rounded-xl px-4 py-2 text-xs font-semibold transition-all focus-ring",
+              filter === tab.id
+                ? "bg-accent-blue text-white shadow-soft"
+                : "border border-border-subtle bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Bukti pembayaran */}
+      <Card className="overflow-hidden">
+        <div className="flex items-center gap-2.5 border-b border-border-subtle p-4 dark:border-neutral-800">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue dark:bg-accent-blue/15 dark:text-accent-blue-light">
+            <Wallet className="h-4.5 w-4.5" />
+          </div>
+          <h3 className="font-display text-sm font-bold tracking-tight text-neutral-900 dark:text-white">
+            Bukti Pembayaran
+          </h3>
+        </div>
+
+        {proofs.length === 0 ? (
+          <EmptyState icon={Search} title="Tidak ada data" description="Coba ubah filter status di atas." />
+        ) : (
+          <div className="divide-y divide-border-subtle dark:divide-neutral-800">
+            {proofs.map((p: any) => {
+              const badge = STATUS_BADGE[p.status] || STATUS_BADGE.pending;
+              return (
+                <div key={p.id} className="flex flex-wrap items-center justify-between gap-4 p-4 transition-colors hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue to-accent-violet text-xs font-bold uppercase text-white shadow-soft">
+                      {p.user?.nama_toko?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-neutral-900 dark:text-white">
+                        {p.user?.nama_toko}
+                      </p>
+                      <p className="truncate text-xs text-neutral-400">{p.user?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <p className="font-display text-sm font-bold text-neutral-900 dark:text-white">
+                      Rp{p.amount.toLocaleString("id-ID")}
+                    </p>
+                    <p className="text-xs text-neutral-400">
+                      {new Date(p.createdAt).toLocaleDateString("id-ID")}
+                    </p>
+                    {p.subscription && (
+                      <p className="text-[11px] font-medium text-neutral-400">Plan: {p.subscription.planType}</p>
+                    )}
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {p.proofUrl && (
+                      <button
+                        onClick={() => {
+                          setSelectedProof(p);
+                          setShowDetail(true);
+                        }}
+                        className="rounded-lg border border-border-subtle bg-white p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800 focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                        title="Lihat bukti"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    )}
+                    {p.status === "pending" ? (
+                      <>
+                        <button
+                          onClick={() => handleReview(p.id, "approve")}
+                          disabled={reviewing === p.id}
+                          className="rounded-lg bg-accent-green/10 p-2 text-accent-green transition-colors hover:bg-accent-green/20 focus-ring disabled:opacity-50"
+                          title="Setujui"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleReview(p.id, "reject")}
+                          disabled={reviewing === p.id}
+                          className="rounded-lg bg-accent-pink/10 p-2 text-accent-pink transition-colors hover:bg-accent-pink/20 focus-ring disabled:opacity-50"
+                          title="Tolak"
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <Badge variant={badge.variant} dot>{badge.label}</Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Semua langganan */}
+      <Card className="overflow-hidden">
+        <div className="flex items-center gap-2.5 border-b border-border-subtle p-4 dark:border-neutral-800">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-violet/10 text-accent-violet dark:bg-accent-violet/15 dark:text-accent-violet-light">
+            <UserCheck className="h-4.5 w-4.5" />
+          </div>
+          <h3 className="font-display text-sm font-bold tracking-tight text-neutral-900 dark:text-white">
+            Semua Langganan
+          </h3>
+        </div>
+
+        {subscriptions.length === 0 ? (
+          <EmptyState icon={UserCheck} title="Tidak ada langganan" />
+        ) : (
+          <div className="divide-y divide-border-subtle dark:divide-neutral-800">
+            {subscriptions.map((s: any) => {
+              const badge = SUB_STATUS_BADGE[s.status] || { variant: "neutral" as const, label: s.status };
+              return (
+                <div key={s.id} className="flex flex-wrap items-center justify-between gap-4 p-4 transition-colors hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue to-accent-violet text-xs font-bold uppercase text-white shadow-soft">
+                      {s.user?.nama_toko?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900 dark:text-white">{s.user?.nama_toko}</p>
+                      <p className="text-xs text-neutral-400">{s.user?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-neutral-900 dark:text-white">{s.planType}</p>
+                    <p className="text-xs text-neutral-400">
+                      Kuota: {s.tokensUsedToday?.toLocaleString() || 0}/{s.dailyTokenQuota?.toLocaleString()}
+                    </p>
+                  </div>
+
+                  <Badge variant={badge.variant} dot className="shrink-0">{badge.label}</Badge>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Modal detail */}
+      {showDetail && selectedProof && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 animate-fade-in bg-neutral-950/50 backdrop-blur-sm"
+            onClick={() => {
+              setShowDetail(false);
+              setSelectedProof(null);
+            }}
+          />
+          <div className="relative w-full max-w-lg space-y-4 rounded-3xl border border-border-subtle bg-white p-6 shadow-pop animate-pop-in dark:border-neutral-800 dark:bg-neutral-900">
+            <h2 className="font-display text-lg font-bold tracking-tight text-neutral-900 dark:text-white">
+              Detail Pembayaran
+            </h2>
+            <div className="space-y-2.5 rounded-2xl border border-border-subtle bg-neutral-50/60 p-4 text-sm dark:border-neutral-800 dark:bg-neutral-800/40">
+              <p className="flex justify-between gap-4 text-neutral-600 dark:text-neutral-300">
+                <span className="text-neutral-400">User</span>
+                <span className="text-right font-medium">{selectedProof.user?.nama_toko} ({selectedProof.user?.email})</span>
+              </p>
+              <p className="flex justify-between gap-4 text-neutral-600 dark:text-neutral-300">
+                <span className="text-neutral-400">Jumlah</span>
+                <span className="font-display font-bold text-neutral-900 dark:text-white">
+                  Rp{selectedProof.amount.toLocaleString("id-ID")}
+                </span>
+              </p>
+              <p className="flex justify-between gap-4 text-neutral-600 dark:text-neutral-300">
+                <span className="text-neutral-400">Plan</span>
+                <span className="font-medium">{selectedProof.subscription?.planType}</span>
+              </p>
+              <p className="flex justify-between gap-4 text-neutral-600 dark:text-neutral-300">
+                <span className="text-neutral-400">Tanggal</span>
+                <span className="font-medium">{new Date(selectedProof.createdAt).toLocaleString("id-ID")}</span>
+              </p>
+            </div>
+
+            {selectedProof.proofUrl && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">Bukti Transfer</p>
+                <img
+                  src={`${import.meta.env.VITE_API_URL || ""}${selectedProof.proofUrl}`}
+                  alt="Bukti transfer"
+                  className="max-h-64 w-full rounded-2xl border border-border-subtle object-contain dark:border-neutral-700"
+                />
+              </div>
+            )}
+
+            {selectedProof.status === "pending" && (
+              <div className="space-y-3 pt-1">
+                <Textarea
+                  value={adminNote}
+                  onChange={(e) => setAdminNote(e.target.value)}
+                  placeholder="Catatan admin (opsional)"
+                  className="min-h-[64px]"
+                />
+                <div className="flex gap-2.5">
+                  <Button
+                    variant="success"
+                    className="flex-1"
+                    onClick={() => handleReview(selectedProof.id, "approve")}
+                    disabled={reviewing === selectedProof.id}
+                  >
+                    {reviewing === selectedProof.id ? "Memproses..." : "Setujui"}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    className="flex-1"
+                    onClick={() => handleReview(selectedProof.id, "reject")}
+                    disabled={reviewing === selectedProof.id}
+                  >
+                    {reviewing === selectedProof.id ? "Memproses..." : "Tolak"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => {
+                setShowDetail(false);
+                setSelectedProof(null);
+              }}
+            >
+              Tutup
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
+
+function cnx(...classes: (string | false | undefined | null)[]) {
+  return classes.filter(Boolean).join(" ");
+}

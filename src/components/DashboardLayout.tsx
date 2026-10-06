@@ -24,6 +24,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
 import { cn } from "../lib/utils";
 import { Logo } from "./Logo";
+import { Badge, Button, Input, Modal } from "./ui";
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -36,14 +37,24 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, href, acti
   <Link
     to={href}
     className={cn(
-      "flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-300 group relative",
+      "group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all duration-200 focus-ring",
       active
-        ? "bg-[#1800ad] text-white shadow-lg shadow-[#1800ad]/20"
-        : "text-slate-400 hover:text-white hover:bg-white/5"
+        ? "bg-accent-blue/[0.08] text-accent-blue dark:bg-accent-blue/15 dark:text-accent-blue-light"
+        : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-800/60 dark:hover:text-neutral-100"
     )}
   >
-    <Icon className={cn("w-4.5 h-4.5 transition-colors", active ? "text-white" : "text-slate-500 group-hover:text-slate-300")} />
-    <span className={cn("font-semibold text-xs tracking-tight", active ? "text-white" : "text-slate-400 group-hover:text-slate-200")}>{label}</span>
+    {active && (
+      <span className="absolute right-3 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-accent-blue dark:bg-accent-blue-light" />
+    )}
+    <Icon
+      className={cn(
+        "h-4.5 w-4.5 shrink-0 transition-colors",
+        active ? "text-accent-blue dark:text-accent-blue-light" : "text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300"
+      )}
+    />
+    <span className={cn("text-xs font-semibold tracking-tight", active ? "text-accent-blue dark:text-accent-blue-light" : "text-neutral-500 group-hover:text-neutral-800 dark:text-neutral-400 dark:group-hover:text-neutral-100")}>
+      {label}
+    </span>
   </Link>
 );
 
@@ -75,7 +86,6 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           nama: userData.nama || "Admin",
           toko: savedStore || "Toko JagoBot"
         });
-        console.log("✅ Profile loaded:", { nama: userData.nama, toko: savedStore });
       } catch (error) {
         console.error("Error loading profile:", error);
         setProfile({ nama: "Admin", toko: "Toko JagoBot" });
@@ -84,11 +94,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
     const fetchBots = async () => {
       try {
-        console.log("🔵 [FetchBots] Fetching user bots...");
         const bots = await getUserBots();
-        console.log("🟢 [FetchBots] Bots data:", bots);
-        console.log("🟢 [FetchBots] Bots count:", bots?.length || 0);
-
         const normalizedBots = Array.isArray(bots) ? bots : [];
         setUserBots(normalizedBots);
 
@@ -101,11 +107,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           if (!isStoredIdValid) {
             // activeBotId tidak valid (sisa sesi lama / user berbeda) → reset ke bot pertama
             const firstBotId = normalizedBots[0].id.toString();
-            console.log("🔄 [FetchBots] activeBotId tidak valid, reset ke bot pertama:", firstBotId);
             localStorage.setItem('activeBotId', firstBotId);
             setActiveBotId(firstBotId);
           } else {
-            console.log("🟢 [FetchBots] Active bot valid:", storedId);
             setActiveBotId(storedId);
           }
         }
@@ -124,7 +128,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     setIsSwitching(true);
     localStorage.setItem('activeBotId', newId);
     setActiveBotId(newId);
-    
+
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -132,42 +136,29 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
   const handleCreateBot = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newBotName.trim()) {
       alert("Nama project tidak boleh kosong");
       return;
     }
 
-    console.log("🔵 [CreateBot] Mulai membuat project dengan nama:", newBotName);
     setIsCreatingBot(true);
     try {
-      console.log("🔵 [CreateBot] Mengirim request ke /api/dashboard/create-bot");
       const response = await createProject(newBotName);
-      
-      console.log("🟢 [CreateBot] Response dari backend:", response);
-      console.log("🟢 [CreateBot] Response data:", response.data);
-      console.log("🟢 [CreateBot] Bot object:", response.data.data?.bot);
-      
+
       // Struktur respons bisa: { data: { bot: { id } } } atau { bot: { id } } atau { id }
       const newBotId = (response.data.data?.bot?.id || response.data.bot?.id || response.data.id).toString();
-      
-      console.log("🟢 [CreateBot] New Bot ID extracted:", newBotId);
-      console.log("🟢 [CreateBot] Menyimpan ke localStorage dengan key 'activeBotId':", newBotId);
-      
+
       localStorage.setItem('activeBotId', newBotId);
       setActiveBotId(newBotId);
       setIsModalOpen(false);
       setNewBotName("");
-      
-      console.log("🟢 [CreateBot] Modal ditutup, menunggu 500ms sebelum reload...");
-      
+
       setTimeout(() => {
-        console.log("🟢 [CreateBot] Executing window.location.reload()");
         window.location.reload();
       }, 500);
     } catch (error: any) {
       console.error("🔴 [CreateBot] Error:", error);
-      console.error("🔴 [CreateBot] Error response:", error.response);
       alert(error.response?.data?.message || "Gagal membuat project baru. Silakan coba lagi.");
     } finally {
       setIsCreatingBot(false);
@@ -184,20 +175,38 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     { icon: CreditCard, label: "Pembayaran", href: "/dashboard/payment" },
   ];
 
+  // Judul + subjudul header per halaman
+  const pageMeta: Record<string, { title: string; subtitle: string }> = {
+    "/dashboard": { title: "Dashboard", subtitle: "Kelola chatbot bisnis Anda" },
+    "/dashboard/knowledge": { title: "Knowledge Base", subtitle: "Latih bot dengan pengetahuan toko Anda" },
+    "/dashboard/personality": { title: "Profil Bot", subtitle: "Atur gaya bicara & kepribadian bot" },
+    "/dashboard/playground": { title: "Playground", subtitle: "Uji coba respon bot Anda" },
+    "/dashboard/integration": { title: "Integrasi", subtitle: "Hubungkan channel komunikasi bisnis" },
+    "/dashboard/analytics": { title: "Analitik", subtitle: "Pantau performa chatbot Anda" },
+    "/dashboard/payment": { title: "Pembayaran", subtitle: "Kelola paket & langganan Anda" },
+  };
+  const currentMeta = pageMeta[location.pathname] || {
+    title: menuItems.find((item) => item.href === location.pathname)?.label || "Dashboard",
+    subtitle: "Kelola chatbot bisnis Anda",
+  };
+
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300 flex overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden bg-surface transition-colors duration-300 dark:bg-surface-dark">
+      {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-[#0f172a] to-[#1e293b] dark:from-slate-950 dark:to-slate-900 text-white transition-transform duration-500 ease-in-out transform lg:translate-x-0 border-r border-white/5 dark:border-slate-800 flex flex-col",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border-subtle bg-white text-neutral-800 transition-transform duration-300 ease-out dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 lg:translate-x-0",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center px-6 py-10">
-          <Logo iconSize={40} textSize="text-2xl" />
+        <div className="flex items-center px-6 pb-6 pt-8">
+          <Logo iconSize={38} />
         </div>
 
-        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar scrollbar-hide">
-          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 ml-3">Menu Utama</p>
+        <nav className="custom-scrollbar flex-1 space-y-1 overflow-y-auto px-4">
+          <p className="mb-3 ml-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+            Menu Utama
+          </p>
           {menuItems.map((item) => (
             <SidebarItem
               key={item.href}
@@ -209,83 +218,102 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5 mt-auto">
-          <button 
-            onClick={() => setIsHelpOpen(!isHelpOpen)}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-300"
-          >
-            <HelpCircle className="w-4.5 h-4.5 text-slate-500" />
-            <span className="font-semibold text-xs tracking-tight">Pusat Bantuan</span>
-          </button>
+        {/* Kartu Pusat Bantuan */}
+        <div className="mt-auto p-4">
+          <div className="rounded-2xl border border-accent-blue/15 bg-accent-blue/[0.04] p-4 dark:border-accent-blue/20 dark:bg-accent-blue/10">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-accent-blue shadow-soft dark:bg-neutral-800 dark:text-accent-blue-light">
+                <HelpCircle className="h-4 w-4" />
+              </span>
+              <p className="text-xs font-bold text-neutral-900 dark:text-white">Pusat Bantuan</p>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
+              Butuh bantuan tim JagoBot? Kami siap membantu Anda.
+            </p>
+            <a
+              href="https://wa.me/628123456789"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border-subtle bg-white py-2 text-xs font-semibold text-accent-blue shadow-soft transition-all hover:bg-neutral-50 focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-accent-blue-light dark:hover:bg-neutral-700"
+            >
+              Hubungi Support
+            </a>
+          </div>
         </div>
       </aside>
 
-      <div className="lg:ml-64 flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-between shrink-0">
+      {/* ── Area konten ─────────────────────────────────────── */}
+      <div className="flex h-screen flex-1 flex-col overflow-hidden lg:ml-64">
+        <header className="sticky top-0 z-40 flex shrink-0 items-center justify-between border-b border-border-subtle bg-white/80 px-4 py-3 backdrop-blur-md transition-colors dark:border-neutral-800 dark:bg-surface-dark/80 lg:px-6">
           <button
-            className="lg:hidden p-2 text-slate-600 dark:text-slate-300 mr-4"
+            className="mr-2 rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 focus-ring dark:text-neutral-300 dark:hover:bg-neutral-800 lg:hidden"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          <div className="flex-1 lg:flex hidden items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-100 dark:border-emerald-900/50 mr-4">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">System Online</span>
+          <div className="hidden flex-1 items-center gap-4 lg:flex">
+            <div>
+              <h1 className="font-display text-sm font-bold tracking-tight text-neutral-900 dark:text-white">
+                {currentMeta.title}
+              </h1>
+              <p className="text-[11px] font-medium text-neutral-400">{currentMeta.subtitle}</p>
             </div>
-            <h1 className="text-md font-bold tracking-tight text-[#1800ad] dark:text-white uppercase">
-              {menuItems.find(item => item.href === location.pathname)?.label || "Dashboard"}
-            </h1>
 
-            <div className="flex items-center gap-2 ml-4 pl-4 border-l border-slate-100 dark:border-slate-800">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Project:</span>
-              <div className="flex items-center gap-2">
-                <div className="relative group">
-                  <select
-                    value={activeBotId || ''}
-                    onChange={(e) => {
-                      const selectedValue = e.target.value;
-                      if (selectedValue === 'new_project') {
-                        setIsModalOpen(true);
-                        return;
-                      }
-                      handleProjectSwitch(selectedValue);
-                    }}
-                    className="appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-[#1800ad] dark:text-blue-400 py-1.5 pl-3 pr-8 rounded-lg outline-none cursor-pointer hover:border-[#1800ad]/30 transition-all shadow-sm min-w-[180px]"
-                  >
-                    {userBots.length === 0 && (
-                      <option value="" disabled>
-                        Belum ada project
-                      </option>
-                    )}
-                    {userBots.map((bot) => (
-                      <option key={bot.id} value={bot.id.toString()}>
-                        {bot.nama_bot}
-                      </option>
-                    ))}
-                    <option value="new_project" className="font-bold text-blue-600">
-                      + Tambah Project Baru
-                    </option>
-                  </select>
-                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none transition-transform group-hover:text-[#1800ad]" />
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shrink-0"
-                  title="Tambah Project Baru"
+            <div className="ml-2 flex items-center gap-2 border-l border-border-subtle pl-4 dark:border-neutral-800">
+              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
+                Project
+              </span>
+              <div className="relative">
+                <select
+                  value={activeBotId || ''}
+                  onChange={(e) => {
+                    const selectedValue = e.target.value;
+                    if (selectedValue === 'new_project') {
+                      setIsModalOpen(true);
+                      return;
+                    }
+                    handleProjectSwitch(selectedValue);
+                  }}
+                  className="min-w-[180px] cursor-pointer appearance-none rounded-xl border border-neutral-200 bg-white py-2 pl-3 pr-9 text-xs font-semibold text-neutral-800 shadow-soft outline-none transition-all hover:border-accent-blue/40 focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
                 >
-                  <Plus className="w-4 h-4" />
-                </button>
+                  {userBots.length === 0 && (
+                    <option value="" disabled>
+                      Belum ada project
+                    </option>
+                  )}
+                  {userBots.map((bot) => (
+                    <option key={bot.id} value={bot.id.toString()}>
+                      {bot.nama_bot}
+                    </option>
+                  ))}
+                  <option value="new_project" className="font-semibold text-accent-blue">
+                    + Tambah Project Baru
+                  </option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
               </div>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-1.5 rounded-xl border border-accent-blue/25 bg-accent-blue/5 p-2 text-accent-blue shadow-soft transition-colors hover:bg-accent-blue/10 focus-ring dark:border-accent-blue/30 dark:bg-accent-blue/15 dark:text-accent-blue-light"
+                title="Tambah Project Baru"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Status online */}
+            <Badge variant="success" dot pulseDot className="mr-1 hidden md:inline-flex">
+              Online
+            </Badge>
+
+            {/* Pusat Bantuan */}
             <div className="relative">
               <button
                 onClick={() => setIsHelpOpen(!isHelpOpen)}
-                className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="rounded-xl border border-transparent p-2 text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 focus-ring dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                 title="Help Center"
               >
                 <HelpCircle size={18} />
@@ -294,35 +322,35 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               {isHelpOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsHelpOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-20 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-2">
-                      <h3 className="text-xs font-bold uppercase tracking-widest text-[#1800ad] dark:text-white">Pusat Bantuan</h3>
-                      <p className="text-[9px] text-slate-400 font-medium">Kami siap membantu Anda</p>
+                  <div className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-border-subtle bg-white py-2 shadow-pop animate-pop-in dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="mb-2 border-b border-border-subtle px-4 py-3 dark:border-neutral-800">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-900 dark:text-white">Pusat Bantuan</h3>
+                      <p className="mt-0.5 text-[11px] text-neutral-400">Kami siap membantu Anda</p>
                     </div>
-                    
+
                     <a
                       href="https://wa.me/628123456789"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-[#1800ad] transition-all"
+                      className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-neutral-600 transition-all hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
                     >
-                      <MessageSquare size={14} className="text-emerald-500" />
+                      <MessageSquare size={14} className="text-accent-green" />
                       Chat WhatsApp Support
                     </a>
 
                     <a
                       href="#"
-                      className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-[#1800ad] transition-all"
+                      className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-neutral-600 transition-all hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
                     >
-                      <Database size={14} className="text-blue-500" />
+                      <Database size={14} className="text-accent-blue" />
                       Dokumentasi JagoBot
                     </a>
 
                     <a
                       href="mailto:support@jagobot.com"
-                      className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-[#1800ad] transition-all"
+                      className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-neutral-600 transition-all hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
                     >
-                      <RefreshCw size={14} className="text-amber-500" />
+                      <RefreshCw size={14} className="text-accent-orange" />
                       Kirim Tiket Bantuan
                     </a>
                   </div>
@@ -330,36 +358,39 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               )}
             </div>
 
+            {/* Notifikasi */}
             <div className="relative">
               <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative"
+                className="relative rounded-xl border border-transparent p-2 text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 focus-ring dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
               >
                 <Bell size={18} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-800" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-white bg-accent-pink dark:border-surface-dark" />
               </button>
-              
+
               {isNotificationsOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsNotificationsOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-20 overflow-hidden">
-                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                      <h3 className="text-xs font-bold uppercase tracking-widest text-[#1800ad] dark:text-white">Notifikasi Masuk</h3>
-                      <Link to="/dashboard/notifications?tab=settings" onClick={() => setIsNotificationsOpen(false)} className="text-[10px] font-bold text-slate-400 hover:text-[#1800ad]">Pengaturan</Link>
+                  <div className="absolute right-0 z-20 mt-2 w-80 overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-pop animate-pop-in dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="flex items-center justify-between border-b border-border-subtle p-4 dark:border-neutral-800">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-900 dark:text-white">Notifikasi Masuk</h3>
+                      <Link to="/dashboard/notifications?tab=settings" onClick={() => setIsNotificationsOpen(false)} className="text-[11px] font-semibold text-accent-blue hover:underline">
+                        Pengaturan
+                      </Link>
                     </div>
-                    <div className="max-h-64 overflow-y-auto">
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar">
                       {[1, 2].map((i) => (
-                        <div key={i} className="p-4 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Ada Pesan Baru!</p>
-                          <p className="text-[10px] text-slate-500 line-clamp-1">Pelanggan menanyakan harga produk...</p>
-                          <p className="text-[8px] text-slate-400 mt-2 uppercase font-bold tracking-tighter">Baru saja</p>
+                        <div key={i} className="cursor-pointer border-b border-border-subtle/60 p-4 transition-colors last:border-b-0 hover:bg-neutral-50 dark:border-neutral-800/60 dark:hover:bg-neutral-800/40">
+                          <p className="mb-0.5 text-xs font-semibold text-neutral-800 dark:text-neutral-100">Ada Pesan Baru!</p>
+                          <p className="line-clamp-1 text-[11px] text-neutral-500 dark:text-neutral-400">Pelanggan menanyakan harga produk...</p>
+                          <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wider text-neutral-400">Baru saja</p>
                         </div>
                       ))}
                     </div>
-                    <Link 
-                      to="/dashboard/notifications" 
+                    <Link
+                      to="/dashboard/notifications"
                       onClick={() => setIsNotificationsOpen(false)}
-                      className="block p-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                      className="block border-t border-border-subtle p-3 text-center text-[11px] font-semibold uppercase tracking-widest text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-700 dark:border-neutral-800 dark:hover:bg-neutral-800/40 dark:hover:text-neutral-200"
                     >
                       Lihat Semua Notifikasi
                     </Link>
@@ -368,61 +399,65 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               )}
             </div>
 
+            {/* Tema */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors mr-2"
+              className="rounded-xl border border-transparent p-2 text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 focus-ring dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+              title={theme === "light" ? "Mode Gelap" : "Mode Terang"}
             >
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
-            <div className="relative">
+            {/* Profil */}
+            <div className="relative ml-1">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-3 pl-3 border-l border-slate-100 dark:border-slate-800 hover:opacity-80 transition-opacity"
+                className="flex items-center gap-3 rounded-xl py-1 pl-3 transition-colors hover:bg-neutral-50 focus-ring dark:hover:bg-neutral-800/60"
               >
-                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-bold text-[#1800ad] dark:text-white uppercase leading-none mb-1">
+                <div className="hidden text-right sm:block">
+                  <p className="text-xs font-bold leading-tight text-neutral-900 dark:text-white">
                     {profile.toko}
                   </p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none">
+                  <p className="text-[10px] font-medium leading-tight text-neutral-400">
                     {profile.nama}
                   </p>
                 </div>
 
-                <div className="w-8 h-8 rounded-lg bg-[#1800ad] flex items-center justify-center text-white font-bold text-[10px] uppercase shadow-md relative group-hover:scale-105 transition-transform">
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue to-accent-violet text-[11px] font-bold uppercase text-white shadow-soft">
                   {profile.toko && profile.toko.trim() !== ""
                     ? profile.toko.split(' ').map(n => n[0]).join('').substring(0, 2)
                     : "JB"}
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-950" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-accent-green dark:border-surface-dark" />
                 </div>
+                <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
               </button>
 
               {isProfileOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsProfileOpen(false)} />
-                  <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-20 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-2">
-                      <p className="text-xs font-bold text-slate-900 dark:text-white uppercase truncate">{profile.toko}</p>
-                      <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest truncate">{profile.nama}</p>
+                  <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-2xl border border-border-subtle bg-white py-2 shadow-pop animate-pop-in dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="mb-2 border-b border-border-subtle px-4 py-3 dark:border-neutral-800">
+                      <p className="truncate text-xs font-bold text-neutral-900 dark:text-white">{profile.toko}</p>
+                      <p className="truncate text-[11px] font-medium text-neutral-400">{profile.nama}</p>
                     </div>
-                    
+
                     <Link
                       to="/dashboard/profile"
                       onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-[#1800ad] transition-all"
+                      className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-neutral-600 transition-all hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
                     >
                       <User size={14} />
                       Profil Saya
                     </Link>
-                    
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2" />
-                    
+
+                    <div className="mx-2 my-1 h-px bg-border-subtle dark:bg-neutral-800" />
+
                     <button
                       onClick={() => {
                         localStorage.clear();
                         navigate("/");
                       }}
-                      className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all w-full text-left"
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs font-medium text-accent-pink transition-all hover:bg-accent-pink/10"
                     >
                       <LogOut size={14} />
                       Logout / Keluar
@@ -434,8 +469,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           </div>
         </header>
 
-        <main className={cn("flex-1 custom-scrollbar", location.pathname === "/dashboard/playground" ? "p-0 overflow-hidden" : "p-6 lg:p-8 overflow-y-auto")}>
-          <div className={cn("mx-auto", location.pathname === "/dashboard/playground" ? "max-w-none h-full" : "max-w-7xl")}>
+        <main className={cn("flex-1 custom-scrollbar", location.pathname === "/dashboard/playground" ? "overflow-hidden p-0" : "overflow-y-auto p-4 lg:p-8")}>
+          <div className={cn("mx-auto", location.pathname === "/dashboard/playground" ? "h-full max-w-none" : "max-w-7xl")}>
             {children}
           </div>
         </main>
@@ -443,78 +478,76 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-neutral-950/50 backdrop-blur-sm lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
+      {/* Overlay berpindah project */}
       {isSwitching && (
-        <div className="fixed inset-0 z-[100] bg-[#0f172a]/80 backdrop-blur-md flex flex-col items-center justify-center transition-all duration-500">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-brand-navy/80 backdrop-blur-md transition-all duration-500">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-            <RefreshCw className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-blue-400 animate-pulse" />
+            <div className="h-16 w-16 animate-spin rounded-full border-4 border-white/15 border-t-accent-blue-light"></div>
+            <RefreshCw className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 animate-pulse text-accent-blue-light" />
           </div>
-          <p className="mt-6 text-sm font-bold text-white uppercase tracking-[0.3em] animate-pulse">Berpindah Project...</p>
-          <p className="mt-2 text-[10px] text-slate-400 font-medium">Menyiapkan Knowledge Base & Statistik...</p>
+          <p className="mt-6 animate-pulse text-sm font-bold uppercase tracking-[0.3em] text-white">Berpindah Project...</p>
+          <p className="mt-2 text-xs font-medium text-slate-400">Menyiapkan Knowledge Base & Statistik...</p>
         </div>
       )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full border border-slate-100 dark:border-slate-800">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-tight">Buat Project Baru</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan nama untuk project UMKM Anda yang baru</p>
-            </div>
-
-            <form onSubmit={handleCreateBot} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest mb-2">Nama Project</label>
-                <input
-                  type="text"
-                  value={newBotName}
-                  onChange={(e) => setNewBotName(e.target.value)}
-                  placeholder="Misal: Toko Online Aku"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-[#1800ad] focus:ring-2 focus:ring-[#1800ad]/20 outline-none transition-all"
-                  disabled={isCreatingBot}
-                  autoFocus
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setNewBotName("");
-                  }}
-                  disabled={isCreatingBot}
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreatingBot || !newBotName.trim()}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-[#1800ad] text-white font-semibold text-sm hover:bg-[#1400a0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isCreatingBot ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Membuat...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Buat Project
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+      {/* Modal buat project baru */}
+      <Modal
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setNewBotName("");
+        }}
+        title="Buat Project Baru"
+        description="Masukkan nama untuk project UMKM Anda yang baru"
+        icon={Plus}
+      >
+        <form onSubmit={handleCreateBot} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400">Nama Project</label>
+            <Input
+              type="text"
+              value={newBotName}
+              onChange={(e) => setNewBotName(e.target.value)}
+              placeholder="Misal: Toko Online Aku"
+              disabled={isCreatingBot}
+              autoFocus
+            />
           </div>
-        </div>
-      )}
+
+          <div className="flex gap-2.5 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={() => {
+                setIsModalOpen(false);
+                setNewBotName("");
+              }}
+              disabled={isCreatingBot}
+            >
+              Batal
+            </Button>
+            <Button type="submit" className="flex-1" disabled={isCreatingBot || !newBotName.trim()}>
+              {isCreatingBot ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Membuat...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Buat Project
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

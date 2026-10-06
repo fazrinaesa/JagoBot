@@ -6,24 +6,150 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
-  
-  --color-brand-blue: #0A2647;
-  --color-brand-navy: #06142E;
-  --color-brand-orange: #FF6B35;
-  --color-brand-white: #FFFFFF;
-  
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
-  --radius-4xl: 2.5rem;
-}
 
-@layer base {
-  body {
-    @apply font-sans text-brand-blue bg-white dark:bg-brand-navy dark:text-slate-100 transition-colors duration-300;
+  /* ── Brand (hero, permukaan gelap, identitas) ─────────────── */
+  --color-brand-blue: #0a2647;
+  --color-brand-navy: #06142e;
+  --color-brand-royal: #1800ad;
+  --color-brand-orange: #ff6b35;
+  --color-brand-white: #ffffff;
+
+  /* ── Palet interaktif (button, badge, aksen status) ───────── */
+  --color-accent-blue: #4f46e5;
+  --color-accent-blue-dark: #4338ca;
+  --color-accent-blue-light: #a5b4fc;
+
+  --color-accent-violet: #7c3aed;
+  --color-accent-violet-dark: #6d28d9;
+  --color-accent-violet-light: #c4b5fd;
+
+  --color-accent-green: #10b981;
+  --color-accent-green-dark: #059669;
+  --color-accent-green-light: #6ee7b7;
+
+  --color-accent-orange: #f59e0b;
+  --color-accent-orange-dark: #d97706;
+  --color-accent-orange-light: #fcd34d;
+
+  --color-accent-pink: #f43f5e;
+  --color-accent-pink-dark: #e11d48;
+  --color-accent-pink-light: #fda4af;
+
+  --color-accent-teal: #14b8a6;
+  --color-accent-teal-dark: #0d9488;
+  --color-accent-teal-light: #5eead4;
+
+  --color-accent-rose: #fb7185;
+  --color-accent-rose-dark: #f43f5e;
+  --color-accent-rose-light: #fecdd3;
+
+  /* ── Surface semantic (kanvas & kartu) ────────────────────── */
+  --color-surface: #f6f7fb;
+  --color-surface-card: #ffffff;
+  --color-surface-muted: #eef0f7;
+  --color-border-subtle: #e8eaf2;
+
+  --color-surface-dark: #0b1120;
+  --color-surface-dark-card: #111a2e;
+
+  /* ── Radius ───────────────────────────────────────────────── */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+
+  /* ── Drop shadow halus ────────────────────────────────────── */
+  --shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 10px 28px -10px rgba(16, 24, 40, 0.1);
+  --shadow-lift: 0 2px 4px rgba(16, 24, 40, 0.05), 0 18px 36px -12px rgba(79, 70, 229, 0.18);
+  --shadow-pop: 0 24px 64px -16px rgba(16, 24, 40, 0.25);
+
+  /* ── Animasi mikro ────────────────────────────────────────── */
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-pop-in: pop-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-right: slide-in-right 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-float: float 5s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
 }
 
+@layer base {
+  html {
+    @apply antialiased scroll-smooth;
+  }
+
+  body {
+    @apply font-sans bg-surface text-brand-blue dark:bg-surface-dark dark:text-slate-100 transition-colors duration-300;
+  }
+
+  ::selection {
+    @apply bg-accent-blue/20 text-accent-blue-dark dark:text-accent-blue-light;
+  }
+}
+
+/* ── Utilitas komponen ──────────────────────────────────────── */
+
+/* Ring fokus konsisten untuk semua elemen interaktif */
+@utility focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-surface-dark;
+}
+
+/* Efek angkat halus saat hover kartu */
+@utility card-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* Scrollbar tipis & bersih */
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.35);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Teks gradien untuk judul display */
+@utility text-gradient {
+  background: linear-gradient(92deg, #4f46e5 10%, #7c3aed 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Gradien sidebar gelap */
 .sidebar-blue {
-  background: linear-gradient(180deg, #0A2647 0%, #06142E 100%);
+  background: linear-gradient(180deg, #0e1a38 0%, #0b1120 100%);
 }

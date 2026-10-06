@@ -1,6 +1,7 @@
-import { Send, Bot, User, RotateCcw, Info } from "lucide-react";
+import { Send, Bot, User, RotateCcw, Info, Sparkles, Zap } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "../lib/utils";
+import { Badge } from "../components/ui";
 
 interface Message {
   id: number;
@@ -9,9 +10,20 @@ interface Message {
   timestamp: string;
 }
 
+const QUICK_START = [
+  "Berapa harga produk terlaris?",
+  "Apakah bisa kirim luar kota?",
+  "Jam operasional toko?",
+];
+
 export const ChatbotPlayground = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Halo! Saya asisten JagoBot Anda. Ada yang bisa saya bantu hari ini?", sender: "bot", timestamp: "10:00" }
+    {
+      id: 1,
+      text: "Halo! Saya asisten JagoBot Anda. Ada yang bisa saya bantu hari ini?",
+      sender: "bot",
+      timestamp: "10:00",
+    },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,19 +41,10 @@ export const ChatbotPlayground = () => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    console.log("═══════════════════════════════════════════════════════");
-    console.log("💬 [Playground] Sending message");
-
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-    // ✅ FIX: Ambil activeBotId dari localStorage (bukan dari user object)
     const storedActiveBotId = localStorage.getItem("activeBotId");
     const activeBotId = storedActiveBotId ? Number(storedActiveBotId) : null;
-
-    // ✅ DEBUG: Log untuk memastikan botId diambil dengan benar
-    console.log("👤 User from localStorage:", storedUser);
-    console.log("🔑 Stored activeBotId:", storedActiveBotId);
-    console.log("🤖 Numeric activeBotId:", activeBotId);
 
     if (!activeBotId) {
       console.error("❌ activeBotId tidak ditemukan di localStorage");
@@ -49,18 +52,14 @@ export const ChatbotPlayground = () => {
       return;
     }
 
-    console.log("✅ Bot ID valid, proceeding with message...");
-    console.log("💭 Message content:", input);
-    console.log("═══════════════════════════════════════════════════════\n");
-
     const userMsg: Message = {
       id: Date.now(),
       text: input,
       sender: "user",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     const currentInput = input;
     setInput("");
     setIsLoading(true);
@@ -71,38 +70,31 @@ export const ChatbotPlayground = () => {
       const requestBody = {
         botId: activeBotId,
         customerName: storedUser.nama_lengkap || storedUser.nama_toko || "User Jago",
-        message: currentInput
+        message: currentInput,
       };
 
-      console.log("📤 [Playground] Sending request to /api/chat/send");
-      console.log("📦 Request payload:", requestBody);
-
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = import.meta.env.VITE_API_URL || "";
       const response = await fetch(`${apiUrl}/api/chat/send`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
-      console.log("📥 [Playground] Response status:", response.status);
       const result = await response.json();
-
-      console.log("📥 [Playground] Response data:", result);
 
       if (result.status === "success") {
         const botResponse = result.data.aiResponse || result.data.jawaban || "Bot tidak memberikan respon.";
-        console.log("✅ [Playground] Bot response extracted:", botResponse);
 
         const botMsg: Message = {
           id: Date.now() + 1,
           text: botResponse,
           sender: "bot",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
-        setMessages(prev => [...prev, botMsg]);
+        setMessages((prev) => [...prev, botMsg]);
       } else {
         throw new Error(result.message);
       }
@@ -112,119 +104,185 @@ export const ChatbotPlayground = () => {
         id: Date.now() + 2,
         text: "Maaf, terjadi gangguan koneksi ke otak bot. Silakan coba lagi.",
         sender: "bot",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-      setMessages(prev => [...prev, errorMsg]);
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
-      console.log("═══════════════════════════════════════════════════════\n");
     }
   };
 
+  const handleQuickStart = (text: string) => {
+    if (isLoading) return;
+    setInput(text);
+  };
+
   return (
-    // Penyesuaian: Memperbesar container dengan menyisakan sedikit margin (space) di sisi kiri & kanan
-    <div className="h-[calc(100vh-120px)] w-[calc(100%-2rem)] lg:w-[calc(100%-4rem)] mx-auto flex flex-col bg-brand-blue rounded-[1.5rem] border border-white/5 shadow-2xl shadow-brand-blue/20 overflow-hidden">
-      {/* Chat Header */}
-      {/* Penyesuaian: Mengurangi padding (py-5 -> py-3, px-8 -> px-6) */}
-      <div className="px-6 py-3 border-b border-white/10 flex items-center justify-between bg-white/5 dark:bg-slate-900/5 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          {/* Warna: orange -> #1800ad, Size: 12 -> 10 */}
-          <div className="w-10 h-10 bg-[#1800ad] rounded-xl flex items-center justify-center shadow-lg shadow-[#1800ad]/20">
-            <Bot className="text-white w-6 h-6" />
+    <div className="mx-auto flex h-[calc(100vh-140px)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border-subtle bg-white shadow-card dark:border-neutral-800 dark:bg-neutral-900/60">
+      {/* ── Header ala platform chatbot profesional ── */}
+      <div className="relative flex items-center justify-between overflow-hidden border-b border-border-subtle bg-gradient-to-r from-brand-blue via-[#132d52] to-brand-navy px-6 py-4 dark:border-neutral-800 dark:from-brand-blue dark:to-brand-navy">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-accent-blue/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-36 w-36 rounded-full bg-accent-violet/20 blur-3xl" />
+
+        <div className="relative flex items-center gap-3.5">
+          {/* Avatar bot dengan ring status */}
+          <div className="relative">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-blue to-accent-violet text-white shadow-soft ring-2 ring-white/20">
+              <Bot className="h-5.5 w-5.5" />
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-brand-navy bg-accent-green" />
           </div>
+
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-tight">Uji Coba Bot</h3>
-            <p className="text-[9px] text-emerald-400 font-bold flex items-center gap-1 uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Online
+            <div className="flex items-center gap-2">
+              <h3 className="font-display text-sm font-bold tracking-tight text-white">JagoBot Playground</h3>
+              <Sparkles className="h-3.5 w-3.5 text-accent-blue-light" />
+            </div>
+            <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              Online · Balas instan
             </p>
           </div>
         </div>
+
         <button
-          onClick={() => setMessages([{ id: 1, text: "Halo! Saya asisten JagoBot Anda. Ada yang bisa saya bantu hari ini?", sender: "bot", timestamp: "10:00" }])}
-          className="p-2 text-slate-400 hover:text-white transition-colors bg-white/10 dark:bg-slate-900/10 rounded-lg"
+          onClick={() =>
+            setMessages([
+              {
+                id: 1,
+                text: "Halo! Saya asisten JagoBot Anda. Ada yang bisa saya bantu hari ini?",
+                sender: "bot",
+                timestamp: "10:00",
+              },
+            ])
+          }
+          className="relative flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-[11px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-ring"
           title="Reset Percakapan"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Reset</span>
         </button>
       </div>
 
-      {/* Messages Area */}
-      {/* Penyesuaian: Mengurangi padding (p-8 -> p-6) dan space-y (8 -> 6) */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-brand-blue/50">
-        {/* Warna: orange -> #1800ad */}
-        <div className="bg-white/5 dark:bg-slate-900/5 p-4 rounded-xl flex gap-3 mb-2 border border-white/10">
-          <Info className="w-4 h-4 text-[#1800ad] shrink-0" />
-          <p className="text-[11px] text-slate-300 font-medium leading-relaxed">
-            Gunakan area ini untuk mencoba bagaimana bot Anda merespon pertanyaan pelanggan. Respon di sini menggunakan data dari Knowledge Base dan Profil Bot yang telah Anda atur.
+      {/* ── Area pesan ── */}
+      <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto bg-surface/70 px-6 py-6 dark:bg-neutral-950/40">
+        {/* Info strip */}
+        <div className="flex items-start gap-3 rounded-2xl border border-accent-blue/15 bg-accent-blue/5 px-4 py-3">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-blue dark:text-accent-blue-light" />
+          <p className="text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300">
+            Respon di sini menggunakan data dari <strong className="font-semibold">Knowledge Base</strong> dan{" "}
+            <strong className="font-semibold">Profil Bot</strong> yang telah Anda atur.
           </p>
         </div>
 
-        {messages.map((msg) => (
+        {/* Quick start chips — tampil sebelum percakapan dimulai */}
+        {messages.length <= 1 && (
+          <div className="flex flex-wrap justify-center gap-2 pt-1">
+            {QUICK_START.map((q) => (
+              <button
+                key={q}
+                onClick={() => handleQuickStart(q)}
+                className="rounded-full border border-border-subtle bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-600 shadow-soft transition-all hover:border-accent-blue/40 hover:text-accent-blue focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:text-accent-blue-light"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {messages.map((msg, idx) => (
           <div
             key={msg.id}
             className={cn(
-              "flex gap-3 max-w-[85%]",
-              msg.sender === "user" ? "ml-auto flex-row-reverse" : ""
+              "flex items-end gap-2.5",
+              msg.sender === "user" ? "flex-row-reverse" : ""
             )}
           >
-            {/* Warna: orange -> #1800ad, Size: 10 -> 8 */}
-            <div className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
-              msg.sender === "bot" ? "bg-white/20 dark:bg-slate-900/10 text-white border border-white/10" : "bg-[#1800ad] text-white"
-            )}>
-              {msg.sender === "bot" ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
-            </div>
-            <div className="space-y-1">
-              {/* Penyesuaian: padding px-5 -> px-4, py-4 -> py-3, radius 1.5rem -> 1rem */}
-              <div className={cn(
-                "px-4 py-3 rounded-[1rem] text-xs leading-relaxed font-medium shadow-sm",
+            {/* Avatar */}
+            <div
+              className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold uppercase shadow-soft",
                 msg.sender === "bot"
-                  ? "bg-white/10 dark:bg-slate-900/10 text-white rounded-tl-none border border-white/10"
-                  : "bg-[#1800ad] text-white rounded-tr-none shadow-[#1800ad]/20"
-              )}>
+                  ? "bg-gradient-to-br from-accent-blue to-accent-violet text-white"
+                  : "bg-neutral-200 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200"
+              )}
+            >
+              {msg.sender === "bot" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+            </div>
+
+            <div className={cn("max-w-[78%] space-y-1", msg.sender === "user" && "items-end text-right")}>
+              {/* Label pengirim */}
+              <p className={cn("px-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400", msg.sender === "user" && "text-right")}>
+                {msg.sender === "bot" ? "JagoBot" : "Anda"}
+              </p>
+
+              <div
+                className={cn(
+                  "px-4 py-3 text-xs font-medium leading-relaxed shadow-soft",
+                  msg.sender === "bot"
+                    ? // Bubble bot: permukaan terang dengan ekor kiri
+                      "rounded-2xl rounded-bl-md border border-border-subtle bg-white text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                    : // Bubble user: gradien brand dengan ekor kanan
+                      "rounded-2xl rounded-br-md bg-gradient-to-br from-accent-blue to-accent-violet text-white"
+                )}
+              >
                 {msg.text}
               </div>
-              <p className={cn("text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter", msg.sender === "user" ? "text-right" : "")}>
+
+              <p className={cn("px-1 text-[10px] font-medium text-neutral-400", msg.sender === "user" && "text-right")}>
                 {msg.timestamp}
               </p>
             </div>
           </div>
         ))}
+
+        {/* Typing indicator dengan dots */}
         {isLoading && (
-          <div className="flex gap-3 max-w-[85%]">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 dark:bg-slate-900/10 border border-white/10">
-              <Bot className="w-5 h-5 text-white animate-bounce" />
+          <div className="flex items-end gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-blue to-accent-violet text-white shadow-soft">
+              <Bot className="h-4 w-4" />
             </div>
-            <div className="bg-white/10 dark:bg-slate-900/10 text-white px-4 py-3 rounded-[1rem] rounded-tl-none border border-white/10 text-[10px] italic">
-              Bot sedang mengetik...
+            <div>
+              <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400">JagoBot</p>
+              <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border-subtle bg-white px-4 py-3.5 shadow-soft dark:border-neutral-700 dark:bg-neutral-800">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:0ms]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:150ms]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:300ms]" />
+              </div>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      {/* Penyesuaian: Mengurangi padding (p-8 -> p-5) */}
-      <div className="p-5 bg-white/5 dark:bg-slate-900/5 border-t border-white/10">
-        <form onSubmit={handleSend} className="relative">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={isLoading}
-            placeholder={isLoading ? "Mohon tunggu respon bot..." : "Ketik pesan untuk mencoba bot..."}
-            // Penyesuaian: Padding vertikal (py-5 -> py-3.5) dan radius (2xl -> xl), warna ring -> #1800ad
-            className="w-full pl-5 pr-14 py-3.5 rounded-xl bg-white/10 dark:bg-slate-900/10 border border-white/10 focus:ring-2 focus:ring-[#1800ad]/30 outline-none text-white text-sm font-medium placeholder:text-slate-500 dark:text-slate-400 disabled:opacity-50"
-          />
+      {/* ── Input toolbar ── */}
+      <div className="border-t border-border-subtle bg-white/80 p-4 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/80">
+        <form onSubmit={handleSend} className="flex items-end gap-2.5">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={isLoading}
+              placeholder={isLoading ? "Bot sedang memproses..." : "Tulis pesan untuk menguji bot Anda..."}
+              className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/60 py-3.5 pl-4 pr-12 text-sm font-medium text-neutral-800 placeholder:text-neutral-400 outline-none transition-all focus:border-accent-blue/60 focus:bg-white focus:ring-4 focus:ring-accent-blue/10 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800/60 dark:text-neutral-100 dark:placeholder:text-neutral-500"
+            />
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-medium text-neutral-300">
+              Enter ↵
+            </span>
+          </div>
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            // Warna: orange -> #1800ad, Padding p-3.5 -> p-2.5
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2.5 bg-[#1800ad] text-white rounded-lg shadow-xl shadow-[#1800ad]/30 hover:scale-105 active:scale-95 transition-all disabled:grayscale disabled:scale-100"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-blue to-accent-violet text-white shadow-lift transition-all hover:scale-105 active:scale-95 focus-ring disabled:scale-100 disabled:opacity-40 disabled:grayscale"
           >
-            <Send className="w-4 h-4" />
+            <Send className="h-4.5 w-4.5" />
           </button>
         </form>
+        <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center text-[10px] font-medium text-neutral-400">
+          <Zap className="h-3 w-3 text-accent-green" />
+          Didukung oleh Knowledge Base Anda · JagoBot dapat melakukan kesalahan
+        </p>
       </div>
     </div>
   );

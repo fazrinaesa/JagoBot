@@ -1,7 +1,8 @@
-import { ArrowLeft, User, Mail, Store, Phone, MapPin, Camera, Save, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, User, Mail, Store, Phone, MapPin, Camera, Save, AlertCircle, CheckCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserProfile, updateUserProfile, uploadAvatar, deleteUserAccount } from "../lib/api";
+import { Button, Card, Input, PageHeader, Textarea } from "../components/ui";
 
 export const ProfilePage = () => {
   const navigate = useNavigate();
@@ -11,18 +12,18 @@ export const ProfilePage = () => {
     storeName: "",
     phone: "",
     address: "",
-    avatarUrl: ""
+    avatarUrl: "",
   });
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Toast State
+  // Toast state
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  // Delete Modal State
+  // Delete modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -43,7 +44,7 @@ export const ProfilePage = () => {
           storeName: data.nama_toko || "",
           phone: data.whatsapp || "",
           address: data.alamat || "",
-          avatarUrl: data.avatarUrl || ""
+          avatarUrl: data.avatarUrl || "",
         });
       } catch (error) {
         console.error("Gagal memuat profil", error);
@@ -63,18 +64,18 @@ export const ProfilePage = () => {
         email: formData.email,
         nama_toko: formData.storeName,
         whatsapp: formData.phone,
-        alamat: formData.address
+        alamat: formData.address,
       });
-      
+
       // Sinkronisasi ke Navbar
-      const rawUser = localStorage.getItem('user');
+      const rawUser = localStorage.getItem("user");
       if (rawUser) {
         const userData = JSON.parse(rawUser);
         userData.nama = formData.name;
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem("user", JSON.stringify(userData));
       }
-      localStorage.setItem('nama_toko', formData.storeName);
-      window.dispatchEvent(new Event('storage'));
+      localStorage.setItem("nama_toko", formData.storeName);
+      window.dispatchEvent(new Event("storage"));
 
       showToast("Profil berhasil diperbarui", "success");
     } catch (error: any) {
@@ -99,19 +100,17 @@ export const ProfilePage = () => {
     try {
       const res = await uploadAvatar(file);
       const newAvatarUrl = res.data.avatarUrl;
-      setFormData(prev => ({ ...prev, avatarUrl: newAvatarUrl }));
+      setFormData((prev) => ({ ...prev, avatarUrl: newAvatarUrl }));
       showToast("Foto profil berhasil diunggah", "success");
-      
-      // Update localstorage
-      localStorage.setItem('avatarUrl', newAvatarUrl);
-      window.dispatchEvent(new Event('storage'));
+
+      localStorage.setItem("avatarUrl", newAvatarUrl);
+      window.dispatchEvent(new Event("storage"));
     } catch (error: any) {
       const msg = error.response?.data?.message || "Gagal mengunggah foto profil";
       showToast(msg, "error");
     } finally {
       setIsUploading(false);
-      // Reset input
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -120,7 +119,7 @@ export const ProfilePage = () => {
       showToast('Ketik "HAPUS" untuk konfirmasi', "error");
       return;
     }
-    
+
     setIsDeleting(true);
     try {
       await deleteUserAccount();
@@ -133,222 +132,260 @@ export const ProfilePage = () => {
   };
 
   // Ambil inisial untuk avatar fallback
-  const initials = formData.name 
-    ? formData.name.substring(0, 2).toUpperCase() 
-    : formData.storeName 
-      ? formData.storeName.substring(0, 2).toUpperCase() 
+  const initials = formData.name
+    ? formData.name.substring(0, 2).toUpperCase()
+    : formData.storeName
+      ? formData.storeName.substring(0, 2).toUpperCase()
       : "JB";
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <RefreshCw className="w-8 h-8 text-[#1800ad] animate-spin" />
+      <div className="flex h-[60vh] items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-accent-blue dark:text-accent-blue-light" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-10 relative">
+    <div className="relative mx-auto max-w-4xl space-y-5 pb-10">
       <button
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white bg-slate-900/50 dark:bg-slate-950/60 px-3 py-2 rounded-full border border-white/10 transition"
+        className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-white px-4 py-2 text-sm font-semibold text-neutral-600 shadow-soft transition-all hover:bg-neutral-50 hover:text-neutral-900 focus-ring dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="h-4 w-4" />
         Kembali
       </button>
 
-      {/* Toast Notification */}
+      {/* Toast */}
       {toast && (
-        <div className={`fixed top-20 right-8 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-xl animate-in slide-in-from-right-5 fade-in duration-300 ${
-          toast.type === "success" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
-        }`}>
-          {toast.type === "success" ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+        <div
+          className={`fixed right-8 top-20 z-50 flex items-center gap-2.5 rounded-2xl border px-4 py-3 shadow-pop animate-slide-in-right ${
+            toast.type === "success"
+              ? "border-accent-green/20 bg-white text-accent-green-dark dark:bg-neutral-900 dark:text-accent-green-light"
+              : "border-accent-pink/20 bg-white text-accent-pink-dark dark:bg-neutral-900 dark:text-accent-pink-light"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <CheckCircle className="h-5 w-5 shrink-0" />
+          ) : (
+            <AlertCircle className="h-5 w-5 shrink-0" />
+          )}
           <span className="text-sm font-semibold">{toast.message}</span>
         </div>
       )}
 
-      <div className="bg-brand-blue rounded-3xl border border-white/5 shadow-xl overflow-visible">
-        {/* Profile Header - Twitter/X Style */}
-        <div className="h-40 bg-[#1800ad]/20 relative overflow-visible">
-          <div className="absolute inset-x-0 top-0 h-full bg-[radial-gradient(circle_at_top,_rgba(24,0,173,0.28),_transparent_45%)]" />
-          <div className="absolute -bottom-8 left-6 w-44 h-44 rounded-full bg-[#1800ad] opacity-80 blur-2xl" />
-          <div className="absolute -bottom-6 left-10 w-32 h-32 rounded-full bg-[#0f255d] opacity-70 blur-2xl" />
-          <div className="absolute -bottom-16 left-6 z-20">
-            <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-              <div className="w-24 h-24 rounded-full bg-white/10 p-1 shadow-xl border-4 border-white/10 backdrop-blur-sm">
+      {/* Kartu profil */}
+      <Card className="overflow-hidden">
+        {/* Header profil */}
+        <div className="relative h-36 bg-gradient-to-br from-brand-blue via-brand-navy to-[#1a2f5e]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(79,70,229,0.35),_transparent_55%)]" />
+          <div className="absolute -right-10 -top-16 h-48 w-48 rounded-full bg-accent-violet/25 blur-3xl" />
+        </div>
+
+        <div className="px-6 pb-2">
+          <div className="relative z-10 -mt-12 mb-4">
+            <div className="relative group cursor-pointer w-fit" onClick={handleAvatarClick}>
+              <div className="h-24 w-24 rounded-full border-4 border-white bg-white p-0.5 shadow-card dark:border-neutral-900 dark:bg-neutral-900">
                 {formData.avatarUrl ? (
-                  <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover border border-white/5 bg-white" />
+                  <img
+                    src={formData.avatarUrl}
+                    alt="Avatar"
+                    className="h-full w-full rounded-full border border-border-subtle bg-white object-cover dark:border-neutral-700"
+                  />
                 ) : (
-                  <div className="w-full h-full rounded-full bg-brand-blue flex items-center justify-center text-3xl font-bold text-white border border-white/5 overflow-hidden">
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-accent-blue to-accent-violet font-display text-2xl font-bold text-white">
                     {initials}
                   </div>
                 )}
               </div>
-              <button className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50" disabled={isUploading}>
-                {isUploading ? <RefreshCw className="text-white w-5 h-5 animate-spin" /> : <Camera className="text-white w-5 h-5" />}
+              <button className="absolute inset-0 flex items-center justify-center rounded-full bg-neutral-950/40 opacity-0 transition-opacity hover:opacity-100 focus-ring" disabled={isUploading}>
+                {isUploading ? (
+                  <RefreshCw className="h-5 w-5 animate-spin text-white" />
+                ) : (
+                  <Camera className="h-5 w-5 text-white" />
+                )}
               </button>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </div>
+
+            <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
+              {formData.name || "Nama Belum Diatur"}
+            </h2>
+            <p className="mt-0.5 text-sm text-neutral-400">
+              @{formData.storeName.toLowerCase().replace(/\s/g, "") || "toko"}
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="flex items-center gap-1.5">
+                <Store className="h-3.5 w-3.5" /> {formData.storeName || "Toko"}
+              </span>
+              {formData.address && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" /> {formData.address}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="flex justify-end pt-4 px-6 h-12"></div>
+        {/* Form edit */}
+        <div className="space-y-4 border-t border-border-subtle p-6 dark:border-neutral-800">
+          <PageHeader title="Informasi Akun" className="mb-2" />
 
-        {/* Profile Identity Text */}
-        <div className="mt-4 pb-6 px-8">
-          <h2 className="text-2xl font-black text-white tracking-tight">{formData.name || "Nama Belum Diatur"}</h2>
-          <p className="text-sm text-slate-400">@{formData.storeName.toLowerCase().replace(/\s/g, '') || "toko"}</p>
-
-          <div className="flex flex-wrap gap-4 mt-3 text-slate-400 text-xs">
-            <div className="flex items-center gap-1">
-              <Store className="w-3.5 h-3.5" /> {formData.storeName || "Toko"}
-            </div>
-            {formData.address && (
-              <div className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" /> {formData.address}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Input Form Section */}
-        <div className="p-6 border-t border-white/10 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-white uppercase tracking-wider ml-1">Nama Lengkap</label>
+              <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Nama Lengkap</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
-                <input
+                <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Misal: Budi Santoso"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 dark:bg-slate-900/5 focus:border-[#1800ad] focus:ring-1 focus:ring-[#1800ad]/20 outline-none transition-all text-white text-sm"
+                  className="pl-10"
                 />
               </div>
             </div>
+
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-white uppercase tracking-wider ml-1">Email Bisnis</label>
+              <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Email Bisnis</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
-                <input
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 dark:bg-slate-900/5 focus:border-[#1800ad] focus:ring-1 focus:ring-[#1800ad]/20 outline-none transition-all text-white text-sm"
+                  className="pl-10"
                 />
               </div>
             </div>
+
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-white uppercase tracking-wider ml-1">Nama Toko</label>
+              <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Nama Toko</label>
               <div className="relative">
-                <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
-                <input
+                <Store className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                <Input
                   type="text"
                   value={formData.storeName}
                   onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 dark:bg-slate-900/5 focus:border-[#1800ad] focus:ring-1 focus:ring-[#1800ad]/20 outline-none transition-all text-white text-sm"
+                  className="pl-10"
                 />
               </div>
             </div>
+
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-white uppercase tracking-wider ml-1">Nomor WhatsApp</label>
+              <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Nomor WhatsApp</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
-                <input
+                <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                <Input
                   type="text"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="Misal: 081234567890"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 dark:bg-slate-900/5 focus:border-[#1800ad] focus:ring-1 focus:ring-[#1800ad]/20 outline-none transition-all text-white text-sm"
+                  className="pl-10"
                 />
               </div>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-white uppercase tracking-wider ml-1">Alamat Toko</label>
+            <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Alamat Toko</label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <textarea
+              <MapPin className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-neutral-400" />
+              <Textarea
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 placeholder="Alamat lengkap toko Anda"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 dark:bg-slate-900/5 focus:border-[#1800ad] focus:ring-1 focus:ring-[#1800ad]/20 outline-none transition-all min-h-[80px] text-white text-sm"
+                className="min-h-[80px] pl-10"
               />
             </div>
           </div>
 
-          <div className="pt-2">
-            <button 
-              onClick={handleSave} 
-              disabled={isSaving}
-              className="bg-[#1800ad] text-white px-8 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-[#1800ad]/20 hover:bg-[#1800ad]/90 active:scale-[0.98] transition-all flex items-center gap-2 ml-auto disabled:opacity-70"
-            >
-              {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleSave} disabled={isSaving} className="px-8">
+              {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Danger Zone */}
-      <div className="bg-[#1800ad]/5 p-5 rounded-2xl border border-[#1800ad]/10 flex items-center justify-between">
-        <div>
-          <h4 className="font-bold text-[#1800ad] text-sm">Hapus Akun</h4>
-          <p className="text-[11px] text-slate-400">Tindakan ini tidak dapat dibatalkan. Semua data bot Anda akan dihapus.</p>
+      {/* Danger zone */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-accent-pink/20 bg-accent-pink/5 p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-pink/10 text-accent-pink">
+            <Trash2 className="h-4.5 w-4.5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-accent-pink-dark dark:text-accent-pink-light">Hapus Akun</h4>
+            <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+              Tindakan ini tidak dapat dibatalkan. Semua data bot Anda akan dihapus permanen.
+            </p>
+          </div>
         </div>
-        <button 
-          onClick={() => setIsDeleteModalOpen(true)}
-          className="px-5 py-2 bg-white dark:bg-slate-900 border border-[#1800ad]/20 text-[#1800ad] font-bold text-xs rounded-full hover:bg-[#1800ad]/5 transition-all"
-        >
+        <Button variant="danger" onClick={() => setIsDeleteModalOpen(true)} className="shrink-0">
           Hapus
-        </button>
+        </Button>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Modal konfirmasi hapus */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-red-500/20">
-            <h3 className="text-lg font-bold text-red-500 mb-2">Hapus Akun Secara Permanen?</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 animate-fade-in bg-neutral-950/50 backdrop-blur-sm"
+            onClick={() => setIsDeleteModalOpen(false)}
+          />
+          <div className="relative w-full max-w-sm space-y-4 rounded-3xl border border-accent-pink/20 bg-white p-6 shadow-pop animate-pop-in dark:bg-neutral-900">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-pink/10 text-accent-pink">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h3 className="font-display text-lg font-bold tracking-tight text-neutral-900 dark:text-white">
+              Hapus Akun Secara Permanen?
+            </h3>
+            <p className="text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
               Apakah Anda yakin? Semua data bot dan riwayat chat akan dihapus secara permanen.
             </p>
-            <div className="mb-4">
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">
-                Ketik <strong className="text-slate-800 dark:text-slate-200">HAPUS</strong> untuk melanjutkan:
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                Ketik <strong className="text-neutral-800 dark:text-neutral-200">HAPUS</strong> untuk melanjutkan:
               </label>
-              <input
+              <Input
                 type="text"
                 value={deleteConfirmation}
                 onChange={(e) => setDeleteConfirmation(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-red-500"
+                className="focus:border-accent-pink/60 focus:ring-accent-pink/10"
               />
             </div>
-            <div className="flex gap-3">
-              <button
+            <div className="flex gap-2.5 pt-1">
+              <Button
+                variant="secondary"
+                className="flex-1"
                 onClick={() => {
                   setIsDeleteModalOpen(false);
                   setDeleteConfirmation("");
                 }}
-                className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
               >
                 Batal
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                className="flex-1"
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirmation !== "HAPUS" || isDeleting}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
               >
-                {isDeleting ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+                {isDeleting ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
                 Konfirmasi Hapus
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };

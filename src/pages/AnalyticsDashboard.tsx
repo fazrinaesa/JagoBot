@@ -8,12 +8,25 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
-import { Download, Calendar, Filter, TrendingUp, MessageCircle, Clock, CheckCircle } from "lucide-react";
+import { Download, TrendingUp, MessageCircle, Clock, CheckCircle, Star, BarChart3, ChevronUp, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "../lib/utils";
 import { getAnalyticsStats, getActiveBot } from "../lib/api";
+import { Badge, Button, Card, PageHeader, Select, StatCard } from "../components/ui";
+
+const chartTooltipStyle = {
+  backgroundColor: "#ffffff",
+  borderRadius: "14px",
+  border: "1px solid #e8eaf2",
+  boxShadow: "0 12px 32px -8px rgba(16,24,40,0.15)",
+  padding: "10px 12px",
+  fontSize: "12px",
+  color: "#0f172a",
+};
+
+const PIE_COLORS = ["#4f46e5", "#7c3aed", "#14b8a6", "#f59e0b", "#f43f5e"];
 
 export const AnalyticsDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
@@ -22,7 +35,7 @@ export const AnalyticsDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const storedBotId = localStorage.getItem('activeBotId');
+      const storedBotId = localStorage.getItem("activeBotId");
       let resolvedBotId: number | null = null;
 
       if (storedBotId) {
@@ -32,7 +45,7 @@ export const AnalyticsDashboard = () => {
         const activeBot = botResponse.data;
         if (activeBot && activeBot.id) {
           resolvedBotId = activeBot.id;
-          localStorage.setItem('activeBotId', String(resolvedBotId));
+          localStorage.setItem("activeBotId", String(resolvedBotId));
         }
       }
 
@@ -51,138 +64,203 @@ export const AnalyticsDashboard = () => {
     fetchData();
     const interval = setInterval(() => {
       fetchData();
-    }, 30000); // Polling tiap 30 detik
+    }, 30000);
     return () => clearInterval(interval);
   }, [period]);
 
   if (loading && !analyticsData) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] text-slate-500 font-bold italic animate-pulse uppercase tracking-widest text-xs">
-        Memuat Data Analitik...
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-neutral-200 border-t-accent-blue dark:border-neutral-700 dark:border-t-accent-blue-light" />
+          <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
+            Memuat Data Analitik...
+          </p>
+        </div>
       </div>
     );
   }
 
   const chatData = analyticsData?.chatData || [];
   const sourceData = analyticsData?.sourceData || [];
-  
+
   const totalChats = analyticsData?.totalChats || 0;
   const completionRate = analyticsData?.completionRate || "0%";
   const responseTime = analyticsData?.responseTime || "0.0s";
 
+  // Statistik turunan untuk footer chart
+  const maxEntry = chatData.reduce(
+    (a: any, b: any) => ((b.chats || 0) > (a?.chats || 0) ? b : a),
+    chatData[0]
+  );
+  const hasData = chatData.length > 0;
+
   return (
-    <div className="space-y-5 max-w-6xl mx-auto pb-10">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-brand-blue dark:text-white uppercase tracking-tighter">Analitik Performa</h2>
-          <p className="text-slate-400 text-[11px] font-medium">Pantau bagaimana JagoBot membantu bisnis Anda.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold uppercase tracking-widest rounded-xl px-4 py-2 outline-none cursor-pointer text-brand-blue shadow-sm"
-          >
-            <option value="bulan">Bulan Ini</option>
-            <option value="minggu">Minggu Ini</option>
-          </select>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#1800ad] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-[#1800ad]/30">
-            <Download className="w-3.5 h-3.5" /> Ekspor
-          </button>
-        </div>
+    <div className="mx-auto max-w-6xl space-y-5 pb-10">
+      <PageHeader
+        title="Analitik Performa"
+        description="Pantau bagaimana JagoBot membantu bisnis Anda."
+        actions={
+          <>
+            <Select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="w-auto min-w-[130px] text-xs"
+            >
+              <option value="bulan">Bulan Ini</option>
+              <option value="minggu">Minggu Ini</option>
+            </Select>
+            <Button>
+              <Download className="h-4 w-4" /> Ekspor
+            </Button>
+          </>
+        }
+      />
+
+      {/* ── Widget statistik (KPI) ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard title="Total Percakapan" value={totalChats.toLocaleString()} icon={MessageCircle} accentColor="blue" />
+        <StatCard title="Tingkat Penyelesaian" value={completionRate} icon={CheckCircle} accentColor="green" />
+        <StatCard title="Waktu Respon" value={responseTime} icon={Clock} accentColor="violet" />
+        <StatCard title="Kepuasan Pelanggan" value="N/A" icon={Star} accentColor="orange" />
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: "Total Percakapan", value: totalChats.toLocaleString(), icon: MessageCircle, mobileVisible: true },
-          { label: "Tingkat Penyelesaian", value: completionRate, icon: CheckCircle, mobileVisible: true },
-          { label: "Waktu Respon", value: responseTime, icon: Clock, mobileVisible: true },
-          { label: "Kepuasan Pelanggan", value: "N/A", icon: TrendingUp, mobileVisible: false },
-        ].map((stat, idx) => (
-          <div key={idx} className={cn(
-            "bg-brand-blue p-4 rounded-2xl border border-white/5 shadow-xl group hover:shadow-2xl transition-all duration-300",
-            !stat.mobileVisible && "hidden sm:block"
-          )}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3 bg-white/20 dark:bg-slate-900/10 text-white shadow-sm border border-white/10 group-hover:bg-[#1800ad] group-hover:text-white transition-all">
-              <stat.icon className="w-5 h-5" />
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* ── Volume Chat Harian ── */}
+        <Card className="p-6 lg:col-span-2">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue ring-1 ring-inset ring-accent-blue/20 dark:bg-accent-blue/15 dark:text-accent-blue-light dark:ring-accent-blue/30">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-bold tracking-tight text-neutral-900 dark:text-white">
+                  Volume Chat Harian
+                </h3>
+                <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                  Jumlah percakapan per hari · {period === "bulan" ? "bulan ini" : "minggu ini"}
+                </p>
+              </div>
             </div>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{stat.label}</p>
-            <p className="text-xl font-bold text-white tracking-tighter">{stat.value}</p>
+            <Badge variant="info">Live · 30s</Badge>
           </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Main Chart */}
-        <div className="lg:col-span-2 bg-brand-blue p-5 rounded-2xl border border-white/5 shadow-xl">
-          <h3 className="text-xs font-bold text-white mb-6 uppercase tracking-tight flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#1800ad]" /> Volume Chat Harian
-          </h3>
-          <div className="h-[250px] w-full">
+          <div className="h-[260px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chatData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" opacity={0.5} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 700 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 700 }} />
-                <Tooltip
-                  cursor={{ fill: '#ffffff05' }}
-                  contentStyle={{ backgroundColor: '#0A2647', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3)', padding: '10px', color: '#fff', fontSize: '10px' }}
-                  itemStyle={{ color: '#fff' }}
+              <BarChart data={chatData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.75} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 6" vertical={false} stroke="#e8eaf2" />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
+                  dy={10}
                 />
-                <Bar dataKey="chats" fill="#1800ad" radius={[4, 4, 0, 0]} barSize={30} />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 500 }}
+                  width={38}
+                  tickFormatter={(v: number) => (v >= 1000 ? `${v / 1000}k` : String(v))}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  cursor={{ fill: "#eef0f7", radius: 8 }}
+                />
+                <Bar dataKey="chats" name="Chat" fill="url(#barGradient)" radius={[7, 7, 0, 0]} barSize={26} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
 
-        {/* Source Breakdown */}
-        <div className="bg-brand-blue p-5 rounded-2xl border border-white/5 shadow-xl">
-          <h3 className="text-xs font-bold text-white mb-6 uppercase tracking-tight">Sumber Chat</h3>
-          <div className="h-[180px] w-full relative">
+          {/* Footer ringkasan */}
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border-subtle pt-4 dark:border-neutral-800">
+            <span className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+              Hari tertinggi:{" "}
+              <strong className="font-semibold text-neutral-800 dark:text-neutral-100">
+                {hasData ? `${maxEntry?.name} (${maxEntry?.chats ?? 0})` : "-"}
+              </strong>
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+              Total periode:{" "}
+              <strong className="font-semibold text-neutral-800 dark:text-neutral-100">
+                {totalChats.toLocaleString()} chat
+              </strong>
+            </span>
+          </div>
+        </Card>
+
+        {/* ── Sumber Chat ── */}
+        <Card className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-display text-sm font-bold tracking-tight text-neutral-900 dark:text-white">
+              Sumber Chat
+            </h3>
+            <Badge variant="neutral">{sourceData.length} kanal</Badge>
+          </div>
+
+          <div className="relative mx-auto h-[170px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={sourceData}
+                  data={sourceData.length > 0 ? sourceData : [{ name: "Belum ada data", value: 100, color: "#e8eaf2" }]}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
+                  innerRadius={52}
                   outerRadius={70}
-                  paddingAngle={8}
+                  paddingAngle={6}
                   dataKey="value"
+                  stroke="none"
+                  cornerRadius={5}
                 >
-                  {sourceData.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                  {(sourceData.length > 0 ? sourceData : [{ color: "#e8eaf2" }]).map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0A2647', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', color: '#fff', fontSize: '10px' }}
-                />
+                <Tooltip contentStyle={chartTooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
-              <p className="text-lg font-bold text-white">100%</p>
+            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Total</p>
+              <p className="font-display text-lg font-bold text-neutral-900 dark:text-white">100%</p>
             </div>
           </div>
-          <div className="space-y-2 mt-4">
-            {sourceData.map((item: any) => (
-              <div key={item.name} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 dark:bg-slate-900/5 border border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
-                  <span className="text-[10px] font-bold text-white uppercase tracking-widest">{item.name}</span>
+
+          <div className="mt-5 space-y-2">
+            {sourceData.map((item: any, idx: number) => (
+              <div
+                key={item.name}
+                className="flex items-center justify-between rounded-xl border border-border-subtle bg-neutral-50/60 px-3 py-2.5 transition-colors hover:border-accent-blue/30 dark:border-neutral-800 dark:bg-neutral-800/40"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-neutral-900"
+                    style={{ backgroundColor: item.color || PIE_COLORS[idx % PIE_COLORS.length] }}
+                  />
+                  <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">{item.name}</span>
                 </div>
-                <span className="text-xs font-bold text-[#1800ad]">{item.value}%</span>
+                <span className="flex items-center gap-1 font-display text-xs font-bold tabular-nums text-neutral-900 dark:text-white">
+                  {item.value}%
+                  {idx === 0 && sourceData.length > 1 ? (
+                    <ChevronUp className="h-3 w-3 text-accent-green" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3 text-neutral-300 dark:text-neutral-600" />
+                  )}
+                </span>
               </div>
             ))}
             {sourceData.length === 0 && (
-              <div className="text-center text-xs text-slate-400 font-bold uppercase tracking-widest py-2">
+              <div className="py-3 text-center text-xs font-medium text-neutral-400">
                 Belum ada data sumber
               </div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

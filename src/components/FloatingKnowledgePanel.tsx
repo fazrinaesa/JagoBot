@@ -1,8 +1,9 @@
-import { Upload, FileText, CheckCircle2, Loader2, Edit3, X, Plus, Minimize2, Maximize2 } from "lucide-react";
+import { Upload, CheckCircle2, Loader2, X, Plus, Minimize2, FileUp, PenLine } from "lucide-react";
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import api from "../lib/api";
+import { Button, Input, Textarea } from "./ui";
 
 interface FloatingKnowledgePanelProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ export const FloatingKnowledgePanel = ({
   onMaximize,
   activeBotId,
   onUploadSuccess,
-  isLoading
+  isLoading,
 }: FloatingKnowledgePanelProps) => {
   const [manualText, setManualText] = useState("");
   const [editingTitle, setEditingTitle] = useState("");
@@ -45,7 +46,7 @@ export const FloatingKnowledgePanel = ({
       const response = await api.post("/knowledge/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      
+
       if (response.data.success) {
         alert("✅ Dokumen berhasil diunggah!");
         onUploadSuccess();
@@ -73,7 +74,7 @@ export const FloatingKnowledgePanel = ({
       const response = await api.post("/knowledge/manual", {
         botId: activeBotId,
         title: editingTitle,
-        content: manualText
+        content: manualText,
       });
 
       if (response.data.success) {
@@ -109,10 +110,10 @@ export const FloatingKnowledgePanel = ({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0, opacity: 0 }}
         onClick={onMaximize}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-br from-[#1800ad] to-blue-600 rounded-full shadow-2xl shadow-[#1800ad]/50 flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all group"
+        className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent-blue to-accent-violet text-white shadow-lift transition-all hover:scale-110 active:scale-95 focus-ring"
         title="Buka Panel Knowledge Base"
       >
-        <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />
+        <Plus className="h-6 w-6 transition-transform group-hover:rotate-90" />
       </motion.button>
     );
   }
@@ -121,113 +122,118 @@ export const FloatingKnowledgePanel = ({
     <AnimatePresence>
       {isOpen && !isMinimized && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => handleClose()}
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+            className="absolute inset-0 bg-neutral-950/50 backdrop-blur-sm"
           />
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl bg-white dark:bg-slate-900 shadow-2xl rounded-3xl flex flex-col border border-white/10 overflow-hidden max-h-[85vh]"
+            className="relative flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-border-subtle bg-white shadow-pop animate-pop-in dark:border-neutral-800 dark:bg-neutral-900"
           >
             {/* Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-[#1800ad] to-blue-600">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
-                  <Upload className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between border-b border-border-subtle px-6 pb-4 pt-5 dark:border-neutral-800">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue dark:bg-accent-blue/15 dark:text-accent-blue-light">
+                  <Upload className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white uppercase tracking-tight">
+                  <h3 className="font-display text-base font-bold tracking-tight text-neutral-900 dark:text-white">
                     Tambah Pengetahuan
                   </h3>
-                  <p className="text-xs text-blue-100">Upload dokumen atau input teks manual</p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                    Upload dokumen atau input teks manual
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => onMinimize()} 
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => onMinimize()}
+                  className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                   title="Minimize"
                 >
-                  <Minimize2 className="w-5 h-5 text-white" />
+                  <Minimize2 className="h-4.5 w-4.5" />
                 </button>
-                <button 
-                  onClick={() => handleClose()} 
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                <button
+                  onClick={() => handleClose()}
+                  className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                   title="Close"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Section 1: File Upload */}
+            {/* Konten */}
+            <div className="custom-scrollbar flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                {/* Bagian 1: Upload file */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-[#1800ad]/10 flex items-center justify-center text-[10px] font-bold text-[#1800ad]">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-blue/10 text-[11px] font-bold text-accent-blue dark:bg-accent-blue/15 dark:text-accent-blue-light">
                       1
                     </div>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-700 dark:text-neutral-200">
                       Unggah File
                     </h4>
                   </div>
-                  
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    className="hidden" 
-                    accept=".pdf,.txt,.docx" 
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept=".pdf,.txt,.docx"
                   />
-                  
-                  <div 
+
+                  <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center hover:border-[#1800ad] hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group bg-slate-50/50 dark:bg-slate-800/20"
+                    className="group cursor-pointer rounded-3xl border-2 border-dashed border-neutral-200 bg-neutral-50/50 p-10 text-center transition-all hover:border-accent-blue/50 hover:bg-accent-blue/5 focus-ring dark:border-neutral-700 dark:bg-neutral-800/30 dark:hover:border-accent-blue/50 dark:hover:bg-accent-blue/10"
                   >
-                    <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100 dark:border-slate-700 group-hover:bg-[#1800ad] transition-all">
-                      <Upload className="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" />
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border-subtle bg-white shadow-soft transition-all group-hover:border-accent-blue/30 group-hover:bg-accent-blue/10 dark:border-neutral-700 dark:bg-neutral-800">
+                      <Upload className="h-6 w-6 text-neutral-400 transition-colors group-hover:text-accent-blue dark:group-hover:text-accent-blue-light" />
                     </div>
-                    <p className="text-sm font-bold text-slate-700 dark:text-white">
+                    <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
                       {uploadLoading ? "Mengunggah..." : "Klik atau Tarik File"}
                     </p>
-                    <p className="text-[9px] text-slate-400 mt-1 uppercase font-bold tracking-widest">
-                      PDF, DOCX, TXT (Max 10MB)
+                    <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-neutral-400">
+                      PDF, DOCX, TXT (Maks 10MB)
                     </p>
                   </div>
                 </section>
 
-                {/* Section 2: Manual Text */}
+                {/* Bagian 2: Input manual */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-[#1800ad]/10 flex items-center justify-center text-[10px] font-bold text-[#1800ad]">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-violet/10 text-[11px] font-bold text-accent-violet dark:bg-accent-violet/15 dark:text-accent-violet-light">
                       2
                     </div>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-700 dark:text-neutral-200">
                       Input Manual
                     </h4>
                   </div>
-                  
+
                   <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={editingTitle}
-                      onChange={(e) => setEditingTitle(e.target.value)}
-                      placeholder="Judul Informasi"
-                      className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-slate-800 dark:text-white text-sm font-bold placeholder:text-slate-400 transition-all"
-                    />
-                    <textarea
+                    <div className="relative">
+                      <PenLine className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                      <Input
+                        type="text"
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        placeholder="Judul Informasi"
+                        className="pl-10 font-semibold"
+                      />
+                    </div>
+                    <Textarea
                       value={manualText}
                       onChange={(e) => setManualText(e.target.value)}
                       placeholder="Tuliskan detail informasi toko Anda..."
-                      className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#1800ad]/20 outline-none text-slate-700 dark:text-white text-sm min-h-[160px] resize-none font-medium placeholder:text-slate-400 transition-all"
+                      className="min-h-[176px]"
                     />
                   </div>
                 </section>
@@ -235,25 +241,14 @@ export const FloatingKnowledgePanel = ({
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-end gap-3">
-              <button
-                onClick={() => handleClose()}
-                className="px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-              >
+            <div className="flex justify-end gap-2.5 border-t border-border-subtle bg-neutral-50/60 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/30">
+              <Button variant="ghost" onClick={() => handleClose()}>
                 Batal
-              </button>
-              <button
-                onClick={handleManualSubmit}
-                disabled={uploadLoading}
-                className="px-8 py-3.5 bg-[#1800ad] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-[#1800ad]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50"
-              >
-                {uploadLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4" />
-                )}
+              </Button>
+              <Button onClick={handleManualSubmit} disabled={uploadLoading}>
+                {uploadLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                 Simpan & Latih
-              </button>
+              </Button>
             </div>
           </motion.div>
         </div>
