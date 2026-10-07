@@ -488,7 +488,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           pageBgRoutes[location.pathname] || "page-bg-minimal",
           location.pathname === "/dashboard/playground" ? "overflow-hidden p-0" : "overflow-y-auto p-4 lg:p-8"
         )}>
-          <div className={cn("mx-auto", location.pathname === "/dashboard/playground" ? "h-full max-w-none" : "max-w-7xl")}>
+          <div className={cn("mx-auto", location.pathname === "/dashboard/playground" ? "flex h-full max-w-none items-center justify-center p-5" : "max-w-7xl")}>
             {children}
           </div>
         </main>

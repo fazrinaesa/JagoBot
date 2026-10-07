@@ -118,7 +118,7 @@ export const ChatbotPlayground = () => {
   };
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-140px)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border-subtle bg-white shadow-card dark:border-neutral-800 dark:bg-neutral-900/60">
+    <div className="flex h-full w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border-subtle bg-white shadow-card dark:border-neutral-800 dark:bg-neutral-900/60">
       {/* ── Header ala platform chatbot profesional ── */}
       <div className="relative flex items-center justify-between overflow-hidden border-b border-border-subtle bg-gradient-to-r from-brand-blue via-[#132d52] to-brand-navy px-6 py-4 dark:border-neutral-800 dark:from-brand-blue dark:to-brand-navy">
         <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-accent-blue/30 blur-3xl" />
