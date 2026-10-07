@@ -235,7 +235,7 @@ export const AnalyticsDashboard = () => {
             {sourceData.map((item: any, idx: number) => (
               <div
                 key={item.name}
-                className="flex items-center justify-between rounded-xl border border-border-subtle bg-neutral-50/60 px-3 py-2.5 transition-colors hover:border-accent-blue/30 dark:border-neutral-800 dark:bg-neutral-800/40"
+                className="flex items-center justify-between rounded-xl border border-border-subtle bg-neutral-50/60 px-3 py-2.5 transition-all hover:bg-white hover:shadow-soft dark:border-neutral-800 dark:bg-neutral-800/40"
               >
                 <div className="flex items-center gap-2.5">
                   <span

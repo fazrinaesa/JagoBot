@@ -242,7 +242,7 @@ export const PaymentPage: React.FC = () => {
                   "flex h-full flex-col rounded-3xl border p-6 transition-all duration-300",
                   plan.recommended
                     ? "border-transparent bg-gradient-to-b from-accent-blue/[0.06] to-accent-violet/[0.04] shadow-card ring-2 ring-accent-blue/40 hover:-translate-y-1 hover:shadow-lift dark:from-accent-blue/15 dark:to-accent-violet/10"
-                    : "border-border-subtle bg-white shadow-soft hover:-translate-y-0.5 hover:border-accent-blue/30 hover:shadow-card dark:border-neutral-800 dark:bg-neutral-900/60"
+                    : "border-border-subtle bg-white shadow-soft hover:-translate-y-0.5 hover:shadow-hover-blue dark:border-neutral-800 dark:bg-neutral-900/60"
                 )}
               >
                 <h4 className="font-display text-base font-bold tracking-tight text-neutral-900 dark:text-white">
@@ -308,7 +308,7 @@ export const PaymentPage: React.FC = () => {
               return (
                 <div
                   key={p.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-neutral-50/60 p-4 transition-colors hover:border-accent-blue/25 dark:border-neutral-800 dark:bg-neutral-800/40"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-neutral-50/60 p-4 transition-all hover:bg-white hover:shadow-soft dark:border-neutral-800 dark:bg-neutral-800/40"
                 >
                   <div>
                     <p className="font-display text-sm font-bold text-neutral-900 dark:text-white">
@@ -381,7 +381,7 @@ export const PaymentPage: React.FC = () => {
             <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
               Upload Bukti Transfer
             </label>
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-3.5 text-sm text-neutral-600 transition-all hover:border-accent-blue/50 hover:bg-accent-blue/5 dark:border-neutral-700 dark:bg-neutral-800/40 dark:text-neutral-300">
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-3.5 text-sm text-neutral-600 transition-all hover:bg-accent-blue/5 hover:shadow-hover-blue dark:border-neutral-700 dark:bg-neutral-800/40 dark:text-neutral-300">
               <Upload className="h-4 w-4 shrink-0" />
               <span className="truncate">{proofFile ? proofFile.name : "Pilih file (JPG/PNG)"}</span>
               <input

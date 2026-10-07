@@ -137,16 +137,28 @@ const accentBaseStyle: Record<CardAccentColor, string> = {
   neutral: "border-border-subtle shadow-soft",
 };
 
+/* Hover = shadow berwarna sesuai aksen kartu (tanpa outline) */
 const accentHoverStyles: Record<CardAccentColor, string> = {
-  blue: "hover:border-accent-blue/70 hover:shadow-lg hover:shadow-accent-blue/15 hover:ring-1 hover:ring-accent-blue/25",
-  violet: "hover:border-accent-violet/70 hover:shadow-lg hover:shadow-accent-violet/15 hover:ring-1 hover:ring-accent-violet/25",
-  green: "hover:border-accent-green/70 hover:shadow-lg hover:shadow-accent-green/15 hover:ring-1 hover:ring-accent-green/25",
-  pink: "hover:border-accent-pink/70 hover:shadow-lg hover:shadow-accent-pink/15 hover:ring-1 hover:ring-accent-pink/25",
-  orange: "hover:border-accent-orange/70 hover:shadow-lg hover:shadow-accent-orange/15 hover:ring-1 hover:ring-accent-orange/25",
-  teal: "hover:border-accent-teal/70 hover:shadow-lg hover:shadow-accent-teal/15 hover:ring-1 hover:ring-accent-teal/25",
-  rose: "hover:border-accent-rose/70 hover:shadow-lg hover:shadow-accent-rose/15 hover:ring-1 hover:ring-accent-rose/25",
-  neutral:
-    "hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/60 dark:hover:border-neutral-600 dark:hover:shadow-neutral-800/50 hover:ring-1 hover:ring-neutral-300 dark:hover:ring-neutral-600",
+  blue: "hover:shadow-hover-blue",
+  violet: "hover:shadow-hover-violet",
+  green: "hover:shadow-hover-green",
+  pink: "hover:shadow-hover-pink",
+  orange: "hover:shadow-hover-orange",
+  teal: "hover:shadow-hover-teal",
+  rose: "hover:shadow-hover-rose",
+  neutral: "hover:shadow-hover-neutral",
+};
+
+/* Outline hanya saat kartu dipilih/aktif — warnanya mengikuti aksen kartu */
+const accentActiveStyles: Record<CardAccentColor, string> = {
+  blue: "border-accent-blue/60 ring-2 ring-accent-blue/45",
+  violet: "border-accent-violet/60 ring-2 ring-accent-violet/45",
+  green: "border-accent-green/60 ring-2 ring-accent-green/45",
+  pink: "border-accent-pink/60 ring-2 ring-accent-pink/45",
+  orange: "border-accent-orange/60 ring-2 ring-accent-orange/45",
+  teal: "border-accent-teal/60 ring-2 ring-accent-teal/45",
+  rose: "border-accent-rose/60 ring-2 ring-accent-rose/45",
+  neutral: "border-neutral-300 ring-2 ring-neutral-300/70",
 };
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -154,6 +166,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   accentColor?: CardAccentColor;
   elevated?: boolean;
   solidBg?: boolean;
+  selected?: boolean;
 }
 
 export const Card = ({
@@ -161,6 +174,7 @@ export const Card = ({
   accentColor = "neutral",
   elevated = false,
   solidBg = true,
+  selected = false,
   className,
   ...props
 }: CardProps) => (
@@ -172,6 +186,7 @@ export const Card = ({
       elevated && "shadow-md",
       hover && "card-hover",
       hover && accentHoverStyles[accentColor],
+      selected && accentActiveStyles[accentColor],
       className
     )}
     {...props}
@@ -432,7 +447,7 @@ export const StatCard = ({
   accentColor = "blue",
   className,
 }: StatCardProps) => (
-  <Card accentColor={accentColor} className={cn("group relative overflow-hidden p-5", className)}>
+  <Card accentColor={accentColor} hover className={cn("group relative overflow-hidden p-5", className)}>
     {/* Glow dekoratif di sudut kartu */}
     <div
       className={cn(

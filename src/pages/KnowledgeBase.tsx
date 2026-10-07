@@ -90,7 +90,7 @@ export const KnowledgeBase = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <button
           onClick={handleOpenPanel}
-          className="group relative overflow-hidden rounded-3xl border-2 border-dashed border-accent-blue/30 bg-gradient-to-br from-accent-blue/5 to-transparent p-6 text-left transition-all duration-300 hover:border-accent-blue/60 hover:shadow-card focus-ring dark:border-accent-blue/30 dark:from-accent-blue/10 dark:to-transparent"
+          className="group relative overflow-hidden rounded-3xl border-2 border-dashed border-accent-blue/30 bg-gradient-to-br from-accent-blue/5 to-transparent p-6 text-left transition-all duration-300 hover:border-accent-blue/60 hover:shadow-hover-blue focus-ring dark:border-accent-blue/30 dark:from-accent-blue/10 dark:to-transparent"
         >
           <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-accent-blue/15 opacity-70 blur-2xl transition-opacity group-hover:opacity-100" />
           <div className="relative">
@@ -110,7 +110,7 @@ export const KnowledgeBase = () => {
 
         <button
           onClick={handleOpenPanel}
-          className="group relative overflow-hidden rounded-3xl border-2 border-dashed border-accent-violet/30 bg-gradient-to-br from-accent-violet/5 to-transparent p-6 text-left transition-all duration-300 hover:border-accent-violet/60 hover:shadow-card focus-ring dark:border-accent-violet/30 dark:from-accent-violet/10 dark:to-transparent"
+          className="group relative overflow-hidden rounded-3xl border-2 border-dashed border-accent-violet/30 bg-gradient-to-br from-accent-violet/5 to-transparent p-6 text-left transition-all duration-300 hover:border-accent-violet/60 hover:shadow-hover-violet focus-ring dark:border-accent-violet/30 dark:from-accent-violet/10 dark:to-transparent"
         >
           <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-accent-violet/15 opacity-70 blur-2xl transition-opacity group-hover:opacity-100" />
           <div className="relative">
@@ -159,7 +159,7 @@ export const KnowledgeBase = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04 }}
                     key={file.id || idx}
-                    className="group flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-white p-4 shadow-soft transition-all hover:border-accent-blue/40 hover:shadow-card dark:border-neutral-800 dark:bg-neutral-900/60"
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-white p-4 shadow-soft transition-all hover:shadow-hover-blue dark:border-neutral-800 dark:bg-neutral-900/60"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3.5">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-violet/10 text-accent-violet transition-colors group-hover:bg-accent-violet/20 dark:bg-accent-violet/15 dark:text-accent-violet-light">

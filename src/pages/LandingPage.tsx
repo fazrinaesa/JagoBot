@@ -38,7 +38,7 @@ export const LandingPage = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-surface font-sans transition-colors duration-500 dark:bg-surface-dark">
+    <div className="page-bg-hero min-h-screen overflow-x-hidden font-sans transition-colors duration-500 dark:bg-surface-dark">
       {/* Navbar */}
       <nav className="fixed inset-x-0 top-0 z-50 border-b border-border-subtle/60 bg-white/80 backdrop-blur-xl transition-colors duration-500 dark:border-neutral-800/60 dark:bg-surface-dark/80">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-6">

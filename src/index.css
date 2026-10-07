@@ -64,6 +64,16 @@
   --shadow-lift: 0 2px 4px rgba(16, 24, 40, 0.05), 0 18px 36px -12px rgba(79, 70, 229, 0.18);
   --shadow-pop: 0 24px 64px -16px rgba(16, 24, 40, 0.25);
 
+  /* ── Shadow hover berwarna, mengikuti aksen kartu ─────────── */
+  --shadow-hover-blue: 0 14px 36px -12px rgba(79, 70, 229, 0.38);
+  --shadow-hover-violet: 0 14px 36px -12px rgba(124, 58, 237, 0.38);
+  --shadow-hover-green: 0 14px 36px -12px rgba(16, 185, 129, 0.38);
+  --shadow-hover-pink: 0 14px 36px -12px rgba(244, 63, 94, 0.38);
+  --shadow-hover-orange: 0 14px 36px -12px rgba(245, 158, 11, 0.38);
+  --shadow-hover-teal: 0 14px 36px -12px rgba(20, 184, 166, 0.38);
+  --shadow-hover-rose: 0 14px 36px -12px rgba(251, 113, 133, 0.38);
+  --shadow-hover-neutral: 0 14px 36px -12px rgba(16, 24, 40, 0.18);
+
   /* ── Animasi mikro ────────────────────────────────────────── */
   --animate-fade-in: fade-in 0.25s ease-out both;
   --animate-pop-in: pop-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -115,6 +125,128 @@
   &:hover {
     transform: translateY(-3px);
   }
+}
+
+/* ── Latar halaman: blob radial lembut multi-hue (biru + ungu + pink + fuchsia + sky + rose, satu tone) di atas dasar putih.
+      Pola tiap halaman dibuat berbeda agar tidak monoton; kartu tetap putih solid. ── */
+@utility page-bg-hero {
+  background:
+    radial-gradient(64rem 36rem at 12% -12%, rgba(79, 70, 229, 0.14), transparent 62%),
+    radial-gradient(58rem 32rem at 92% -6%, rgba(217, 70, 239, 0.11), transparent 58%),
+    radial-gradient(48rem 30rem at 68% 10%, rgba(244, 63, 94, 0.09), transparent 58%),
+    radial-gradient(72rem 40rem at 38% 4%, rgba(124, 58, 237, 0.1), transparent 66%),
+    var(--color-surface);
+}
+
+@utility page-bg-dashboard {
+  background:
+    radial-gradient(54rem 32rem at -6% -10%, rgba(79, 70, 229, 0.13), transparent 60%),
+    radial-gradient(46rem 28rem at 106% -6%, rgba(14, 165, 233, 0.11), transparent 56%),
+    radial-gradient(52rem 30rem at 78% 22%, rgba(217, 70, 239, 0.08), transparent 58%),
+    radial-gradient(56rem 36rem at 40% 118%, rgba(244, 63, 94, 0.1), transparent 60%),
+    radial-gradient(48rem 30rem at 10% 58%, rgba(124, 58, 237, 0.08), transparent 60%),
+    var(--color-surface);
+}
+
+@utility page-bg-knowledge {
+  background:
+    radial-gradient(48rem 30rem at 108% 10%, rgba(124, 58, 237, 0.13), transparent 58%),
+    radial-gradient(44rem 26rem at 82% -8%, rgba(217, 70, 239, 0.09), transparent 56%),
+    radial-gradient(54rem 34rem at -8% 88%, rgba(79, 70, 229, 0.11), transparent 62%),
+    radial-gradient(42rem 26rem at 46% 42%, rgba(251, 113, 133, 0.07), transparent 58%),
+    radial-gradient(40rem 24rem at 55% -6%, rgba(14, 165, 233, 0.07), transparent 60%),
+    var(--color-surface);
+}
+
+@utility page-bg-integration {
+  background:
+    radial-gradient(50rem 30rem at 50% -16%, rgba(79, 70, 229, 0.12), transparent 62%),
+    radial-gradient(44rem 28rem at -10% 66%, rgba(20, 184, 166, 0.1), transparent 58%),
+    radial-gradient(44rem 26rem at 110% 76%, rgba(217, 70, 239, 0.09), transparent 58%),
+    radial-gradient(40rem 24rem at 62% 108%, rgba(14, 165, 233, 0.07), transparent 58%),
+    radial-gradient(44rem 26rem at 12% -4%, rgba(244, 63, 94, 0.07), transparent 58%),
+    var(--color-surface);
+}
+
+@utility page-bg-analytics {
+  background:
+    radial-gradient(60rem 34rem at 50% -18%, rgba(124, 58, 237, 0.13), transparent 64%),
+    radial-gradient(42rem 26rem at -8% 36%, rgba(79, 70, 229, 0.09), transparent 58%),
+    radial-gradient(46rem 28rem at 108% 48%, rgba(217, 70, 239, 0.09), transparent 56%),
+    radial-gradient(40rem 24rem at 32% 96%, rgba(244, 63, 94, 0.07), transparent 58%),
+    radial-gradient(38rem 22rem at 88% 88%, rgba(14, 165, 233, 0.06), transparent 58%),
+    var(--color-surface);
+}
+
+@utility page-bg-payment {
+  background:
+    radial-gradient(48rem 32rem at -10% 16%, rgba(79, 70, 229, 0.12), transparent 58%),
+    radial-gradient(48rem 30rem at 112% 22%, rgba(217, 70, 239, 0.11), transparent 58%),
+    radial-gradient(44rem 26rem at 76% -8%, rgba(244, 63, 94, 0.09), transparent 56%),
+    radial-gradient(56rem 32rem at 42% 114%, rgba(124, 58, 237, 0.09), transparent 62%),
+    radial-gradient(38rem 22rem at 88% 66%, rgba(14, 165, 233, 0.06), transparent 58%),
+    var(--color-surface);
+}
+
+@utility page-bg-playground {
+  background:
+    radial-gradient(56rem 30rem at 50% -18%, rgba(124, 58, 237, 0.1), transparent 64%),
+    radial-gradient(42rem 26rem at 106% 96%, rgba(217, 70, 239, 0.07), transparent 58%),
+    radial-gradient(40rem 26rem at -6% 92%, rgba(79, 70, 229, 0.07), transparent 60%),
+    radial-gradient(36rem 22rem at 86% 40%, rgba(14, 165, 233, 0.05), transparent 58%),
+    var(--color-surface);
+}
+
+@utility page-bg-personality {
+  background:
+    radial-gradient(48rem 30rem at -8% 10%, rgba(124, 58, 237, 0.12), transparent 58%),
+    radial-gradient(44rem 28rem at 110% 82%, rgba(217, 70, 239, 0.09), transparent 58%),
+    radial-gradient(42rem 26rem at 76% -10%, rgba(251, 113, 133, 0.08), transparent 56%),
+    radial-gradient(40rem 24rem at 26% 108%, rgba(79, 70, 229, 0.07), transparent 60%),
+    radial-gradient(36rem 22rem at 56% 44%, rgba(14, 165, 233, 0.05), transparent 58%),
+    var(--color-surface);
+}
+
+@utility page-bg-settings {
+  background:
+    radial-gradient(46rem 28rem at 104% -8%, rgba(79, 70, 229, 0.11), transparent 58%),
+    radial-gradient(44rem 26rem at -8% 28%, rgba(251, 113, 133, 0.08), transparent 56%),
+    radial-gradient(42rem 26rem at 84% 46%, rgba(217, 70, 239, 0.07), transparent 58%),
+    radial-gradient(48rem 30rem at 42% 118%, rgba(124, 58, 237, 0.09), transparent 60%),
+    radial-gradient(36rem 22rem at 12% 62%, rgba(14, 165, 233, 0.06), transparent 58%),
+    var(--color-surface);
+}
+
+@utility page-bg-minimal {
+  background:
+    radial-gradient(46rem 26rem at 18% -12%, rgba(79, 70, 229, 0.1), transparent 60%),
+    radial-gradient(44rem 26rem at 88% -8%, rgba(217, 70, 239, 0.08), transparent 56%),
+    radial-gradient(48rem 28rem at 50% 114%, rgba(124, 58, 237, 0.07), transparent 60%),
+    var(--color-surface);
+}
+
+@utility page-bg-auth {
+  background:
+    radial-gradient(56rem 34rem at 50% -20%, rgba(79, 70, 229, 0.14), transparent 62%),
+    radial-gradient(46rem 30rem at 110% 74%, rgba(217, 70, 239, 0.11), transparent 58%),
+    radial-gradient(42rem 26rem at -8% 82%, rgba(251, 113, 133, 0.09), transparent 56%),
+    radial-gradient(44rem 26rem at 42% 96%, rgba(124, 58, 237, 0.09), transparent 60%),
+    var(--color-surface);
+}
+
+/* Dark mode: kembalikan ke permukaan gelap polos agar kontras kartu tetap terjaga */
+.dark .page-bg-hero,
+.dark .page-bg-dashboard,
+.dark .page-bg-knowledge,
+.dark .page-bg-integration,
+.dark .page-bg-analytics,
+.dark .page-bg-payment,
+.dark .page-bg-playground,
+.dark .page-bg-personality,
+.dark .page-bg-settings,
+.dark .page-bg-minimal,
+.dark .page-bg-auth {
+  background: var(--color-surface-dark);
 }
 
 /* Scrollbar tipis & bersih */

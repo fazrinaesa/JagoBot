@@ -182,7 +182,7 @@ export const ChatbotPlayground = () => {
               <button
                 key={q}
                 onClick={() => handleQuickStart(q)}
-                className="rounded-full border border-border-subtle bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-600 shadow-soft transition-all hover:border-accent-blue/40 hover:text-accent-blue focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:text-accent-blue-light"
+                className="rounded-full border border-border-subtle bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-600 shadow-soft transition-all hover:text-accent-blue hover:shadow-hover-blue focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:text-accent-blue-light"
               >
                 {q}
               </button>

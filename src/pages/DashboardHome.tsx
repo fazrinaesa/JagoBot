@@ -345,7 +345,7 @@ export const DashboardHome = () => {
 
           <Link
             to="/dashboard/analytics"
-            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border-subtle bg-white py-2.5 text-xs font-semibold text-neutral-700 shadow-soft transition-all hover:border-accent-blue/40 hover:text-accent-blue focus-ring dark:border-neutral-700 dark:bg-neutral-800/60 dark:text-neutral-200 dark:hover:text-accent-blue-light"
+            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border-subtle bg-white py-2.5 text-xs font-semibold text-neutral-700 shadow-soft transition-all hover:text-accent-blue hover:shadow-hover-blue focus-ring dark:border-neutral-700 dark:bg-neutral-800/60 dark:text-neutral-200 dark:hover:text-accent-blue-light"
           >
             Lihat analitik lengkap <ChevronRight className="h-3.5 w-3.5" />
           </Link>

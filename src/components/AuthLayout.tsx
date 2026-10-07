@@ -11,10 +11,8 @@ interface AuthLayoutProps {
 
 export const AuthLayout = ({ title, subtitle, children, footer }: AuthLayoutProps) => {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface p-6 font-sans transition-colors duration-500 dark:bg-surface-dark">
-      {/* Dekorasi background */}
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[480px] w-[480px] rounded-full bg-accent-blue/10 blur-[110px]" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[480px] w-[480px] rounded-full bg-accent-violet/10 blur-[110px]" />
+    <div className="page-bg-auth relative flex min-h-screen items-center justify-center overflow-hidden p-6 font-sans transition-colors duration-500 dark:bg-surface-dark">
+      {/* Garis aksen atas */}
       <div className="pointer-events-none absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-accent-blue/20 to-transparent" />
 
       <motion.div

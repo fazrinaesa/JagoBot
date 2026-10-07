@@ -135,7 +135,7 @@ export const CustomPersonality = () => {
                       "relative rounded-2xl border-2 p-4 text-left transition-all duration-200 focus-ring",
                       isSelected
                         ? "border-accent-blue bg-gradient-to-br from-accent-blue/[0.07] to-accent-violet/[0.05] shadow-card ring-2 ring-accent-blue/30 ring-offset-2 ring-offset-white dark:from-accent-blue/15 dark:to-accent-violet/10 dark:ring-offset-neutral-900"
-                        : "border-border-subtle bg-white hover:-translate-y-0.5 hover:border-accent-blue/50 hover:shadow-soft dark:border-neutral-800 dark:bg-neutral-900/50"
+                        : "border-border-subtle bg-white hover:-translate-y-0.5 hover:shadow-hover-blue dark:border-neutral-800 dark:bg-neutral-900/50"
                     )}
                   >
                     {/* Check indicator di pojok */}

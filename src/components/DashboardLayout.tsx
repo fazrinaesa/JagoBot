@@ -58,6 +58,20 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, href, acti
   </Link>
 );
 
+/* Background gradient full-bleed per halaman (diterapkan di <main>, dipisah batas sidebar & header) */
+const pageBgRoutes: Record<string, string> = {
+  "/dashboard": "page-bg-dashboard",
+  "/dashboard/knowledge": "page-bg-knowledge",
+  "/dashboard/personality": "page-bg-personality",
+  "/dashboard/integration": "page-bg-integration",
+  "/dashboard/analytics": "page-bg-analytics",
+  "/dashboard/profile": "page-bg-settings",
+  "/dashboard/notifications": "page-bg-minimal",
+  "/dashboard/payment": "page-bg-payment",
+  "/dashboard/admin/payment": "page-bg-minimal",
+  "/dashboard/playground": "page-bg-playground",
+};
+
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -275,7 +289,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                     }
                     handleProjectSwitch(selectedValue);
                   }}
-                  className="min-w-[180px] cursor-pointer appearance-none rounded-xl border border-neutral-200 bg-white py-2 pl-3 pr-9 text-xs font-semibold text-neutral-800 shadow-soft outline-none transition-all hover:border-accent-blue/40 focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                  className="min-w-[180px] cursor-pointer appearance-none rounded-xl border border-neutral-200 bg-white py-2 pl-3 pr-9 text-xs font-semibold text-neutral-800 shadow-soft outline-none transition-all hover:shadow-hover-blue focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
                 >
                   {userBots.length === 0 && (
                     <option value="" disabled>
@@ -313,7 +327,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             <div className="relative">
               <button
                 onClick={() => setIsHelpOpen(!isHelpOpen)}
-                className="rounded-xl border border-transparent p-2 text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 focus-ring dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                className="rounded-xl border border-transparent p-2 text-neutral-500 transition-all hover:bg-neutral-50 hover:text-neutral-800 hover:shadow-soft focus-ring dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                 title="Help Center"
               >
                 <HelpCircle size={18} />
@@ -362,7 +376,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             <div className="relative">
               <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="relative rounded-xl border border-transparent p-2 text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 focus-ring dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                className="relative rounded-xl border border-transparent p-2 text-neutral-500 transition-all hover:bg-neutral-50 hover:text-neutral-800 hover:shadow-soft focus-ring dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
               >
                 <Bell size={18} />
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-white bg-accent-pink dark:border-surface-dark" />
@@ -402,7 +416,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             {/* Tema */}
             <button
               onClick={toggleTheme}
-              className="rounded-xl border border-transparent p-2 text-neutral-500 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 focus-ring dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+              className="rounded-xl border border-transparent p-2 text-neutral-500 transition-all hover:bg-neutral-50 hover:text-neutral-800 hover:shadow-soft focus-ring dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
               title={theme === "light" ? "Mode Gelap" : "Mode Terang"}
             >
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
@@ -469,7 +483,11 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           </div>
         </header>
 
-        <main className={cn("flex-1 custom-scrollbar", location.pathname === "/dashboard/playground" ? "overflow-hidden p-0" : "overflow-y-auto p-4 lg:p-8")}>
+        <main className={cn(
+          "flex-1 custom-scrollbar",
+          pageBgRoutes[location.pathname] || "page-bg-minimal",
+          location.pathname === "/dashboard/playground" ? "overflow-hidden p-0" : "overflow-y-auto p-4 lg:p-8"
+        )}>
           <div className={cn("mx-auto", location.pathname === "/dashboard/playground" ? "h-full max-w-none" : "max-w-7xl")}>
             {children}
           </div>

@@ -193,9 +193,9 @@ export const FloatingKnowledgePanel = ({
 
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="group cursor-pointer rounded-3xl border-2 border-dashed border-neutral-200 bg-neutral-50/50 p-10 text-center transition-all hover:border-accent-blue/50 hover:bg-accent-blue/5 focus-ring dark:border-neutral-700 dark:bg-neutral-800/30 dark:hover:border-accent-blue/50 dark:hover:bg-accent-blue/10"
+                    className="group cursor-pointer rounded-3xl border-2 border-dashed border-neutral-200 bg-neutral-50/50 p-10 text-center transition-all hover:border-accent-blue/50 hover:bg-accent-blue/5 hover:shadow-hover-blue focus-ring dark:border-neutral-700 dark:bg-neutral-800/30 dark:hover:border-accent-blue/50 dark:hover:bg-accent-blue/10"
                   >
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border-subtle bg-white shadow-soft transition-all group-hover:border-accent-blue/30 group-hover:bg-accent-blue/10 dark:border-neutral-700 dark:bg-neutral-800">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border-subtle bg-white shadow-soft transition-all group-hover:bg-accent-blue/10 dark:border-neutral-700 dark:bg-neutral-800">
                       <Upload className="h-6 w-6 text-neutral-400 transition-colors group-hover:text-accent-blue dark:group-hover:text-accent-blue-light" />
                     </div>
                     <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
