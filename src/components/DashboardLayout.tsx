@@ -16,7 +16,8 @@ import {
   RefreshCw,
   ChevronDown,
   Plus,
-  HelpCircle
+  HelpCircle,
+  KeyRound
 } from "lucide-react";
 import { getUserBots, createProject } from "../lib/api";
 import React, { useState, useEffect } from "react";
@@ -185,7 +186,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     { icon: Bot, label: "Profil Bot", href: "/dashboard/personality" },
     { icon: MessageSquare, label: "Playground", href: "/dashboard/playground" },
     { icon: Settings, label: "Integrasi", href: "/dashboard/integration" },
-    { icon: BarChart3, label: "Analitik", href: "/dashboard/analytics" },
+    { icon: KeyRound, label: "API", href: "/dashboard/api" },
     { icon: CreditCard, label: "Pembayaran", href: "/dashboard/payment" },
   ];
 
@@ -196,6 +197,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     "/dashboard/personality": { title: "Profil Bot", subtitle: "Atur gaya bicara & kepribadian bot" },
     "/dashboard/playground": { title: "Playground", subtitle: "Uji coba respon bot Anda" },
     "/dashboard/integration": { title: "Integrasi", subtitle: "Hubungkan channel komunikasi bisnis" },
+    "/dashboard/api": { title: "Manajemen API", subtitle: "Kelola kunci API untuk integrasi eksternal" },
     "/dashboard/analytics": { title: "Analitik", subtitle: "Pantau performa chatbot Anda" },
     "/dashboard/payment": { title: "Pembayaran", subtitle: "Kelola paket & langganan Anda" },
   };

@@ -11,12 +11,12 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
-import { DashboardHome } from "./pages/DashboardHome";
+import { DashboardWithAnalytics } from "./pages/DashboardWithAnalytics";
+import { ApiManagement } from "./pages/ApiManagement";
 import { KnowledgeBase } from "./pages/KnowledgeBase";
 import { CustomPersonality } from "./pages/CustomPersonality";
 import { ChatbotPlayground } from "./pages/ChatbotPlayground";
 import { IntegrationSettings } from "./pages/IntegrationSettings";
-import { AnalyticsDashboard } from "./pages/AnalyticsDashboard";
 import { ProfilePage } from "./pages/ProfilePage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { PaymentPage } from "./pages/PaymentPage";
@@ -37,7 +37,7 @@ export default function App() {
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={
             <DashboardLayout>
-              <DashboardHome />
+              <DashboardWithAnalytics />
             </DashboardLayout>
           } />
           <Route path="/dashboard/knowledge" element={
@@ -55,16 +55,17 @@ export default function App() {
               <ChatbotPlayground />
             </DashboardLayout>
           } />
+          <Route path="/dashboard/api" element={
+            <DashboardLayout>
+              <ApiManagement />
+            </DashboardLayout>
+          } />
           <Route path="/dashboard/integration" element={
             <DashboardLayout>
               <IntegrationSettings />
             </DashboardLayout>
           } />
-          <Route path="/dashboard/analytics" element={
-            <DashboardLayout>
-              <AnalyticsDashboard />
-            </DashboardLayout>
-          } />
+          <Route path="/dashboard/analytics" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard/profile" element={
             <DashboardLayout>
               <ProfilePage />
