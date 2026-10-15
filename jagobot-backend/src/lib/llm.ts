@@ -45,7 +45,7 @@ const getGenAI = (): GoogleGenerativeAI | null => {
 
 const getChatModel = (): string => process.env.NINEROUTER_CHAT_MODEL || '';
 const getEmbedModel = (): string => process.env.NINEROUTER_EMBED_MODEL || 'text-embedding-3-small';
-const GEMINI_CHAT_MODEL = 'gemini-2.5-flash';
+const GEMINI_CHAT_MODEL = 'gemini-3.8-flash';
 const GEMINI_EMBED_MODEL = 'gemini-embedding-001';
 
 // ─── Helpers ───
