@@ -3,6 +3,8 @@ import { cn } from "../lib/utils";
 interface LogoProps {
   className?: string;
   iconSize?: number;
+  // Dipertahankan demi kompatibilitas pemanggil lama; logo gambar tidak merender teks.
+  textSize?: string;
   variant?: 'box' | 'flat';
 }
 

@@ -52,7 +52,7 @@ app.use('/api/health', (_req, res) => {
 
 // Untuk development local
 if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5006;
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
         console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`);
         // Start Google Sheets polling if GOOGLE_CLIENT_ID is configured
