@@ -45,8 +45,19 @@ const getGenAI = (): GoogleGenerativeAI | null => {
 
 const getChatModel = (): string => process.env.NINEROUTER_CHAT_MODEL || '';
 const getEmbedModel = (): string => process.env.NINEROUTER_EMBED_MODEL || 'text-embedding-3-small';
-const GEMINI_CHAT_MODEL = 'gemini-3.8-flash';
+
+/**
+ * Rantai model Gemini — dicoba berurutan. Bila model pertama habis/503/rate-limit,
+ * otomatis rolling ke berikutnya. Dapat dikonfigurasi via env
+ * GEMINI_CHAT_MODELS (dipisah koma); default di bawah sudah tahan-gagal.
+ */
+const GEMINI_CHAT_MODELS: string[] = (process.env.GEMINI_CHAT_MODELS || 'gemini-2.5-flash,gemini-3-flash-preview,gemini-3.8-flash')
+    .split(',')
+    .map(m => m.trim())
+    .filter(Boolean);
 const GEMINI_EMBED_MODEL = 'gemini-embedding-001';
+// Batas waktu per percobaan model (ms) agar model yang menggantung cepat dilewati.
+const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 10000;
 
 // ─── Helpers ───
 
@@ -104,11 +115,9 @@ export const generateChatCompletion = async (opts: ChatOptions): Promise<string>
         }
     }
 
-    // Fallback to Gemini
+    // Fallback ke Gemini — coba tiap model dalam rantai secara berurutan.
     const genAI = getGenAI();
     if (!genAI) throw new Error('No LLM provider available. Set NINEROUTER_* or GEMINI_API_KEY.');
-
-    const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_MODEL });
 
     // Convert OpenAI-style messages to Gemini format
     const systemMsg = opts.messages.find(m => m.role === 'system');
@@ -119,11 +128,36 @@ export const generateChatCompletion = async (opts: ChatOptions): Promise<string>
         ? `${systemMsg.content}\n\nUSER: ${prompt}`
         : prompt;
 
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    const text = response.text();
-    if (!text) throw new Error('Empty response from Gemini');
-    return text;
+    let lastErr: any = null;
+
+    for (const modelName of GEMINI_CHAT_MODELS) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+
+            // Batas waktu: model yang menggantung (mis. 503 tanpa balasan) cepat dilewati.
+            const result = await Promise.race([
+                model.generateContent(fullPrompt),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error(`timeout after ${GEMINI_TIMEOUT_MS}ms`)), GEMINI_TIMEOUT_MS)
+                ),
+            ]) as any;
+
+            const text = result.response.text();
+            if (!text) throw new Error('Empty response from Gemini');
+
+            if (modelName !== GEMINI_CHAT_MODELS[0]) {
+                console.warn(`✅ [LLM] Gemini rolling berhasil pakai model: ${modelName}`);
+            }
+            return text;
+        } catch (err: any) {
+            lastErr = err;
+            const msg = err?.message || String(err);
+            console.warn(`⚠️ [LLM] Gemini "${modelName}" gagal (${msg.slice(0, 80)}) → rolling ke model berikutnya`);
+            // Lanjut ke model berikutnya pada rantai (baik error retryable maupun timeout).
+        }
+    }
+
+    throw lastErr || new Error('Semua model Gemini pada rantai gagal diakses.');
 };
 
 // ─── Embeddings ───

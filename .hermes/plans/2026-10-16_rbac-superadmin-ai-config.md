@@ -312,12 +312,28 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 4. Halaman `/admin/ai-config`
 > Verifikasi: simpan provider dari UI → tersimpan terenkripsi; tes koneksi hijau.
 
-### Fase 3 — Model Rolling (F6)
-1. Refactor `generateChatCompletion` → iterasi provider
-2. Fallback ke env bila tabel kosong (backward compatible)
-3. Ambil `usage.total_tokens` bila tersedia
-4. Halaman `/admin/model-chain` (urutkan prioritas)
-> Verifikasi: paksa provider pertama gagal (key salah) → otomatis rolling ke berikutnya; chat tetap terjawab.
+### Fase 3 — Model Rolling (F6) — ⚠️ **SEBAGIAN SELESAI (darurat) 2026-10-16**
+> **Pemicu:** `gemini-3.8-flash` (model tunggal yang dipakai) kena **503 high demand** →
+> seluruh chat balas *"Maaf, saya sedang tidak bisa memproses pesan Anda."* selama ~34 detik.
+> Perbaikan darurat dikerjakan lebih awal dari urutan rencana.
+
+**Sudah dikerjakan:**
+- ~~Refactor `generateChatCompletion` → iterasi rantai model~~ ✅ (rantai Gemini via `GEMINI_CHAT_MODELS`)
+- ~~Timeout per model (`GEMINI_TIMEOUT_MS`, default 10s)~~ ✅
+- ~~Fallback ke jalur env bila tabel kosong (backward compatible)~~ ✅ (default tetap jalan)
+
+**Bukti rolling:**
+```
+⚠️ [LLM] Gemini "gemini-3.8-flash" gagal (timeout 20000ms) → rolling ke model berikutnya
+✅ [LLM] Gemini rolling berhasil pakai model: gemini-2.5-flash
+```
+- Uji rantai `gemini-3.8-flash(❌),gemini-2.5-flash(✅)` → jawab dalam **2.6s**
+- Chat publik: **34s (rusak) → 3.4s (sehat)**
+
+**Sisa Fase 3 (belum):**
+- Ambil `usage.total_tokens` dari respons provider (akurasi token)
+- Simpan `modelUsed` di `ChatLog`
+- UI admin untuk mengatur urutan rantai (butuh Fase 2)
 
 ### Fase 4 — Monitoring API (F4)
 1. Migrasi: `ApiKey`, `ApiUsageLog`
