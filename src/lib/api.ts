@@ -256,4 +256,30 @@ export const adminReorderAiProviders = (order: number[]) => api.put('/admin/ai/p
 
 export const adminTestAiProvider = (id: number) => api.post(`/admin/ai/providers/${id}/test`);
 
+// ─── Admin: monitoring pemakaian API (Fase 4) ───
+export interface UsageSummaryRow {
+    userId: number;
+    email: string;
+    nama_toko: string;
+    role: string;
+    totalBots: number;
+    totalTokens: number;
+    promptTokens: number;
+    completionTokens: number;
+    requestCount: number;
+    hasSubscription: boolean;
+    planType: string | null;
+    dailyTokenQuota: number;
+    tokensUsedToday: number;
+    remainingToday: number;
+    quotaPercentUsed: number;
+    endDate: string | null;
+}
+
+export const adminGetUsageSummary = (days = 30) => api.get(`/admin/api-usage/summary?days=${days}`);
+export const adminGetUsageTimeline = (days = 30) => api.get(`/admin/api-usage/timeline?days=${days}`);
+export const adminGetUsageLogs = (limit = 50, userId?: number) =>
+    api.get(`/admin/api-usage/logs?limit=${limit}${userId ? `&userId=${userId}` : ''}`);
+export const adminGetUsageByModel = (days = 30) => api.get(`/admin/api-usage/models?days=${days}`);
+
 export default api;

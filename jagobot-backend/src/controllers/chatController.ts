@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { generateEmbedding, generateChatCompletion } from '../lib/llm';
 import { recordTokenUsage, estimateTokens } from '../middleware/quotaMiddleware';
+import { logApiUsage } from '../lib/usageLog';
 import { DEFAULT_INSTRUCTIONS } from '../lib/jagobotPersona';
 
 export const handleIncomingChat = async (req: Request, res: Response) => {
@@ -128,6 +129,17 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
                 console.warn('[Quota] Failed to record token usage:', err.message)
             );
         }
+
+        // Catat pemakaian API (Fase 4) — untuk dashboard monitoring token.
+        logApiUsage({
+            userId: userId ? Number(userId) : null,
+            botId: Number(botId),
+            endpoint: '/api/chat/send',
+            promptTokens: estimateTokens(message),
+            completionTokens: estimateTokens(aiResponse),
+            statusCode: 200,
+            latencyMs: duration,
+        });
 
         console.log("✅ Chat log saved with ID:", newChat.id);
 

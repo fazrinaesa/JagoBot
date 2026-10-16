@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { generateChatCompletion } from '../lib/llm';
+import { logApiUsage, estimateTokens, resolveBotOwner } from '../lib/usageLog';
 
 /**
  * Controller untuk menangani interaksi chat publik dari Widget Web (Live Chat)
@@ -103,6 +104,18 @@ export const handlePublicChat = async (req: Request, res: Response) => {
                 userMessage: message,
                 aiResponse: replyMessage
             }
+        });
+
+        // Catat pemakaian API (Fase 4). Endpoint publik tidak punya token,
+        // jadi pemilik bot dicari dari botId agar tetap bisa diatribusikan.
+        const ownerId = await resolveBotOwner(botId);
+        logApiUsage({
+            userId: ownerId,
+            botId: Number(botId),
+            endpoint: '/api/public/chat',
+            promptTokens: estimateTokens(message),
+            completionTokens: estimateTokens(replyMessage),
+            statusCode: 200,
         });
 
         // 6. Mengirimkan response sukses berupa format JSON balik menuju website client

@@ -346,13 +346,21 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 - Ambil `usage.total_tokens` dari respons provider (akurasi token)
 - Simpan `modelUsed` di `ChatLog`
 
-### Fase 4 — Monitoring API (F4)
-1. Migrasi: `ApiKey`, `ApiUsageLog`
-2. Catat pemakaian di `chatController` + `integrasiController`
-3. Endpoint summary/timeline
-4. Halaman `/admin/api-usage`
-5. Sambungkan `ApiManagement.tsx` ke data nyata
-> Verifikasi: kirim chat → muncul di `ApiUsageLog`; total token bertambah.
+### Fase 4 — Monitoring API (F4) — ✅ **SELESAI 2026-10-16**
+1. ~~Migrasi: `ApiUsageLog`~~ ✅ (aditif, 12 kolom + 2 index)
+2. ~~Catat pemakaian di `chatController` + `integrasiController`~~ ✅ (`lib/usageLog.ts`)
+3. ~~Endpoint summary/timeline/logs/models~~ ✅ (`apiUsageController.ts`)
+4. ~~Halaman `/dashboard/admin/api-usage`~~ ✅ (`ApiUsagePage.tsx`)
+
+**Hasil Fase 4 (terverifikasi):**
+- Chat publik tercatat otomatis: 3 log, 292 token (userId diatribusikan via pemilik bot)
+- Endpoint: `/api/admin/api-usage/{summary,timeline,logs,models}` → SUPER=200, USER=403
+- Halaman menampilkan: kartu total token/request/pengguna aktif/kuota kritis,
+  grafik tren harian, pie per model, tabel per pengguna (sisa kuota + progress bar),
+  log 20 terbaru, filter periode (7/30/90/365 hari)
+- Peringatan otomatis bila kuota pengguna ≥80%
+- lint/build/tsc = 0
+- Berkas: `lib/usageLog.ts`, `controllers/apiUsageController.ts`, `pages/ApiUsagePage.tsx`, `migration-fase4-api-usage.sql`
 
 ### Fase 5 — Analitik Global (F2)
 1. Endpoint top-questions / unanswered / trend

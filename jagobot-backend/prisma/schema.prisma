@@ -25,6 +25,7 @@ model User {
   bots         Bot[]
   subscriptions Subscription[]
   paymentProofs PaymentProof[]
+  apiUsageLogs ApiUsageLog[]
 }
 
 model Bot {
@@ -144,4 +145,20 @@ model AiProviderConfig {
   updatedAt   DateTime @updatedAt
 }
 
+// ─── MONITORING API (Fase 4) ───
 
+model ApiUsageLog {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  botId            Int?
+  apiKeyId         Int?
+  endpoint         String   // "/api/chat/send", "/api/public/chat", dst
+  model            String?  // model yang akhirnya melayani
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  statusCode       Int?
+  latencyMs        Int?
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

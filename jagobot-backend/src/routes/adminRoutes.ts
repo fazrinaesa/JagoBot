@@ -16,6 +16,12 @@ import {
     reorderProviders,
     testProvider,
 } from '../controllers/aiConfigController';
+import {
+    getUsageSummary,
+    getUsageTimeline,
+    getUsageLogs,
+    getUsageByModel,
+} from '../controllers/apiUsageController';
 
 const router = Router();
 
@@ -38,5 +44,11 @@ router.put('/ai/providers/reorder', reorderProviders); // harus di atas '/:id'
 router.put('/ai/providers/:id', updateProvider);
 router.delete('/ai/providers/:id', deleteProvider);
 router.post('/ai/providers/:id/test', testProvider);
+
+// ─── Monitoring pemakaian API (Fase 4) ───
+router.get('/api-usage/summary', getUsageSummary);
+router.get('/api-usage/timeline', getUsageTimeline);
+router.get('/api-usage/logs', getUsageLogs);
+router.get('/api-usage/models', getUsageByModel);
 
 export default router;
