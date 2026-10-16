@@ -10,6 +10,7 @@ import userRoutes from './src/routes/userRoutes';
 import integrasiRoutes from './src/routes/integrasiRoutes';
 import paymentRoutes from './src/routes/paymentRoutes';
 import sheetsRoutes from './src/routes/sheetsRoutes';
+import adminRoutes from './src/routes/adminRoutes';
 import { startSheetPolling } from './src/lib/googleSheets';
 
 dotenv.config();
@@ -46,6 +47,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/public', integrasiRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/sheets', sheetsRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

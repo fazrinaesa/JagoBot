@@ -18,6 +18,10 @@ model User {
   alamat       String?
   avatarUrl    String?
   createdAt    DateTime @default(now())
+  // ─── RBAC (Fase 1) ───
+  role         String   @default("USER")   // "USER" | "ADMIN" | "SUPER_ADMIN"
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
   bots         Bot[]
   subscriptions Subscription[]
   paymentProofs PaymentProof[]

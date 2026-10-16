@@ -47,7 +47,26 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ message: "Email atau Password Salah" });
         }
 
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' });
+        // ─── RBAC: bootstrap super admin pertama ───
+        // Bila email cocok dengan SUPER_ADMIN_EMAIL dan role belum SUPER_ADMIN,
+        // promosikan otomatis. Ini satu-satunya cara memberi akses awal tanpa
+        // menyentuh database secara manual. Tidak mengubah alur login biasa.
+        let role = user.role || 'USER';
+        const bootstrapEmail = (process.env.SUPER_ADMIN_EMAIL || '').trim().toLowerCase();
+        if (bootstrapEmail && user.email.toLowerCase() === bootstrapEmail && role !== 'SUPER_ADMIN') {
+            await prisma.user.update({ where: { id: user.id }, data: { role: 'SUPER_ADMIN' } });
+            role = 'SUPER_ADMIN';
+            console.log(`✅ [RBAC] ${user.email} dipromosikan menjadi SUPER_ADMIN (bootstrap)`);
+        }
+
+        // Catat waktu login terakhir (tidak memblokir bila gagal)
+        prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() }
+        }).catch(() => { /* abaikan */ });
+
+        // Token kini menyertakan role agar tidak perlu query DB tiap request
+        const token = jwt.sign({ userId: user.id, role }, process.env.JWT_SECRET!, { expiresIn: '1d' });
 
         // SESUAIKAN: Kirimkan objek user yang berisi botId agar bisa disimpan oleh Frontend
         res.json({
@@ -57,7 +76,8 @@ export const login = async (req: Request, res: Response) => {
                 id: user.id,
                 email: user.email,
                 nama_toko: user.nama_toko,
-                botId: user.bots[0]?.id // Mengambil ID bot pertama milik user
+                botId: user.bots[0]?.id, // Mengambil ID bot pertama milik user
+                role // dikirim ke frontend untuk menu kondisional
             }
         });
     } catch (err) {
