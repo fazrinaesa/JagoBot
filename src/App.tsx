@@ -21,6 +21,8 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { AdminPaymentPage } from "./pages/AdminPaymentPage";
+import { AiConfigPage } from "./pages/AiConfigPage";
+import { RequireSuperAdmin } from "./components/RequireSuperAdmin";
 
 export default function App() {
   return (
@@ -84,6 +86,13 @@ export default function App() {
           <Route path="/dashboard/admin/payment" element={
             <DashboardLayout>
               <AdminPaymentPage />
+            </DashboardLayout>
+          } />
+          <Route path="/dashboard/admin/ai-config" element={
+            <DashboardLayout>
+              <RequireSuperAdmin>
+                <AiConfigPage />
+              </RequireSuperAdmin>
             </DashboardLayout>
           } />
 

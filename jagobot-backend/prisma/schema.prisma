@@ -125,4 +125,23 @@ model GoogleSheetsConnection {
   bot           Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
 }
 
+// ─── KONFIGURASI AI (Fase 2) ───
+
+model AiProviderConfig {
+  id          Int      @id @default(autoincrement())
+  label       String   // nama tampilan, mis. "9router Utama"
+  provider    String   @default("openai-compatible") // "openai-compatible" | "gemini"
+  baseUrl     String?  // untuk openai-compatible; gemini memakai endpoint resmi
+  apiKeyEnc   String   // API key terenkripsi AES (crypto-js)
+  model       String   // nama model chat
+  priority    Int      @default(1) // urutan rolling: 1 = dicoba pertama
+  isActive    Boolean  @default(true)
+  maxTokens   Int?
+  temperature Float?
+  lastStatus  String?  // "ok" | "error" | null — hasil tes terakhir
+  lastCheckedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 

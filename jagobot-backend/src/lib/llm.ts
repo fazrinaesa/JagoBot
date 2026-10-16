@@ -22,6 +22,27 @@
 
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import prisma from './prisma';
+import { decryptKey } from './cryptoKey';
+
+// ─── Provider dari DB (Fase 2) ───
+
+/**
+ * Ambil daftar provider aktif dari tabel AiProviderConfig, urut priority ASC.
+ * Bila tabel KOSONG atau terjadi error, kembalikan [] → pemanggil memakai
+ * jalur env lama (perilaku identik sebelum fitur ini ada). Ini yang menjaga
+ * backward-compatibility.
+ */
+const getDbProviders = async (): Promise<any[]> => {
+    try {
+        return await prisma.aiProviderConfig.findMany({
+            where: { isActive: true },
+            orderBy: [{ priority: 'asc' }, { id: 'asc' }],
+        });
+    } catch {
+        return []; // tabel belum ada / DB error → pakai env
+    }
+};
 
 // ─── Lazy config getters (read env at call time) ───
 
@@ -91,6 +112,70 @@ interface ChatOptions {
 }
 
 export const generateChatCompletion = async (opts: ChatOptions): Promise<string> => {
+    // ─── 1. Coba provider dari DB (Fase 2), urut priority ───
+    // Bila tabel kosong → langsung lanjut ke jalur env lama (backward-compatible).
+    const dbProviders = await getDbProviders();
+    let lastDbErr: any = null;
+
+    for (const p of dbProviders) {
+        const apiKey = decryptKey(p.apiKeyEnc);
+        if (!apiKey) {
+            console.warn(`⚠️ [LLM] Provider "${p.label}" dilewati: API key tidak dapat didekripsi.`);
+            continue;
+        }
+        try {
+            let reply: string | null = null;
+
+            if (p.provider === 'gemini') {
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: p.model });
+                const systemMsg = opts.messages.find(m => m.role === 'system');
+                const userMsg = opts.messages.find(m => m.role === 'user');
+                const prompt = userMsg?.content || '';
+                const fullPrompt = systemMsg ? `${systemMsg.content}\n\nUSER: ${prompt}` : prompt;
+
+                const result = await Promise.race([
+                    model.generateContent(fullPrompt),
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error(`timeout after ${GEMINI_TIMEOUT_MS}ms`)), GEMINI_TIMEOUT_MS)
+                    ),
+                ]) as any;
+                reply = result.response.text();
+            } else {
+                // openai-compatible (9router, OpenRouter, dst)
+                const client = new OpenAI({
+                    baseURL: (p.baseUrl || '').replace(/\/$/, ''),
+                    apiKey,
+                    timeout: GEMINI_TIMEOUT_MS,
+                    maxRetries: 0,
+                });
+                const completion = await client.chat.completions.create({
+                    model: p.model,
+                    messages: opts.messages as any,
+                    temperature: p.temperature ?? opts.temperature ?? 0.4,
+                    max_tokens: p.maxTokens ?? opts.maxTokens,
+                });
+                reply = completion.choices?.[0]?.message?.content || null;
+            }
+
+            if (!reply) throw new Error('Empty response');
+
+            if (p.priority > 1) {
+                console.warn(`✅ [LLM] rolling berhasil pakai provider DB: ${p.label} (${p.model})`);
+            }
+            return reply;
+        } catch (err: any) {
+            lastDbErr = err;
+            const msg = (err?.message || String(err)).slice(0, 80);
+            console.warn(`⚠️ [LLM] provider DB "${p.label}" gagal (${msg}) → rolling ke berikutnya`);
+        }
+    }
+
+    if (dbProviders.length > 0 && lastDbErr) {
+        // Semua provider DB gagal — tetap coba jalur env di bawah sebagai jaring terakhir.
+        console.warn('⚠️ [LLM] semua provider DB gagal, mencoba jalur env lama...');
+    }
+
     const nineRouter = getNineRouter();
 
     // Try 9router first

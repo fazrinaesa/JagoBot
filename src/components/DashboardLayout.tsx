@@ -17,7 +17,8 @@ import {
   ChevronDown,
   Plus,
   HelpCircle,
-  KeyRound
+  KeyRound,
+  Cpu
 } from "lucide-react";
 import { getUserBots, createProject } from "../lib/api";
 import React, { useState, useEffect } from "react";
@@ -190,6 +191,28 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     { icon: CreditCard, label: "Pembayaran", href: "/dashboard/payment" },
   ];
 
+  // Menu khusus SUPER_ADMIN — hanya muncul bila role sesuai.
+  // Role dibaca dari localStorage (diisi saat login) dan/atau payload token.
+  const role = (() => {
+    try {
+      const cached = localStorage.getItem("role");
+      if (cached) return cached;
+      const token = localStorage.getItem("token");
+      if (!token) return "USER";
+      const payload = JSON.parse(atob(token.split(".")[1] || ""));
+      return payload.role || "USER";
+    } catch {
+      return "USER";
+    }
+  })();
+
+  const adminMenuItems =
+    role === "SUPER_ADMIN"
+      ? [{ icon: Cpu, label: "Konfigurasi AI", href: "/dashboard/admin/ai-config" }]
+      : [];
+
+  const allMenuItems = [...menuItems, ...adminMenuItems];
+
   // Judul + subjudul header per halaman
   const pageMeta: Record<string, { title: string; subtitle: string }> = {
     "/dashboard": { title: "Dashboard", subtitle: "Kelola chatbot bisnis Anda" },
@@ -202,7 +225,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     "/dashboard/payment": { title: "Pembayaran", subtitle: "Kelola paket & langganan Anda" },
   };
   const currentMeta = pageMeta[location.pathname] || {
-    title: menuItems.find((item) => item.href === location.pathname)?.label || "Dashboard",
+    title: allMenuItems.find((item) => item.href === location.pathname)?.label || "Dashboard",
     subtitle: "Kelola chatbot bisnis Anda",
   };
 
@@ -223,7 +246,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           <p className="mb-3 ml-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
             Menu Utama
           </p>
-          {menuItems.map((item) => (
+          {allMenuItems.map((item) => (
             <SidebarItem
               key={item.href}
               icon={item.icon}

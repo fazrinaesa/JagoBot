@@ -305,12 +305,23 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 - Berkas: `rbacMiddleware.ts`, `adminController.ts`, `adminRoutes.ts`, `migration-fase1-rbac.sql`
 
 
-### Fase 2 — Konfigurasi AI (F3, F5)
-1. Migrasi: `AiProviderConfig`
-2. CRUD + enkripsi key (crypto-js AES)
-3. Endpoint tes koneksi
-4. Halaman `/admin/ai-config`
-> Verifikasi: simpan provider dari UI → tersimpan terenkripsi; tes koneksi hijau.
+### Fase 2 — Konfigurasi AI (F3, F5) — ✅ **SELESAI 2026-10-16**
+1. ~~Migrasi: `AiProviderConfig`~~ ✅ (aditif, 14 kolom)
+2. ~~CRUD + enkripsi key (crypto-js AES)~~ ✅ (`cryptoKey.ts`, `aiConfigController.ts`)
+3. ~~Endpoint tes koneksi~~ ✅ (gemini & openai-compatible)
+4. ~~Halaman `/dashboard/admin/ai-config`~~ ✅ (`AiConfigPage.tsx`)
+
+**Hasil Fase 2 (terverifikasi):**
+- API key tersimpan **terenkripsi AES** (`U2FsdGVkX19...`), UI hanya lihat bentuk tersensor (`AQ.A••••••4QQg`)
+- Endpoint: GET/POST/PUT/DELETE `/api/admin/ai/providers`, PUT `/reorder`, POST `/:id/test`
+- Tes koneksi: key palsu ❌ · key asli ✅ (1.7s)
+- Urutan rolling bisa diubah dari UI (tombol naik/turun) → tersimpan ke DB
+- **`llm.ts` baca provider dari DB** urut priority; tabel kosong → fallback ke `.env` (backward-compatible)
+- Guard: `/api/admin/ai/providers` → SUPER=200, USER=403
+- Menu "Konfigurasi AI" hanya muncul untuk SUPER_ADMIN; guard `RequireSuperAdmin` aktif
+- Rolling dari DB terbukti: provider rusak di priority 1 dilewati, chat tetap terjawab (4s)
+- lint/build/tsc = 0
+- Berkas: `cryptoKey.ts`, `aiConfigController.ts`, `AiConfigPage.tsx`, `RequireSuperAdmin.tsx`, `migration-fase2-ai-provider.sql`
 
 ### Fase 3 — Model Rolling (F6) — ⚠️ **SEBAGIAN SELESAI (darurat) 2026-10-16**
 > **Pemicu:** `gemini-3.8-flash` (model tunggal yang dipakai) kena **503 high demand** →
@@ -320,7 +331,8 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 **Sudah dikerjakan:**
 - ~~Refactor `generateChatCompletion` → iterasi rantai model~~ ✅ (rantai Gemini via `GEMINI_CHAT_MODELS`)
 - ~~Timeout per model (`GEMINI_TIMEOUT_MS`, default 10s)~~ ✅
-- ~~Fallback ke jalur env bila tabel kosong (backward compatible)~~ ✅ (default tetap jalan)
+- ~~Fallback ke jalur env bila tabel kosong (backward compatible)~~ ✅
+- ~~Provider dari DB (Fase 2) ikut dalam rantai rolling~~ ✅
 
 **Bukti rolling:**
 ```
@@ -328,12 +340,11 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 ✅ [LLM] Gemini rolling berhasil pakai model: gemini-2.5-flash
 ```
 - Uji rantai `gemini-3.8-flash(❌),gemini-2.5-flash(✅)` → jawab dalam **2.6s**
-- Chat publik: **34s (rusak) → 3.4s (sehat)**
+- Chat publik: **34s (rusak) → 2-4s (sehat)**
 
 **Sisa Fase 3 (belum):**
 - Ambil `usage.total_tokens` dari respons provider (akurasi token)
 - Simpan `modelUsed` di `ChatLog`
-- UI admin untuk mengatur urutan rantai (butuh Fase 2)
 
 ### Fase 4 — Monitoring API (F4)
 1. Migrasi: `ApiKey`, `ApiUsageLog`

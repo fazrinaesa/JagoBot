@@ -207,4 +207,53 @@ export const adminGetSubscriptions = () => {
     return api.get('/payment/admin/subscriptions');
 };
 
+// ─── Admin: konfigurasi AI (Fase 2) ───
+export interface AiProvider {
+    id: number;
+    label: string;
+    provider: 'gemini' | 'openai-compatible';
+    baseUrl: string | null;
+    model: string;
+    priority: number;
+    isActive: boolean;
+    maxTokens: number | null;
+    temperature: number | null;
+    lastStatus: 'ok' | 'error' | null;
+    lastCheckedAt: string | null;
+    createdAt: string;
+    apiKeyMasked: string;
+    hasKey: boolean;
+}
+
+export const adminGetAiProviders = () => api.get('/admin/ai/providers');
+
+export const adminCreateAiProvider = (payload: {
+    label: string;
+    provider: 'gemini' | 'openai-compatible';
+    baseUrl?: string;
+    apiKey: string;
+    model: string;
+    priority?: number;
+    maxTokens?: number;
+    temperature?: number;
+}) => api.post('/admin/ai/providers', payload);
+
+export const adminUpdateAiProvider = (id: number, payload: Partial<{
+    label: string;
+    provider: 'gemini' | 'openai-compatible';
+    baseUrl: string;
+    apiKey: string;
+    model: string;
+    priority: number;
+    isActive: boolean;
+    maxTokens: number;
+    temperature: number;
+}>) => api.put(`/admin/ai/providers/${id}`, payload);
+
+export const adminDeleteAiProvider = (id: number) => api.delete(`/admin/ai/providers/${id}`);
+
+export const adminReorderAiProviders = (order: number[]) => api.put('/admin/ai/providers/reorder', { order });
+
+export const adminTestAiProvider = (id: number) => api.post(`/admin/ai/providers/${id}/test`);
+
 export default api;

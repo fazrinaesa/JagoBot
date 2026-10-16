@@ -30,6 +30,8 @@ export const LoginPage = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("nama_toko", data.nama_toko);
         localStorage.setItem("user", JSON.stringify(data.user));
+        // Simpan role untuk menu kondisional & guard admin.
+        localStorage.setItem("role", data.user?.role || "USER");
 
         alert("Berhasil Masuk! Selamat datang kembali.");
         navigate("/dashboard");
