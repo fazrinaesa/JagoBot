@@ -20,7 +20,8 @@ import {
   KeyRound,
   Cpu,
   Activity,
-  MessageCircleQuestion
+  MessageCircleQuestion,
+  Users
 } from "lucide-react";
 import { getUserBots, createProject } from "../lib/api";
 import React, { useState, useEffect } from "react";
@@ -214,6 +215,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           { icon: Cpu, label: "Konfigurasi AI", href: "/dashboard/admin/ai-config" },
           { icon: Activity, label: "Monitoring API", href: "/dashboard/admin/api-usage" },
           { icon: MessageCircleQuestion, label: "Analitik Pertanyaan", href: "/dashboard/admin/questions" },
+          { icon: Users, label: "Manajemen Pengguna", href: "/dashboard/admin/users" },
         ]
       : [];
 

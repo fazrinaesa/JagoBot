@@ -305,4 +305,33 @@ export const adminGetTopQuestions = (days = 30, limit = 20) =>
 export const adminGetUnanswered = (days = 30, limit = 20) =>
     api.get(`/admin/analytics/unanswered?days=${days}&limit=${limit}`);
 
+// ─── Admin: manajemen pengguna (Fase 6) ───
+export interface AdminUser {
+    id: number;
+    nama_toko: string;
+    email: string;
+    nama_lengkap: string | null;
+    role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+    isActive: boolean;
+    createdAt: string;
+    lastLoginAt: string | null;
+    totalBots: number;
+}
+
+export const adminGetUsers = (params?: { search?: string; role?: string; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.search) q.set('search', params.search);
+    if (params?.role) q.set('role', params.role);
+    if (params?.page) q.set('page', String(params.page));
+    if (params?.limit) q.set('limit', String(params.limit));
+    const qs = q.toString();
+    return api.get(`/admin/users${qs ? `?${qs}` : ''}`);
+};
+
+export const adminUpdateUserRole = (id: number, role: AdminUser['role']) =>
+    api.patch(`/admin/users/${id}/role`, { role });
+
+export const adminUpdateUserStatus = (id: number, isActive: boolean) =>
+    api.patch(`/admin/users/${id}/status`, { isActive });
+
 export default api;

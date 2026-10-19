@@ -374,10 +374,20 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 - UI: kartu ringkasan, tab Paling Sering / Belum Terjawab, pencarian, filter periode
 - lint/build/tsc = 0
 
-### Fase 6 — Halaman Admin & Polish
-1. Halaman manajemen pengguna (`/admin/users`) — ubah role, aktif/nonaktif
-2. Polish & konsistensi UI antar halaman admin
-3. Dokumentasi singkat cara pakai untuk super admin
+### Fase 6 — Halaman Admin & Polish — ✅ **SELESAI 2026-10-19**
+1. ~~Halaman manajemen pengguna (`/dashboard/admin/users`)~~ ✅ (`UsersPage.tsx`)
+2. ~~Ubah role + aktif/nonaktif dari UI~~ ✅
+3. ~~Pencarian, filter peran, paginasi~~ ✅
+
+**Hasil Fase 6 (terverifikasi):**
+- Endpoint: GET `/api/admin/users` (search/role/page/limit), PATCH `/:id/role`, PATCH `/:id/status`
+- Guard: SUPER=200, USER=403
+- Uji nyata: user 34 → ADMIN (DB terkonfirmasi), lalu dinonaktifkan (isActive=false), lalu dipulihkan
+- Pengamanan: super admin **tidak bisa** menurunkan peran / menonaktifkan akun sendiri (400)
+- UI: 27 pengguna, kartu ringkasan, dropdown peran per baris, badge status, tombol aktif/nonaktif,
+  pencarian debounce 400ms, filter peran, paginasi
+- lint/build/tsc = 0
+- Berkas: `pages/UsersPage.tsx`, `lib/api.ts` (+wrapper), `App.tsx`, `DashboardLayout.tsx`
 
 
 ## 9. Risiko & Mitigasi

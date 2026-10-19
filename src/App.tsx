@@ -24,6 +24,7 @@ import { AdminPaymentPage } from "./pages/AdminPaymentPage";
 import { AiConfigPage } from "./pages/AiConfigPage";
 import { ApiUsagePage } from "./pages/ApiUsagePage";
 import { QuestionsPage } from "./pages/QuestionsPage";
+import { UsersPage } from "./pages/UsersPage";
 import { RequireSuperAdmin } from "./components/RequireSuperAdmin";
 
 export default function App() {
@@ -108,6 +109,13 @@ export default function App() {
             <DashboardLayout>
               <RequireSuperAdmin>
                 <QuestionsPage />
+              </RequireSuperAdmin>
+            </DashboardLayout>
+          } />
+          <Route path="/dashboard/admin/users" element={
+            <DashboardLayout>
+              <RequireSuperAdmin>
+                <UsersPage />
               </RequireSuperAdmin>
             </DashboardLayout>
           } />
