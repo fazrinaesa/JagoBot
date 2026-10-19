@@ -362,17 +362,23 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 - lint/build/tsc = 0
 - Berkas: `lib/usageLog.ts`, `controllers/apiUsageController.ts`, `pages/ApiUsagePage.tsx`, `migration-fase4-api-usage.sql`
 
-### Fase 5 — Analitik Global (F2)
-1. Endpoint top-questions / unanswered / trend
-2. Halaman `/admin/questions`
-> Verifikasi: pertanyaan yang sama dari user berbeda teragregasi.
+### Fase 5 — Analitik Global (F2) — ✅ **SELESAI 2026-10-19**
+1. ~~Endpoint top-questions / unanswered / overview~~ ✅ (`analyticsController.ts`)
+2. ~~Halaman `/dashboard/admin/questions`~~ ✅ (`QuestionsPage.tsx`)
+
+**Hasil Fase 5 (terverifikasi):**
+- Pertanyaan diagregasi **lintas semua toko** (bukan per-user)
+- Normalisasi teks: "Berapa harga?" & "berapa harga" tergabung jadi satu
+- Endpoint: `/api/admin/analytics/{overview,top-questions,unanswered}` → SUPER=200, USER=403
+- Data nyata: 192 pertanyaan, 156 unik, 13 top + 11 belum terjawab
+- UI: kartu ringkasan, tab Paling Sering / Belum Terjawab, pencarian, filter periode
+- lint/build/tsc = 0
 
 ### Fase 6 — Halaman Admin & Polish
-1. Layout admin + menu kondisional
-2. `RequireSuperAdmin` guard
-3. Uji end-to-end semua role
+1. Halaman manajemen pengguna (`/admin/users`) — ubah role, aktif/nonaktif
+2. Polish & konsistensi UI antar halaman admin
+3. Dokumentasi singkat cara pakai untuk super admin
 
----
 
 ## 9. Risiko & Mitigasi
 
