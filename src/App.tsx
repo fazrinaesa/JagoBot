@@ -23,6 +23,7 @@ import { PaymentPage } from "./pages/PaymentPage";
 import { AdminPaymentPage } from "./pages/AdminPaymentPage";
 import { AiConfigPage } from "./pages/AiConfigPage";
 import { ApiUsagePage } from "./pages/ApiUsagePage";
+import { QuestionsPage } from "./pages/QuestionsPage";
 import { RequireSuperAdmin } from "./components/RequireSuperAdmin";
 
 export default function App() {
@@ -100,6 +101,13 @@ export default function App() {
             <DashboardLayout>
               <RequireSuperAdmin>
                 <ApiUsagePage />
+              </RequireSuperAdmin>
+            </DashboardLayout>
+          } />
+          <Route path="/dashboard/admin/questions" element={
+            <DashboardLayout>
+              <RequireSuperAdmin>
+                <QuestionsPage />
               </RequireSuperAdmin>
             </DashboardLayout>
           } />

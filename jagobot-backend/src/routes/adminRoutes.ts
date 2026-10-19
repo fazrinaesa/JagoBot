@@ -22,6 +22,11 @@ import {
     getUsageLogs,
     getUsageByModel,
 } from '../controllers/apiUsageController';
+import {
+    getTopQuestions,
+    getUnanswered,
+    getAnalyticsOverview,
+} from '../controllers/analyticsController';
 
 const router = Router();
 
@@ -50,5 +55,10 @@ router.get('/api-usage/summary', getUsageSummary);
 router.get('/api-usage/timeline', getUsageTimeline);
 router.get('/api-usage/logs', getUsageLogs);
 router.get('/api-usage/models', getUsageByModel);
+
+// ─── Analitik pertanyaan global (Fase 5) ───
+router.get('/analytics/overview', getAnalyticsOverview);
+router.get('/analytics/top-questions', getTopQuestions);
+router.get('/analytics/unanswered', getUnanswered);
 
 export default router;

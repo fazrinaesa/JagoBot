@@ -282,4 +282,27 @@ export const adminGetUsageLogs = (limit = 50, userId?: number) =>
     api.get(`/admin/api-usage/logs?limit=${limit}${userId ? `&userId=${userId}` : ''}`);
 export const adminGetUsageByModel = (days = 30) => api.get(`/admin/api-usage/models?days=${days}`);
 
+// ─── Admin: analitik pertanyaan global (Fase 5) ───
+export interface TopQuestion {
+    question: string;
+    count: number;
+    botCount: number;
+    storeCount: number;
+    lastAsked: string;
+}
+
+export interface UnansweredQuestion {
+    question: string;
+    count: number;
+    reason: 'jawaban_kosong' | 'tidak_ditemukan';
+    storeCount: number;
+    lastAsked: string;
+}
+
+export const adminGetAnalyticsOverview = (days = 30) => api.get(`/admin/analytics/overview?days=${days}`);
+export const adminGetTopQuestions = (days = 30, limit = 20) =>
+    api.get(`/admin/analytics/top-questions?days=${days}&limit=${limit}`);
+export const adminGetUnanswered = (days = 30, limit = 20) =>
+    api.get(`/admin/analytics/unanswered?days=${days}&limit=${limit}`);
+
 export default api;
