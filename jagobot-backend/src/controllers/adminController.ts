@@ -9,7 +9,7 @@ import { ROLES } from '../middleware/rbacMiddleware';
  * (dijaga oleh middleware `requireSuperAdmin` di adminRoutes.ts).
  */
 
-const VALID_ROLES = [ROLES.USER, ROLES.ADMIN, ROLES.SUPER_ADMIN];
+const VALID_ROLES = [ROLES.USER, ROLES.SUPER_ADMIN];
 
 /**
  * GET /api/admin/overview

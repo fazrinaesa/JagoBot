@@ -19,7 +19,7 @@ model User {
   avatarUrl    String?
   createdAt    DateTime @default(now())
   // ─── RBAC (Fase 1) ───
-  role         String   @default("USER")   // "USER" | "ADMIN" | "SUPER_ADMIN"
+  role         String   @default("USER")   // "USER" | "SUPER_ADMIN"
   isActive     Boolean  @default(true)
   lastLoginAt  DateTime?
   bots         Bot[]
@@ -39,6 +39,7 @@ model Bot {
   chatLogs        ChatLog[]
   knowledgeBases  KnowledgeBase[]
   sheetsConnections GoogleSheetsConnection[]
+  telegramConnection TelegramConnection?
 }
 
 model KnowledgeBase {
@@ -161,4 +162,18 @@ model ApiUsageLog {
   latencyMs        Int?
   createdAt        DateTime @default(now())
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TelegramConnection {
+  id               Int      @id @default(autoincrement())
+  botId            Int      @unique
+  botTokenEnc      String
+  webhookSecretEnc String
+  telegramBotId    String
+  telegramUsername String?
+  lastUpdateId     Int      @default(0)
+  status           String   @default("connected")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  bot              Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
 }

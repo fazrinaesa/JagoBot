@@ -52,7 +52,7 @@ const proofStorage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname);
-        cb(null, `proof_${Date.now()}${ext}`);
+        cb(null, `proof_${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`);
     }
 });
 

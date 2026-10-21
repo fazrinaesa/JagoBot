@@ -4,7 +4,6 @@ import {
   Search,
   RefreshCw,
   ShieldCheck,
-  Shield,
   User as UserIcon,
   Store,
   Bot,
@@ -20,7 +19,7 @@ import { Badge, Button, Card, EmptyState, Input, LoadingState, PageHeader, Selec
 
 /**
  * Halaman Manajemen Pengguna (Fase 6) — hanya SUPER_ADMIN.
- * Mengubah peran (USER/ADMIN/SUPER_ADMIN) dan mengaktifkan/menonaktifkan akun.
+ * Mengubah peran (USER/SUPER_ADMIN) dan mengaktifkan/menonaktifkan akun.
  */
 
 const fmtDate = (iso: string | null) =>
@@ -28,8 +27,7 @@ const fmtDate = (iso: string | null) =>
 
 const ROLE_META: Record<string, { label: string; variant: any; icon: any }> = {
   SUPER_ADMIN: { label: "Super Admin", variant: "primary", icon: ShieldCheck },
-  ADMIN: { label: "Admin", variant: "warning", icon: Shield },
-  USER: { label: "User", variant: "neutral", icon: UserIcon },
+  USER: { label: "Pemilik UMKM", variant: "neutral", icon: UserIcon },
 };
 
 export const UsersPage: React.FC = () => {
@@ -155,8 +153,7 @@ export const UsersPage: React.FC = () => {
             <Select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}>
               <option value="">Semua peran</option>
               <option value="SUPER_ADMIN">Super Admin</option>
-              <option value="ADMIN">Admin</option>
-              <option value="USER">User</option>
+              <option value="USER">Pemilik UMKM</option>
             </Select>
           </div>
         </div>
@@ -207,8 +204,7 @@ export const UsersPage: React.FC = () => {
                           onChange={(e) => changeRole(u, e.target.value as AdminUser["role"])}
                           className="min-w-[130px] text-xs"
                         >
-                          <option value="USER">User</option>
-                          <option value="ADMIN">Admin</option>
+                          <option value="USER">Pemilik UMKM</option>
                           <option value="SUPER_ADMIN">Super Admin</option>
                         </Select>
                       </td>

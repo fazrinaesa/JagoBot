@@ -2,6 +2,7 @@ import { Globe, Code, Copy, Check, ExternalLink, X, Database, Plug } from "lucid
 import { useState, useEffect } from "react";
 import { cn } from "../lib/utils";
 import { Badge, Button, Card, PageHeader } from "../components/ui";
+import { connectTelegram, disconnectTelegram, getTelegramConnection } from "../lib/api";
 
 type ConnState = "connected" | "disconnected" | "coming-soon";
 
@@ -38,6 +39,40 @@ export const IntegrationSettings = () => {
 
   // STEP 2 & 3: State kontrol modal dialog
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [telegramStatus, setTelegramStatus] = useState<{ connected: boolean; username: string | null }>({ connected: false, username: null });
+  const [telegramToken, setTelegramToken] = useState("");
+  const [telegramBusy, setTelegramBusy] = useState(false);
+  const [telegramMessage, setTelegramMessage] = useState("");
+
+  useEffect(() => {
+    const botId = Number(activeBotId);
+    if (!Number.isInteger(botId) || botId <= 0) { setTelegramStatus({ connected: false, username: null }); return; }
+    getTelegramConnection(botId)
+      .then(({ data }) => setTelegramStatus(data.data))
+      .catch(() => setTelegramMessage("Status koneksi Telegram gagal dimuat."));
+  }, [activeBotId]);
+
+  const handleTelegramConnect = async () => {
+    const botId = Number(activeBotId);
+    if (!Number.isInteger(botId) || !telegramToken.trim()) return;
+    setTelegramBusy(true); setTelegramMessage("");
+    try {
+      const { data } = await connectTelegram(botId, telegramToken.trim());
+      setTelegramStatus(data.data); setTelegramToken(""); setTelegramMessage(data.message);
+    } catch (error: any) {
+      setTelegramMessage(error?.response?.data?.message || "Gagal menghubungkan Telegram.");
+    } finally { setTelegramBusy(false); }
+  };
+
+  const handleTelegramDisconnect = async () => {
+    const botId = Number(activeBotId);
+    if (!Number.isInteger(botId) || !window.confirm("Putuskan koneksi bot Telegram ini?")) return;
+    setTelegramBusy(true); setTelegramMessage("");
+    try {
+      await disconnectTelegram(botId); setTelegramStatus({ connected: false, username: null }); setTelegramMessage("Bot Telegram terputus.");
+    } catch (error: any) { setTelegramMessage(error?.response?.data?.message || "Gagal memutuskan Telegram."); }
+    finally { setTelegramBusy(false); }
+  };
 
   // STEP 5: Buat string kode snippet secara dinamis
   const apiUrl = import.meta.env.VITE_API_URL || "";
@@ -140,27 +175,25 @@ export const IntegrationSettings = () => {
         </Card>
 
         {/* Telegram */}
-        <Card hover className="relative flex flex-col overflow-hidden p-6 opacity-90">
+        <Card accentColor="teal" hover className="relative flex flex-col overflow-hidden p-6">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-teal/10 text-accent-teal ring-1 ring-inset ring-accent-teal/25 dark:bg-accent-teal/15 dark:text-accent-teal-light">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-                <path d="M21.94 4.35 18.9 19.1c-.23 1.02-.84 1.27-1.7.79l-4.7-3.46-2.27 2.18c-.25.25-.46.46-.94.46l.34-4.79L18.36 6.6c.38-.34-.08-.53-.59-.19L6.93 13.04l-4.64-1.45c-1.01-.31-1.02-1.01.21-1.49l18.1-6.98c.84-.31 1.57.2 1.34 1.23Z" />
-              </svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6"><path d="M21.94 4.35 18.9 19.1c-.23 1.02-.84 1.27-1.7.79l-4.7-3.46-2.27 2.18c-.25.25-.46.46-.94.46l.34-4.79L18.36 6.6c.38-.34-.08-.53-.59-.19L6.93 13.04l-4.64-1.45c-1.01-.31-1.02-1.01.21-1.49l18.1-6.98c.84-.31 1.57.2 1.34 1.23Z" /></svg>
             </div>
-            <Badge variant="neutral">Segera Hadir</Badge>
+            <Badge variant={telegramStatus.connected ? "success" : "warning"} dot>{telegramStatus.connected ? "Terhubung" : "Belum Terhubung"}</Badge>
           </div>
-
-          <h3 className="font-display text-base font-bold tracking-tight text-neutral-900 dark:text-white">
-            Telegram Bot
-          </h3>
-          <p className="mb-5 mt-1 flex-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-            {CHANNEL_META["coming-soon"].hint} — nantinya bot akan aktif di channel dan grup Telegram
-            Anda.
-          </p>
-
-          <Button variant="secondary" disabled className="w-full">
-            <Plug className="h-4 w-4" /> Menunggu Rilis
-          </Button>
+          <h3 className="font-display text-base font-bold tracking-tight text-neutral-900 dark:text-white">Telegram Bot</h3>
+          <p className="mb-3 mt-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">Hubungkan bot Telegram pribadi untuk menjawab chat pelanggan melalui AI JagoBot.</p>
+          {telegramStatus.connected ? <>
+            <p className="mb-3 text-xs font-semibold text-accent-teal">@{telegramStatus.username || "bot"}</p>
+            <Button variant="secondary" disabled={telegramBusy} onClick={handleTelegramDisconnect} className="w-full"><Plug className="h-4 w-4" />{telegramBusy ? "Memproses..." : "Putuskan Telegram"}</Button>
+          </> : <>
+            <label className="mb-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300" htmlFor="telegram-token">Token dari @BotFather</label>
+            <input id="telegram-token" type="password" autoComplete="off" value={telegramToken} onChange={(event) => setTelegramToken(event.target.value)} placeholder="123456:ABC-..." disabled={!activeBotId || telegramBusy} className="mb-3 w-full rounded-xl border border-border-subtle bg-neutral-50 px-3 py-2.5 text-sm text-neutral-900 outline-none focus:border-accent-teal dark:border-neutral-700 dark:bg-neutral-800 dark:text-white" />
+            <p className="mb-3 text-[11px] text-neutral-500">Token dikirim langsung ke backend dan tidak ditampilkan kembali. Memerlukan langganan Telegram aktif serta URL webhook HTTPS.</p>
+            <Button variant="success" disabled={!activeBotId || !telegramToken.trim() || telegramBusy} onClick={handleTelegramConnect} className="w-full"><Plug className="h-4 w-4" />{telegramBusy ? "Menghubungkan..." : "Hubungkan Telegram"}</Button>
+          </>}
+          {telegramMessage && <p role="status" className="mt-3 text-xs text-neutral-600 dark:text-neutral-300">{telegramMessage}</p>}
         </Card>
 
         {/* Discord */}

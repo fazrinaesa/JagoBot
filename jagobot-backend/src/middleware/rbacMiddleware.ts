@@ -5,9 +5,8 @@ import prisma from '../lib/prisma';
  * RBAC (Role-Based Access Control) — Fase 1
  *
  * Peran yang didukung (kolom User.role):
- *   USER         — pengguna biasa (default semua pendaftar)
- *   ADMIN        — staf: lihat data semua pengguna & review pembayaran (read-only operasional)
- *   SUPER_ADMIN  — pemilik sistem: kelola role, konfigurasi AI, monitoring
+ *   USER         — pemilik UMKM (default semua pendaftar)
+ *   SUPER_ADMIN  — pengelola platform: pembayaran dan seluruh administrasi global.
  *
  * Catatan kompatibilitas:
  *   Token lama (dibuat sebelum fitur ini) TIDAK memuat `role`.
@@ -17,7 +16,6 @@ import prisma from '../lib/prisma';
 
 export const ROLES = {
     USER: 'USER',
-    ADMIN: 'ADMIN',
     SUPER_ADMIN: 'SUPER_ADMIN',
 } as const;
 
@@ -69,8 +67,7 @@ export const requireRole = (...allowed: string[]) => {
 /** Hanya SUPER_ADMIN (mis. konfigurasi AI, kelola role) */
 export const requireSuperAdmin = requireRole(ROLES.SUPER_ADMIN);
 
-/** ADMIN atau SUPER_ADMIN (mis. review pembayaran, lihat data pengguna) */
-export const requireAdmin = requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
+
 
 /**
  * Tolak akun yang dinonaktifkan (isActive = false).

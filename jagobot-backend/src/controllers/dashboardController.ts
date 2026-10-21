@@ -82,19 +82,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             ? (avgResponseQuery._avg.response_time_ms / 1000).toFixed(1) 
             : "0.0";
 
-        // ✅ Hitung sumber platform untuk pelanggan unik
-        const totalCustomers = await prisma.chatLog.groupBy({
-            by: ['platform'],
-            where: {
-                botId: { in: targetBotIds },
-                createdAt: { gte: startDate, lte: endDate }
-            }
-        });
-
-        const customerCount = totalCustomers.length;
-        const conversionRate = customerCount > 0
-            ? ((totalChatCount / (customerCount * 10)) * 100).toFixed(1)
-            : "0";
+        // ChatLog belum menyimpan identitas pelanggan; jangan tampilkan estimasi palsu.
+        const conversionRate = "0";
 
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
@@ -142,13 +131,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             take: 5
         });
 
-        let topFaq = topFaqQuery.map((faq) => ({
+        const topFaq = topFaqQuery.map((faq) => ({
             q: faq.userMessage,
-            count: faq._count.userMessage,
-            trend: "+5%" // Placeholder trend stat
+            count: faq._count.userMessage
         }));
-
-        console.log("SENDING TOP FAQ:", topFaq);
 
         // --- RETURN RESPONSE DENGAN DATA BARU ---
         res.status(200).json({
@@ -157,8 +143,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                 totalChat: totalChatCount,
                 chatTrend: `${chatDiff >= 0 ? '+' : ''}${chatTrend}%`,
                 isChatPositive: chatDiff >= 0,
-                pelangganBaru: customerCount,
-                tingkatKonversi: `${conversionRate}%`,
+                pelangganBaru: null,
+                tingkatKonversi: null,
                 avgResponse: `${finalAvgRes}s`, // Waktu respon real-time
                 chartData: chartData,
                 topFaq: topFaq
@@ -267,7 +253,8 @@ export const getAnalyticsStats = async (req: Request, res: Response) => {
             _count: { platform: true },
             where: {
                 botId: { in: targetBotIds },
-                createdAt: { gte: startDate, lte: endDate }
+                createdAt: { gte: startDate, lte: endDate },
+                platform: { in: ['widget_web', 'app_dashboard', 'whatsapp', 'telegram'] }
             }
         });
 

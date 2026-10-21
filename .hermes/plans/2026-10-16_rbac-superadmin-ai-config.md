@@ -45,17 +45,16 @@ Hasil pembacaan kode saat ini:
 | Role | Deskripsi | Bisa akses |
 |------|-----------|------------|
 | `USER` | Default semua pendaftar | Dashboard pribadi saja |
-| `ADMIN` | Staf operasional | + Review pembayaran, lihat data semua user (read-only) |
-| `SUPER_ADMIN` | Pemilik sistem | + Konfigurasi API/model, monitoring token, kelola pengguna |
+| `SUPER_ADMIN` | Pengelola platform | Verifikasi pembayaran + konfigurasi AI/model + monitoring + analitik + kelola pengguna |
 
-> Rekomendasi: mulai dari `USER` + `SUPER_ADMIN` dulu (paling sederhana), `ADMIN` bisa ditambah belakangan tanpa migrasi ulang karena tipenya `String`.
+> Keputusan final: aplikasi hanya memakai dua role, `USER` dan `SUPER_ADMIN`. Verifikasi pembayaran termasuk tugas `SUPER_ADMIN`.
 
 ### 3.2 Perubahan Skema
 
 ```prisma
 model User {
   // ... field yang sudah ada TETAP ...
-  role          String   @default("USER")   // "USER" | "ADMIN" | "SUPER_ADMIN"
+  role          String   @default("USER")   // "USER" | "SUPER_ADMIN"
   isActive      Boolean  @default(true)     // untuk suspend akun
   lastLoginAt   DateTime?
   apiKeys       ApiKey[]
@@ -410,9 +409,9 @@ Komponen `RequireSuperAdmin` yang membungkus rute admin; jika bukan super admin 
 > User tidak memberi konfirmasi dalam batas waktu; dipilih opsi paling fleksibel.
 > Semua keputusan di bawah **mudah diubah** tanpa migrasi ulang.
 
-| # | Pertanyaan | **Keputusan default** | Alasan / cara ubah |
-|---|-----------|----------------------|--------------------|
-| 1 | Jumlah role | **3 role:** `USER` → `ADMIN` → `SUPER_ADMIN`<br>• `ADMIN`: lihat pertanyaan global, monitoring API, review pembayaran<br>• `SUPER_ADMIN`: + konfigurasi AI, ubah model, kelola role | Field `role` bertipe `String`; menambah/mengurangi role cukup ubah middleware, tanpa migrasi |
+| # | Pertanyaan | Keputusan final | Alasan / cara ubah |
+|---|-----------|----------------|--------------------|
+| 1 | Jumlah role | **2 role:** `USER` dan `SUPER_ADMIN`.<br>• `USER`: pemilik UMKM, kelola bot/toko sendiri<br>• `SUPER_ADMIN`: kelola platform, termasuk pembayaran, AI, monitoring, analitik, pengguna | Field `role` bertipe `String`; perubahan peran tidak memerlukan migrasi skema |
 | 2 | Akurasi token | **Pakai `usage.total_tokens`** dari respons provider (akurat), estimasi `length/4` hanya sebagai cadangan | Provider sudah mengirim `usage`; tidak ada biaya tambahan |
 | 3 | Periode kuota | **Harian tetap** (`dailyTokenQuota`) **+ agregasi bulanan** untuk laporan "berapa juta token/bulan" | Agregasi dihitung dari `ApiUsageLog`, bukan kolom baru |
 | 4 | Model chain | **Prioritas sederhana** via `AiProviderConfig.priority` (KISS). `ModelChain` disiapkan sebagai pengembangan lanjutan | Tidak perlu UI drag-drop rumit di versi pertama |

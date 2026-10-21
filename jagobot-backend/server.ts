@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes';
 import dotenv from 'dotenv';
@@ -10,6 +11,7 @@ import userRoutes from './src/routes/userRoutes';
 import integrasiRoutes from './src/routes/integrasiRoutes';
 import paymentRoutes from './src/routes/paymentRoutes';
 import sheetsRoutes from './src/routes/sheetsRoutes';
+import telegramRoutes from './src/routes/telegramRoutes';
 import adminRoutes from './src/routes/adminRoutes';
 import { startSheetPolling } from './src/lib/googleSheets';
 
@@ -25,9 +27,10 @@ const app = express();
 // =======================================================
 // PENYESUAIAN LANGKAH 3: MENYAJIKAN FILE STATIS (PUBLIC)
 // =======================================================
-app.use(express.static('public'));
-// Serve uploaded files (payment proofs, etc.) — path matches /uploads/...
-app.use('/uploads', express.static('uploads'));
+const backendDir = __dirname;
+app.use(express.static(path.join(backendDir, 'public')));
+// Anchor uploads to this backend, independent of the process working directory.
+app.use('/uploads', express.static(path.join(backendDir, 'uploads')));
 
 app.use(cors({
     origin: '*', // Mengizinkan semua website luar mengakses endpoint backend kamu
@@ -47,6 +50,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/public', integrasiRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/sheets', sheetsRoutes);
+app.use('/api/telegram', telegramRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

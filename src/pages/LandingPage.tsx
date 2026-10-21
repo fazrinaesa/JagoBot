@@ -260,30 +260,40 @@ export const LandingPage = () => {
               Pilih Paket Sesuai Kebutuhan
             </h2>
             <p className="mx-auto max-w-xl text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Mulai dari gratis hingga paket kustom untuk bisnis yang berkembang pesat.
+              Pilih kanal yang dibutuhkan. Pembayaran dilakukan setelah masuk ke akun JagoBot.
             </p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
             {[
               {
-                name: "Gratis",
-                price: "Rp 0",
-                desc: "Cocok untuk mencoba",
-                features: ["70 Chat / Bulan", "1 Knowledge Base", "Integrasi Website", "Support Komunitas"],
+                name: "Web Widget",
+                price: "Rp349.000",
+                period: "sekali (setup)",
+                desc: "Mulai melayani pengunjung website",
+                features: ["Chatbot di website", "Integrasi widget web", "Setup awal oleh tim", "2 minggu support"],
               },
               {
-                name: "Pro",
-                price: "Rp 149rb",
-                desc: "Paling populer untuk UMKM",
-                features: ["Unlimited Chat", "10 Knowledge Base", "Integrasi WhatsApp", "Upload Dokumen (PDF/Doc)", "Analitik Lengkap"],
+                name: "WhatsApp",
+                price: "Rp139.000",
+                period: "/bulan",
+                desc: "Otomatisasi chat pelanggan via WhatsApp",
+                features: ["Bot WhatsApp aktif", "Kuota 15.000 token/hari", "Auto-reply pelanggan", "Notifikasi chat masuk"],
                 popular: true,
               },
               {
-                name: "Premium",
-                price: "Rp 499rb",
-                desc: "Untuk skala besar",
-                features: ["Semua Fitur Pro", "API Access", "Custom Branding", "Multi-Admin Dashboard", "Dedicated Support 24/7"],
+                name: "Telegram",
+                price: "Rp95.999",
+                period: "/bulan",
+                desc: "Layanan otomatis melalui Telegram",
+                features: ["Bot Telegram aktif", "Kuota 10.000 token/hari", "Dukungan channel & grup"],
+              },
+              {
+                name: "WhatsApp + Telegram",
+                price: "Rp234.999",
+                period: "/bulan",
+                desc: "Jangkau pelanggan di dua kanal chat",
+                features: ["Bot WhatsApp dan Telegram", "Kuota 20.000 token/hari", "Prioritas support", "Semua fitur add-on"],
               },
             ].map((plan, idx) => (
               <div
@@ -306,7 +316,7 @@ export const LandingPage = () => {
                   <span className="font-display text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
                     {plan.price}
                   </span>
-                  <span className="text-xs font-semibold text-neutral-400">/bulan</span>
+                  <span className="text-xs font-semibold text-neutral-400">{plan.period || "/bulan"}</span>
                 </div>
                 <ul className="mb-8 space-y-3">
                   {plan.features.map((f, i) => (
@@ -322,7 +332,7 @@ export const LandingPage = () => {
                   to="/register"
                   className={btn(plan.popular ? "primary" : "secondary", "md", "w-full")}
                 >
-                  Pilih Paket
+                  Daftar untuk berlangganan
                 </Link>
               </div>
             ))}
@@ -410,7 +420,7 @@ export const LandingPage = () => {
             </h2>
             <p className="mx-auto mb-8 max-w-xl text-base font-medium leading-relaxed text-blue-100/90">
               Bergabunglah dengan ribuan UMKM lainnya yang telah menggunakan JagoBot untuk meningkatkan
-              efisiensi layanan pelanggan.
+              efisiensi layanan pelanggan. Pilih paket dan lakukan pembayaran setelah masuk ke akun.
             </p>
             <Link
               to="/register"

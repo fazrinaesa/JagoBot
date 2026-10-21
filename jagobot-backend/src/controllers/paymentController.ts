@@ -33,59 +33,47 @@ export const submitPaymentProof = async (req: Request, res: Response) => {
         const userId = (req as any).user.id || (req as any).user.userId;
         const { planType, amount } = req.body;
 
-        if (!planType || !amount) {
-            return res.status(400).json({ message: 'planType dan amount wajib diisi' });
-        }
-
-        // Pricing reference
         const pricing: Record<string, number> = {
-            'basic': 349000,
-            'whatsapp': 139000,
-            'telegram': 95999,
+            basic: 349000,
+            whatsapp: 139000,
+            telegram: 95999,
             'whatsapp+telegram': 234999,
         };
-
-        const expectedAmount = pricing[planType];
-        if (expectedAmount && Number(amount) < expectedAmount) {
-            return res.status(400).json({
-                message: `Jumlah transfer kurang. Harga ${planType}: Rp${expectedAmount.toLocaleString('id-ID')}`
-            });
+        const expectedAmount = pricing[String(planType)];
+        if (!expectedAmount) return res.status(400).json({ message: 'Paket tidak valid.' });
+        if (Number(amount) !== expectedAmount) {
+            return res.status(400).json({ message: `Nominal paket harus Rp${expectedAmount.toLocaleString('id-ID')}.` });
         }
 
-        // Check if proof file was uploaded (handled by upload middleware)
-        const proofUrl = (req as any).file ? `/uploads/${(req as any).file.filename}` : null;
+        const file = (req as any).file;
+        if (!file) return res.status(400).json({ message: 'Unggah bukti transfer terlebih dahulu.' });
+        const proofUrl = `/uploads/${file.filename}`;
 
-        // Create or update subscription to pending
-        let subscription = await prisma.subscription.findFirst({
-            where: { userId: Number(userId), status: { in: ['inactive', 'expired', 'pending'] } },
-            orderBy: { createdAt: 'desc' }
+        const existingPending = await prisma.paymentProof.findFirst({
+            where: { userId: Number(userId), status: 'pending' },
+            select: { id: true },
         });
+        if (existingPending) return res.status(409).json({ message: 'Pembayaran Anda sedang menunggu verifikasi.' });
 
-        if (!subscription) {
-            subscription = await prisma.subscription.create({
+        const { subscription, proof } = await prisma.$transaction(async (tx) => {
+            const subscription = await tx.subscription.create({
                 data: {
                     userId: Number(userId),
-                    planType,
+                    planType: String(planType),
                     status: 'pending',
-                    dailyTokenQuota: planType === 'basic' ? 5000 : planType.includes('whatsapp') ? 15000 : 10000,
-                }
+                    dailyTokenQuota: ({ basic: 5000, whatsapp: 15000, telegram: 10000, 'whatsapp+telegram': 20000 } as Record<string, number>)[String(planType)],
+                },
             });
-        } else {
-            subscription = await prisma.subscription.update({
-                where: { id: subscription.id },
-                data: { planType, status: 'pending' }
+            const proof = await tx.paymentProof.create({
+                data: {
+                    userId: Number(userId),
+                    subscriptionId: subscription.id,
+                    amount: expectedAmount,
+                    proofUrl,
+                    status: 'pending',
+                },
             });
-        }
-
-        // Create payment proof record
-        const proof = await prisma.paymentProof.create({
-            data: {
-                userId: Number(userId),
-                subscriptionId: subscription.id,
-                amount: Number(amount),
-                proofUrl,
-                status: 'pending',
-            }
+            return { subscription, proof };
         });
 
         res.status(201).json({
@@ -194,46 +182,66 @@ export const adminReviewPayment = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Bukti pembayaran tidak ditemukan' });
         }
 
-        if (action === 'approve') {
-            // Activate subscription
-            const now = new Date();
-            const endDate = new Date(now);
-            endDate.setMonth(endDate.getMonth() + 1); // 1 month subscription
-
-            await prisma.$transaction([
-                prisma.paymentProof.update({
-                    where: { id: proof.id },
-                    data: { status: 'approved', adminNote: adminNote || null }
-                }),
-                prisma.subscription.update({
-                    where: { id: proof.subscriptionId! },
-                    data: {
-                        status: 'active',
-                        startDate: now,
-                        endDate,
-                        tokensUsedToday: 0,
-                        lastQuotaReset: now,
-                    }
-                })
-            ]);
-
-            res.json({ message: 'Pembayaran disetujui. Subscription diaktifkan.' });
-        } else {
-            // Reject
-            await prisma.paymentProof.update({
-                where: { id: proof.id },
-                data: { status: 'rejected', adminNote: adminNote || 'Ditolak' }
-            });
-
-            if (proof.subscriptionId) {
-                await prisma.subscription.update({
-                    where: { id: proof.subscriptionId },
-                    data: { status: 'inactive' }
-                });
-            }
-
-            res.json({ message: 'Pembayaran ditolak.' });
+        if (proof.status !== 'pending') {
+            return res.status(409).json({ message: 'Pembayaran ini sudah pernah diproses.' });
         }
+        if (!proof.proofUrl || !proof.subscriptionId || !proof.subscription) {
+            return res.status(400).json({ message: 'Bukti atau langganan terkait tidak lengkap.' });
+        }
+
+        const pricing: Record<string, number> = {
+            basic: 349000, whatsapp: 139000, telegram: 95999, 'whatsapp+telegram': 234999,
+        };
+        if (pricing[proof.subscription.planType] !== proof.amount) {
+            return res.status(400).json({ message: 'Nominal bukti tidak sesuai harga paket.' });
+        }
+        if (proof.subscription.status !== 'pending') {
+            return res.status(409).json({ message: 'Status langganan tidak lagi menunggu pembayaran.' });
+        }
+
+        if (action === 'approve') {
+            const now = new Date();
+            const active = await prisma.subscription.findFirst({
+                where: { userId: proof.userId, status: 'active', endDate: { gt: now } },
+                orderBy: { endDate: 'desc' },
+                select: { endDate: true },
+            });
+            const startDate = active?.endDate && active.endDate > now ? active.endDate : now;
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + 1);
+
+            const processed = await prisma.$transaction(async (tx) => {
+                const claimed = await tx.paymentProof.updateMany({
+                    where: { id: proof.id, status: 'pending' },
+                    data: { status: 'approved', adminNote: adminNote || null },
+                });
+                if (claimed.count !== 1) return false;
+                const activated = await tx.subscription.updateMany({
+                    where: { id: proof.subscriptionId!, status: 'pending' },
+                    data: { status: 'active', startDate, endDate, tokensUsedToday: 0, lastQuotaReset: now },
+                });
+                if (activated.count !== 1) throw new Error('Langganan tidak lagi berstatus pending.');
+                return true;
+            });
+            if (!processed) return res.status(409).json({ message: 'Pembayaran sudah diproses oleh admin lain.' });
+            return res.json({ message: 'Pembayaran disetujui. Subscription diaktifkan.' });
+        }
+
+        const processed = await prisma.$transaction(async (tx) => {
+            const claimed = await tx.paymentProof.updateMany({
+                where: { id: proof.id, status: 'pending' },
+                data: { status: 'rejected', adminNote: adminNote || 'Ditolak' },
+            });
+            if (claimed.count !== 1) return false;
+            const rejected = await tx.subscription.updateMany({
+                where: { id: proof.subscriptionId!, status: 'pending' },
+                data: { status: 'inactive' },
+            });
+            if (rejected.count !== 1) throw new Error('Langganan tidak lagi berstatus pending.');
+            return true;
+        });
+        if (!processed) return res.status(409).json({ message: 'Pembayaran sudah diproses oleh admin lain.' });
+        return res.json({ message: 'Pembayaran ditolak.' });
     } catch (error: any) {
         console.error('[Payment] Admin review error:', error);
         res.status(500).json({ message: 'Gagal memproses review', error: error.message });

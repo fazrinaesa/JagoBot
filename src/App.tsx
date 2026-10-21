@@ -25,7 +25,9 @@ import { AiConfigPage } from "./pages/AiConfigPage";
 import { ApiUsagePage } from "./pages/ApiUsagePage";
 import { QuestionsPage } from "./pages/QuestionsPage";
 import { UsersPage } from "./pages/UsersPage";
+import { AdminOverviewPage } from "./pages/AdminOverviewPage";
 import { RequireSuperAdmin } from "./components/RequireSuperAdmin";
+import { RequireUser } from "./components/RequireUser";
 
 export default function App() {
   return (
@@ -42,32 +44,30 @@ export default function App() {
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={
             <DashboardLayout>
-              <DashboardWithAnalytics />
+              {localStorage.getItem("role") === "SUPER_ADMIN" ? (
+                <RequireSuperAdmin><AdminOverviewPage /></RequireSuperAdmin>
+              ) : <DashboardWithAnalytics />}
             </DashboardLayout>
           } />
           <Route path="/dashboard/knowledge" element={
             <DashboardLayout>
-              <KnowledgeBase />
+              <RequireUser><KnowledgeBase /></RequireUser>
             </DashboardLayout>
           } />
           <Route path="/dashboard/personality" element={
             <DashboardLayout>
-              <CustomPersonality />
+              <RequireUser><CustomPersonality /></RequireUser>
             </DashboardLayout>
           } />
           <Route path="/dashboard/playground" element={
             <DashboardLayout>
-              <ChatbotPlayground />
+              <RequireUser><ChatbotPlayground /></RequireUser>
             </DashboardLayout>
           } />
-          <Route path="/dashboard/api" element={
-            <DashboardLayout>
-              <ApiManagement />
-            </DashboardLayout>
-          } />
+          <Route path="/dashboard/api" element={<Navigate to="/dashboard/integration" replace />} />
           <Route path="/dashboard/integration" element={
             <DashboardLayout>
-              <IntegrationSettings />
+              <RequireUser><IntegrationSettings /></RequireUser>
             </DashboardLayout>
           } />
           <Route path="/dashboard/analytics" element={<Navigate to="/dashboard" replace />} />
@@ -83,12 +83,14 @@ export default function App() {
           } />
           <Route path="/dashboard/payment" element={
             <DashboardLayout>
-              <PaymentPage />
+              <RequireUser><PaymentPage /></RequireUser>
             </DashboardLayout>
           } />
           <Route path="/dashboard/admin/payment" element={
             <DashboardLayout>
-              <AdminPaymentPage />
+              <RequireSuperAdmin>
+                <AdminPaymentPage />
+              </RequireSuperAdmin>
             </DashboardLayout>
           } />
           <Route path="/dashboard/admin/ai-config" element={

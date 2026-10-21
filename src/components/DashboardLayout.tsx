@@ -17,7 +17,6 @@ import {
   ChevronDown,
   Plus,
   HelpCircle,
-  KeyRound,
   Cpu,
   Activity,
   MessageCircleQuestion,
@@ -112,6 +111,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     };
 
     const fetchBots = async () => {
+      if (localStorage.getItem("role") === "SUPER_ADMIN") return;
       try {
         const bots = await getUserBots();
         const normalizedBots = Array.isArray(bots) ? bots : [];
@@ -184,46 +184,41 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-    { icon: Database, label: "Knowledge Base", href: "/dashboard/knowledge" },
-    { icon: Bot, label: "Profil Bot", href: "/dashboard/personality" },
-    { icon: MessageSquare, label: "Playground", href: "/dashboard/playground" },
-    { icon: Settings, label: "Integrasi", href: "/dashboard/integration" },
-    { icon: KeyRound, label: "API", href: "/dashboard/api" },
-    { icon: CreditCard, label: "Pembayaran", href: "/dashboard/payment" },
-  ];
-
-  // Menu khusus SUPER_ADMIN — hanya muncul bila role sesuai.
-  // Role dibaca dari localStorage (diisi saat login) dan/atau payload token.
   const role = (() => {
     try {
       const cached = localStorage.getItem("role");
       if (cached) return cached;
       const token = localStorage.getItem("token");
       if (!token) return "USER";
-      const payload = JSON.parse(atob(token.split(".")[1] || ""));
-      return payload.role || "USER";
+      return JSON.parse(atob(token.split(".")[1] || "")).role || "USER";
     } catch {
       return "USER";
     }
   })();
 
-  const adminMenuItems =
-    role === "SUPER_ADMIN"
-      ? [
-          { icon: Cpu, label: "Konfigurasi AI", href: "/dashboard/admin/ai-config" },
-          { icon: Activity, label: "Monitoring API", href: "/dashboard/admin/api-usage" },
-          { icon: MessageCircleQuestion, label: "Analitik Pertanyaan", href: "/dashboard/admin/questions" },
-          { icon: Users, label: "Manajemen Pengguna", href: "/dashboard/admin/users" },
-        ]
-      : [];
+  const menuItems = role === "SUPER_ADMIN"
+    ? [
+        { icon: LayoutDashboard, label: "Ringkasan Platform", href: "/dashboard" },
+        { icon: CreditCard, label: "Pembayaran & Langganan", href: "/dashboard/admin/payment" },
+        { icon: Users, label: "Manajemen Pengguna", href: "/dashboard/admin/users" },
+        { icon: Cpu, label: "Konfigurasi AI", href: "/dashboard/admin/ai-config" },
+        { icon: Activity, label: "Monitoring API", href: "/dashboard/admin/api-usage" },
+        { icon: MessageCircleQuestion, label: "Analitik Global", href: "/dashboard/admin/questions" },
+      ]
+    : [
+        { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+        { icon: Database, label: "Knowledge Base", href: "/dashboard/knowledge" },
+        { icon: Bot, label: "Profil Bot", href: "/dashboard/personality" },
+        { icon: MessageSquare, label: "Playground", href: "/dashboard/playground" },
+        { icon: Settings, label: "Integrasi", href: "/dashboard/integration" },
+        { icon: CreditCard, label: "Pembayaran", href: "/dashboard/payment" },
+      ];
 
-  const allMenuItems = [...menuItems, ...adminMenuItems];
+  const allMenuItems = menuItems;
 
   // Judul + subjudul header per halaman
   const pageMeta: Record<string, { title: string; subtitle: string }> = {
-    "/dashboard": { title: "Dashboard", subtitle: "Kelola chatbot bisnis Anda" },
+    "/dashboard": { title: role === "SUPER_ADMIN" ? "Ringkasan Platform" : "Dashboard", subtitle: role === "SUPER_ADMIN" ? "Operasional global JagoBot" : "Kelola chatbot bisnis Anda" },
     "/dashboard/knowledge": { title: "Knowledge Base", subtitle: "Latih bot dengan pengetahuan toko Anda" },
     "/dashboard/personality": { title: "Profil Bot", subtitle: "Atur gaya bicara & kepribadian bot" },
     "/dashboard/playground": { title: "Playground", subtitle: "Uji coba respon bot Anda" },
@@ -307,7 +302,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               <p className="text-[11px] font-medium text-neutral-400">{currentMeta.subtitle}</p>
             </div>
 
-            <div className="ml-2 flex items-center gap-2 border-l border-border-subtle pl-4 dark:border-neutral-800">
+            {role !== "SUPER_ADMIN" && <div className="ml-2 flex items-center gap-2 border-l border-border-subtle pl-4 dark:border-neutral-800">
               <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
                 Project
               </span>
@@ -347,7 +342,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               >
                 <Plus className="h-4 w-4" />
               </button>
-            </div>
+            </div>}
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -463,15 +458,15 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               >
                 <div className="hidden text-right sm:block">
                   <p className="text-xs font-bold leading-tight text-neutral-900 dark:text-white">
-                    {profile.toko}
+                    {role === "SUPER_ADMIN" ? "JagoBot Platform" : profile.toko}
                   </p>
                   <p className="text-[10px] font-medium leading-tight text-neutral-400">
-                    {profile.nama}
+                    {role === "SUPER_ADMIN" ? "Super Admin" : profile.nama}
                   </p>
                 </div>
 
                 <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue to-accent-violet text-[11px] font-bold uppercase text-white shadow-soft">
-                  {profile.toko && profile.toko.trim() !== ""
+                  {role === "SUPER_ADMIN" ? "SA" : profile.toko && profile.toko.trim() !== ""
                     ? profile.toko.split(' ').map(n => n[0]).join('').substring(0, 2)
                     : "JB"}
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-accent-green dark:border-surface-dark" />
@@ -484,8 +479,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                   <div className="fixed inset-0 z-10" onClick={() => setIsProfileOpen(false)} />
                   <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-2xl border border-border-subtle bg-white py-2 shadow-pop animate-pop-in dark:border-neutral-800 dark:bg-neutral-900">
                     <div className="mb-2 border-b border-border-subtle px-4 py-3 dark:border-neutral-800">
-                      <p className="truncate text-xs font-bold text-neutral-900 dark:text-white">{profile.toko}</p>
-                      <p className="truncate text-[11px] font-medium text-neutral-400">{profile.nama}</p>
+                      <p className="truncate text-xs font-bold text-neutral-900 dark:text-white">{role === "SUPER_ADMIN" ? "JagoBot Platform" : profile.toko}</p>
+                                            <p className="truncate text-[11px] font-medium text-neutral-400">{role === "SUPER_ADMIN" ? "Super Admin" : profile.nama}</p>
                     </div>
 
                     <Link

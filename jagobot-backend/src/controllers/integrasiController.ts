@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { generateChatCompletion } from '../lib/llm';
 import { logApiUsage, estimateTokens, resolveBotOwner } from '../lib/usageLog';
+import { recordTokenUsage } from '../middleware/quotaMiddleware';
 
 /**
  * Controller untuk menangani interaksi chat publik dari Widget Web (Live Chat)
@@ -109,6 +110,9 @@ export const handlePublicChat = async (req: Request, res: Response) => {
         // Catat pemakaian API (Fase 4). Endpoint publik tidak punya token,
         // jadi pemilik bot dicari dari botId agar tetap bisa diatribusikan.
         const ownerId = await resolveBotOwner(botId);
+        if (ownerId) {
+            await recordTokenUsage(ownerId, estimateTokens(message) + estimateTokens(replyMessage));
+        }
         logApiUsage({
             userId: ownerId,
             botId: Number(botId),

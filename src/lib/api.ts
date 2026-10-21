@@ -299,6 +299,7 @@ export interface UnansweredQuestion {
     lastAsked: string;
 }
 
+export const adminGetOverview = () => api.get('/admin/overview');
 export const adminGetAnalyticsOverview = (days = 30) => api.get(`/admin/analytics/overview?days=${days}`);
 export const adminGetTopQuestions = (days = 30, limit = 20) =>
     api.get(`/admin/analytics/top-questions?days=${days}&limit=${limit}`);
@@ -311,7 +312,7 @@ export interface AdminUser {
     nama_toko: string;
     email: string;
     nama_lengkap: string | null;
-    role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+    role: 'USER' | 'SUPER_ADMIN';
     isActive: boolean;
     createdAt: string;
     lastLoginAt: string | null;
@@ -333,5 +334,9 @@ export const adminUpdateUserRole = (id: number, role: AdminUser['role']) =>
 
 export const adminUpdateUserStatus = (id: number, isActive: boolean) =>
     api.patch(`/admin/users/${id}/status`, { isActive });
+
+export const getTelegramConnection = (botId: number) => api.get(`/telegram/connections/${botId}`);
+export const connectTelegram = (botId: number, token: string) => api.post('/telegram/connections', { botId, token });
+export const disconnectTelegram = (botId: number) => api.delete(`/telegram/connections/${botId}`);
 
 export default api;

@@ -13,6 +13,13 @@ const STATUS_BADGE: Record<string, { variant: "warning" | "success" | "danger" |
   rejected: { variant: "danger", label: "Ditolak" },
 };
 
+const proofImageUrl = (proofUrl: string) => {
+  const path = proofUrl.startsWith("/uploads/proof_")
+    ? proofUrl.replace("/uploads/", "/uploads/proofs/")
+    : proofUrl;
+  return `${import.meta.env.VITE_API_URL || ""}${path}`;
+};
+
 const SUB_STATUS_BADGE: Record<string, { variant: "success" | "warning" | "neutral"; label: string }> = {
   active: { variant: "success", label: "Aktif" },
   expired: { variant: "warning", label: "Kedaluwarsa" },
@@ -49,12 +56,16 @@ export const AdminPaymentPage: React.FC = () => {
   }, [filter]);
 
   const handleReview = async (proofId: number, action: "approve" | "reject") => {
+    if (reviewing !== null) return;
     setReviewing(proofId);
     try {
       await adminReviewPayment(proofId, action, adminNote || undefined);
       alert(action === "approve" ? "Pembayaran disetujui!" : "Pembayaran ditolak.");
       setAdminNote("");
-      fetchData();
+      if (selectedProof?.id === proofId) {
+        setSelectedProof((current: any) => current ? { ...current, status: action === "approve" ? "approved" : "rejected" } : current);
+      }
+      await fetchData();
     } catch (err: any) {
       alert(err?.response?.data?.message || "Gagal memproses review.");
     } finally {
@@ -80,7 +91,7 @@ export const AdminPaymentPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-10">
       <PageHeader
-        title="Admin — Pembayaran"
+        title="Verifikasi Pembayaran"
         description="Tinjau bukti transfer dan kelola langganan pengguna."
       />
 
@@ -267,16 +278,28 @@ export const AdminPaymentPage: React.FC = () => {
               </p>
             </div>
 
-            {selectedProof.proofUrl && (
-              <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">Bukti Transfer</p>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">Bukti Transfer</p>
+              {selectedProof.proofUrl ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL || ""}${selectedProof.proofUrl}`}
+                  src={proofImageUrl(selectedProof.proofUrl)}
                   alt="Bukti transfer"
-                  className="max-h-64 w-full rounded-2xl border border-border-subtle object-contain dark:border-neutral-700"
+                  className="max-h-[60vh] min-h-40 w-full rounded-2xl border border-border-subtle bg-neutral-50 object-contain dark:border-neutral-700 dark:bg-neutral-800"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                    const fallback = event.currentTarget.nextElementSibling as HTMLElement | null;
+                    if (fallback) fallback.hidden = false;
+                  }}
+                  onLoad={(event) => {
+                    const fallback = event.currentTarget.nextElementSibling as HTMLElement | null;
+                    if (fallback) fallback.hidden = true;
+                  }}
                 />
-              </div>
-            )}
+              ) : null}
+              <p hidden={!selectedProof.proofUrl} className="rounded-xl border border-border-subtle bg-neutral-50 p-4 text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800">
+                Foto tidak dapat dimuat. File bukti mungkin tidak tersedia di server.
+              </p>
+            </div>
 
             {selectedProof.status === "pending" && (
               <div className="space-y-3 pt-1">
@@ -291,7 +314,7 @@ export const AdminPaymentPage: React.FC = () => {
                     variant="success"
                     className="flex-1"
                     onClick={() => handleReview(selectedProof.id, "approve")}
-                    disabled={reviewing === selectedProof.id}
+                    disabled={reviewing !== null || selectedProof.status !== "pending"}
                   >
                     {reviewing === selectedProof.id ? "Memproses..." : "Setujui"}
                   </Button>
@@ -299,7 +322,7 @@ export const AdminPaymentPage: React.FC = () => {
                     variant="danger"
                     className="flex-1"
                     onClick={() => handleReview(selectedProof.id, "reject")}
-                    disabled={reviewing === selectedProof.id}
+                    disabled={reviewing !== null || selectedProof.status !== "pending"}
                   >
                     {reviewing === selectedProof.id ? "Memproses..." : "Tolak"}
                   </Button>

@@ -41,28 +41,6 @@ const GRANULARITY_OPTIONS = [
   { value: "bulanan", label: "Bulanan" },
 ];
 
-const DEFAULT_CHART = [
-  { name: "Sen", chats: 400 },
-  { name: "Sel", chats: 300 },
-  { name: "Rab", chats: 200 },
-  { name: "Kam", chats: 278 },
-  { name: "Jum", chats: 189 },
-  { name: "Sab", chats: 239 },
-  { name: "Min", chats: 349 },
-];
-
-const DEFAULT_FAQ = [
-  { q: "Berapa harga produk ini?", count: 452, trend: "+5%" },
-  { q: "Apakah ada promo hari ini?", count: 321, trend: "+12%" },
-  { q: "Bisa kirim ke luar kota?", count: 289, trend: "-2%" },
-  { q: "Jam berapa toko buka?", count: 156, trend: "+1%" },
-  { q: "Metode pembayaran apa saja?", count: 98, trend: "+8%" },
-];
-
-const DEFAULT_SOURCES = [
-  { name: "WhatsApp", value: 62, color: "#7c3aed" },
-  { name: "Website Widget", value: 38, color: "#4f46e5" },
-];
 
 const chartTooltipStyle = {
   backgroundColor: "#ffffff",
@@ -156,7 +134,7 @@ export const DashboardWithAnalytics = () => {
   useEffect(() => {
     fetchAll(period);
     // Auto-refresh data setiap 30 detik (tanpa menampilkan loading)
-    const interval = setInterval(() => fetchAll(period, true), 30000);
+    const interval = setInterval(() => fetchAll(period, true), 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
@@ -167,19 +145,17 @@ export const DashboardWithAnalytics = () => {
 
   const namaBotAktif = dashboardData?.nama_toko || "Toko Anda";
 
-  const rawChartData: ChartPoint[] =
-    stats?.chartData?.length > 0 ? stats.chartData : DEFAULT_CHART;
+  const rawChartData: ChartPoint[] = stats?.chartData ?? [];
   const chartData = useMemo(
     () => aggregateChart(rawChartData, granularity),
     [rawChartData, granularity]
   );
 
-  const topFaq = stats?.topFaq?.length > 0 ? stats.topFaq : DEFAULT_FAQ;
+  const topFaq = stats?.topFaq ?? [];
   const totalFaq = topFaq.reduce((sum: number, f: any) => sum + (Number(f.count) || 0), 0);
   const maxFaqCount = Math.max(...topFaq.map((f: any) => Number(f.count) || 0), 1);
 
-  const sourceData =
-    analytics?.sourceData?.length > 0 ? analytics.sourceData : DEFAULT_SOURCES;
+  const sourceData = analytics?.sourceData ?? [];
 
   /* ── Ekspor CSV ───────────────────────────────────────────── */
   const handleExport = () => {
@@ -263,24 +239,24 @@ export const DashboardWithAnalytics = () => {
         />
         <StatCard
           title="Pelanggan Baru"
-          value={stats?.pelangganBaru?.toLocaleString() ?? "0"}
-          delta="+8.2%"
-          isPositive={true}
+          value={stats?.pelangganBaru == null ? "—" : stats.pelangganBaru.toLocaleString()}
+          delta=""
+          isPositive={undefined}
           icon={Users}
           accentColor="violet"
         />
         <StatCard
           title="Tingkat Konversi"
-          value={stats?.tingkatKonversi ?? "0%"}
-          delta="-2.4%"
-          isPositive={false}
+          value={stats?.tingkatKonversi ?? "—"}
+          delta=""
+          isPositive={undefined}
           icon={TrendingUp}
           accentColor="orange"
         />
         <StatCard
           title="Waktu Respon"
           value={stats?.avgResponse ?? "0.0s"}
-          delta="-15%"
+          delta=""
           // Turun = lebih cepat = positif
           isPositive={true}
           icon={Clock}
@@ -288,9 +264,9 @@ export const DashboardWithAnalytics = () => {
         />
         <StatCard
           title="Kepuasan Pelanggan"
-          value={analytics?.satisfactionRate ? `${analytics.satisfactionRate}%` : "N/A"}
-          delta="+2.4%"
-          isPositive={true}
+          value="N/A"
+          delta=""
+          isPositive={undefined}
           icon={Users}
           accentColor="teal"
         />
@@ -327,7 +303,9 @@ export const DashboardWithAnalytics = () => {
             </div>
           )}
 
-          <ResponsiveContainer width="100%" height="100%">
+          {chartData.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-neutral-400">Belum ada data chat pada periode ini.</div>
+          ) : <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorChats" x1="0" y1="0" x2="0" y2="1">
@@ -366,12 +344,12 @@ export const DashboardWithAnalytics = () => {
                 activeDot={{ r: 4.5, fill: "#7c3aed", stroke: "#ffffff", strokeWidth: 2.5 }}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ResponsiveContainer>}
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border-subtle pt-4 dark:border-neutral-800">
           <span className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-            <Clock className="h-3.5 w-3.5 text-accent-green" /> Update otomatis tiap 30 detik
+            <Clock className="h-3.5 w-3.5 text-accent-green" /> Update otomatis tiap 5 detik
           </span>
           <span className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
             <TrendingUp className="h-3.5 w-3.5 text-accent-blue" />
@@ -400,7 +378,9 @@ export const DashboardWithAnalytics = () => {
           </div>
 
           <ol className="flex-1 space-y-1">
-            {topFaq.map((faq: any, idx: number) => {
+            {topFaq.length === 0 ? (
+              <li className="py-8 text-center text-sm text-neutral-400">Belum ada pertanyaan pada periode ini.</li>
+            ) : topFaq.map((faq: any, idx: number) => {
               const isDown = faq.trend?.startsWith("-");
               const percent = totalFaq > 0 ? Math.round((Number(faq.count) / totalFaq) * 100) : 0;
               return (
@@ -417,7 +397,7 @@ export const DashboardWithAnalytics = () => {
                       <p className="truncate text-xs font-semibold text-neutral-700 dark:text-neutral-200">
                         {faq.q}
                       </p>
-                      <span
+                      {faq.trend && <span
                         className={cn(
                           "shrink-0 text-xs font-bold tabular-nums",
                           isDown
@@ -431,7 +411,7 @@ export const DashboardWithAnalytics = () => {
                           <ArrowUpRight className="mr-0.5 inline h-3 w-3 align-[-1px]" strokeWidth={2.5} />
                         )}
                         {faq.trend}
-                      </span>
+                      </span>}
                     </div>
                     {/* Progress bar tipis */}
                     <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
@@ -463,6 +443,9 @@ export const DashboardWithAnalytics = () => {
             <Badge variant="neutral">{sourceData.length} kanal</Badge>
           </div>
 
+          {sourceData.length === 0 ? (
+            <div className="flex h-[170px] items-center justify-center text-sm text-neutral-400">Belum ada data kanal.</div>
+          ) : (
           <div className="relative mx-auto h-[170px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -493,6 +476,7 @@ export const DashboardWithAnalytics = () => {
               </p>
             </div>
           </div>
+          )}
 
           <div className="mt-5 space-y-2">
             {sourceData.map((item: any, idx: number) => (

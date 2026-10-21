@@ -267,8 +267,8 @@ export const ApiUsagePage: React.FC = () => {
                       <p className="text-xs text-neutral-500 dark:text-neutral-400">{u.email}</p>
                     </td>
                     <td className="px-5 py-3">
-                      <Badge variant={u.role === "SUPER_ADMIN" ? "primary" : u.role === "ADMIN" ? "warning" : "neutral"}>
-                        {u.role}
+                      <Badge variant={u.role === "SUPER_ADMIN" ? "primary" : "neutral"}>
+                        {u.role === "USER" ? "Pemilik UMKM" : "Super Admin"}
                       </Badge>
                     </td>
                     <td className="px-5 py-3 text-right tabular-nums">{fmt(u.requestCount)}</td>

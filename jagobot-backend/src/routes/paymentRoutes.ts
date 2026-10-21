@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { verifyToken } from '../middleware/authMiddleware';
-import { requireAdmin } from '../middleware/rbacMiddleware';
+import { requireSuperAdmin } from '../middleware/rbacMiddleware';
 import { uploadProof } from '../middleware/upload';
 import {
     getMySubscription,
@@ -20,10 +20,10 @@ router.get('/proofs', verifyToken, getMyPaymentProofs);
 router.get('/quota', verifyToken, checkTokenQuota);
 router.post('/submit', verifyToken, uploadProof, submitPaymentProof);
 
-// ─── Admin routes (require auth + peran ADMIN/SUPER_ADMIN) ───
-// Sebelumnya hanya verifyToken → user biasa bisa melihat data semua orang. Kini ditutup.
-router.get('/admin/proofs', verifyToken, requireAdmin, adminListPaymentProofs);
-router.post('/admin/review', verifyToken, requireAdmin, adminReviewPayment);
-router.get('/admin/subscriptions', verifyToken, requireAdmin, adminListSubscriptions);
+// ─── Verifikasi pembayaran: hanya SUPER_ADMIN ───
+// User biasa hanya boleh melihat/mengirim bukti pembayarannya sendiri.
+router.get('/admin/proofs', verifyToken, requireSuperAdmin, adminListPaymentProofs);
+router.post('/admin/review', verifyToken, requireSuperAdmin, adminReviewPayment);
+router.get('/admin/subscriptions', verifyToken, requireSuperAdmin, adminListSubscriptions);
 
 export default router;
