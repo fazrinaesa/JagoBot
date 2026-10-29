@@ -123,6 +123,8 @@ export const sendChat = (botId: number, customerName: string, message: string) =
     });
 };
 
+export const getChatLogs = (botId: number) => api.get(`/chat/logs?botId=${botId}`);
+
 export const getUserBots = async () => {
     const response = await api.get('/dashboard/user-bots');
     return response.data?.data ?? response.data;
@@ -300,6 +302,7 @@ export interface UnansweredQuestion {
 }
 
 export const adminGetOverview = () => api.get('/admin/overview');
+export const adminGetPlatformNotifications = (limit = 10) => api.get(`/admin/notifications?limit=${limit}`);
 export const adminGetAnalyticsOverview = (days = 30) => api.get(`/admin/analytics/overview?days=${days}`);
 export const adminGetTopQuestions = (days = 30, limit = 20) =>
     api.get(`/admin/analytics/top-questions?days=${days}&limit=${limit}`);

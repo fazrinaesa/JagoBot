@@ -48,11 +48,13 @@ export const AiConfigPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [testingId, setTestingId] = useState<number | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const load = async () => {
     try {
       const res = await adminGetAiProviders();
       setProviders(res.data.data || []);
+      setLastUpdated(new Date());
       setError(null);
     } catch (e: any) {
       setError(e?.response?.data?.message || "Gagal memuat konfigurasi AI.");
@@ -61,7 +63,18 @@ export const AiConfigPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && !showForm && saving === false && testingId === null) void load();
+    }, 5000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !showForm && saving === false && testingId === null) void load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); };
+  }, [showForm, saving, testingId]);
 
   const resetForm = () => {
     setForm({ ...emptyForm });
@@ -182,6 +195,11 @@ export const AiConfigPage: React.FC = () => {
           </Button>
         }
       />
+
+      <p className="flex items-center gap-1.5 text-xs text-neutral-400">
+        <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" /></span>
+        Status provider diperbarui otomatis tiap 5 detik{lastUpdated ? ` · terakhir ${lastUpdated.toLocaleTimeString("id-ID")}` : ""}
+      </p>
 
       {/* Notifikasi */}
       {notice && (

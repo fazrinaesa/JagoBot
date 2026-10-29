@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   MessageSquare,
@@ -81,6 +82,7 @@ const aggregateChart = (data: ChartPoint[], granularity: string): ChartPoint[] =
  * Halaman Dashboard utama — gabungan Ringkasan + Analitik
  * ───────────────────────────────────────────────────────────── */
 export const DashboardWithAnalytics = () => {
+  const navigate = useNavigate();
   const [period, setPeriod] = useState("bulan");
   const [granularity, setGranularity] = useState("harian");
 
@@ -280,7 +282,7 @@ export const DashboardWithAnalytics = () => {
               Volume Chat Harian
             </h2>
             <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-              Jumlah percakapan bot {period === "bulan" ? "bulan ini" : "minggu ini"}
+              Filter periode berlaku untuk kartu dan grafik; grafik mengelompokkan chat {period === "bulan" ? "bulan ini" : "minggu ini"}.
             </p>
           </div>
 
@@ -534,27 +536,18 @@ export const DashboardWithAnalytics = () => {
           <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row">
             <Button
               variant="ghost"
+              onClick={() => navigate("/dashboard/chat-logs")}
               className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white dark:border-white/20 dark:bg-white/10 sm:w-auto"
             >
               Lihat Log Chat
             </Button>
-            <Button className="w-full bg-white text-neutral-900 shadow-lift hover:bg-blue-50 hover:shadow-lg dark:bg-white dark:text-neutral-900 sm:w-auto">
+            <Button onClick={() => navigate("/dashboard/playground")} className="w-full bg-white text-neutral-900 shadow-lift hover:bg-blue-50 hover:shadow-lg dark:bg-white dark:text-neutral-900 sm:w-auto">
               <MessageCircle className="h-4 w-4" />
               Tes Bot Sekarang
             </Button>
           </div>
         </div>
       </Card>
-
-      {/* Tautan analitik lengkap (pertahankan journey pengguna) */}
-      <div className="flex justify-end">
-        <a
-          href="/dashboard/playground"
-          className="flex items-center gap-1 text-xs font-semibold text-accent-blue transition-colors hover:text-accent-blue-dark dark:text-accent-blue-light"
-        >
-          Uji bot di Playground <ChevronRight className="h-3.5 w-3.5" />
-        </a>
-      </div>
     </div>
   );
 };

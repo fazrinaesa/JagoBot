@@ -40,9 +40,10 @@ export const QuestionsPage: React.FC = () => {
   const [unanswered, setUnanswered] = useState<UnansweredQuestion[]>([]);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"top" | "unanswered">("top");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     setError(null);
     try {
       const [o, t, u] = await Promise.all([
@@ -53,14 +54,24 @@ export const QuestionsPage: React.FC = () => {
       setOverview(o.data.totals);
       setTop(t.data.data || []);
       setUnanswered(u.data.data || []);
+      setLastUpdated(new Date());
     } catch (e: any) {
       setError(e?.response?.data?.message || "Gagal memuat analitik pertanyaan.");
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, [days]);
+  useEffect(() => { void load(); }, [days]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load(false);
+    }, 5000);
+    const onVisible = () => { if (document.visibilityState === "visible") void load(false); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); };
+  }, [days]);
 
   if (loading) return <LoadingState label="Memuat analitik pertanyaan..." />;
 
@@ -82,12 +93,17 @@ export const QuestionsPage: React.FC = () => {
               <option value="90">90 hari</option>
               <option value="365">1 tahun</option>
             </Select>
-            <Button variant="secondary" onClick={load}>
+            <Button variant="secondary" onClick={() => void load()}>
               <RefreshCw className="mr-1.5 h-4 w-4" /> Muat ulang
             </Button>
           </div>
         }
       />
+
+      <p className="flex items-center gap-1.5 text-xs text-neutral-400">
+        <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" /></span>
+        Diperbarui otomatis tiap 5 detik{lastUpdated ? ` · terakhir ${lastUpdated.toLocaleTimeString("id-ID")}` : ""}
+      </p>
 
       {error && (
         <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800/40 dark:bg-rose-900/20 dark:text-rose-300">

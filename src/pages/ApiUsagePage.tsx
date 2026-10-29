@@ -50,14 +50,15 @@ export const ApiUsagePage: React.FC = () => {
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const [summary, setSummary] = useState<{ totals: any; data: UsageSummaryRow[] } | null>(null);
   const [timeline, setTimeline] = useState<any[]>([]);
   const [byModel, setByModel] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     setError(null);
     try {
       const [s, t, m, l] = await Promise.all([
@@ -70,14 +71,24 @@ export const ApiUsagePage: React.FC = () => {
       setTimeline(t.data.data || []);
       setByModel(m.data.data || []);
       setLogs(l.data.data || []);
+      setLastUpdated(new Date());
     } catch (e: any) {
       setError(e?.response?.data?.message || "Gagal memuat data pemakaian API.");
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, [days]);
+  useEffect(() => { void load(); }, [days]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load(false);
+    }, 5000);
+    const onVisible = () => { if (document.visibilityState === "visible") void load(false); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); };
+  }, [days]);
 
   // Pengguna yang kuotanya hampir/ sudah habis (>= 80%)
   const nearLimit = useMemo(
@@ -102,12 +113,17 @@ export const ApiUsagePage: React.FC = () => {
               <option value="90">90 hari</option>
               <option value="365">1 tahun</option>
             </Select>
-            <Button variant="secondary" onClick={load}>
+            <Button variant="secondary" onClick={() => void load()}>
               <RefreshCw className="mr-1.5 h-4 w-4" /> Muat ulang
             </Button>
           </div>
         }
       />
+
+      <p className="flex items-center gap-1.5 text-xs text-neutral-400">
+        <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" /></span>
+        Diperbarui otomatis tiap 5 detik{lastUpdated ? ` · terakhir ${lastUpdated.toLocaleTimeString("id-ID")}` : ""}
+      </p>
 
       {error && (
         <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800/40 dark:bg-rose-900/20 dark:text-rose-300">

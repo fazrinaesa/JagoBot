@@ -22,7 +22,8 @@ import {
   MessageCircleQuestion,
   Users
 } from "lucide-react";
-import { getUserBots, createProject } from "../lib/api";
+import { getUserBots, createProject, getChatLogs, adminGetPlatformNotifications } from "../lib/api";
+import { readNotificationSettings, notificationSettingsEvent } from "../lib/notificationSettings";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
@@ -80,6 +81,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [chatNotifications, setChatNotifications] = useState<any[]>([]);
+  const [hasUnreadChats, setHasUnreadChats] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState(readNotificationSettings);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
@@ -142,6 +146,70 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     window.addEventListener('storage', fetchProfile);
     return () => window.removeEventListener('storage', fetchProfile);
   }, []);
+
+  useEffect(() => {
+    const syncSettings = () => setNotificationSettings(readNotificationSettings());
+    window.addEventListener(notificationSettingsEvent, syncSettings);
+    return () => window.removeEventListener(notificationSettingsEvent, syncSettings);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const fetchChatNotifications = async () => {
+      if (!notificationSettings.enabled) { setChatNotifications([]); setHasUnreadChats(false); return; }
+      const isSuperAdmin = localStorage.getItem("role") === "SUPER_ADMIN";
+      if (isSuperAdmin) {
+        try {
+          const response = await adminGetPlatformNotifications(notificationSettings.limit);
+          if (!active) return;
+          const chats = response.data.data ?? [];
+          setChatNotifications(chats);
+          const lastSeen = Number(localStorage.getItem("platformNotificationsSeen") || 0);
+          setHasUnreadChats(chats.some((chat: any) => chat.id > lastSeen));
+        } catch (error) {
+          console.warn("Gagal memuat notifikasi platform", error);
+        }
+        return;
+      }
+      const botIds = notificationSettings.botId === "all"
+        ? userBots.map((bot) => Number(bot.id)).filter(Boolean)
+        : [Number(notificationSettings.botId === "active" ? activeBotId : notificationSettings.botId)].filter(Boolean);
+      if (!botIds.length) { setChatNotifications([]); return; }
+      try {
+        const responses = await Promise.all(botIds.map((botId) => getChatLogs(botId)));
+        if (!active) return;
+        const chats = responses.flatMap((response, index) =>
+          (response.data.data ?? []).map((chat: any) => ({ ...chat, botId: botIds[index] }))
+        ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() || b.id - a.id);
+        const visibleChats = chats.slice(0, notificationSettings.limit);
+        setChatNotifications(visibleChats);
+        setHasUnreadChats(visibleChats.some((chat: any) => chat.id > Number(localStorage.getItem(`chatNotificationsSeen:${chat.botId}`) || 0)));
+      } catch (error) {
+        console.warn("Gagal memuat notifikasi chat", error);
+      }
+    };
+    void fetchChatNotifications();
+    if (!notificationSettings.enabled) return () => { active = false; };
+    const timer = window.setInterval(() => void fetchChatNotifications(), 5000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [activeBotId, userBots, notificationSettings]);
+
+  const openNotifications = () => {
+    setIsNotificationsOpen((open) => !open);
+    if (!isNotificationsOpen) {
+      if (localStorage.getItem("role") === "SUPER_ADMIN") {
+        const newestId = Math.max(0, ...chatNotifications.map((chat) => Number(chat.id) || 0));
+        if (newestId) localStorage.setItem("platformNotificationsSeen", String(newestId));
+      } else {
+        for (const chat of chatNotifications) {
+          const key = `chatNotificationsSeen:${chat.botId}`;
+          const seen = Number(localStorage.getItem(key) || 0);
+          if (Number(chat.id) > seen) localStorage.setItem(key, String(chat.id));
+        }
+      }
+      setHasUnreadChats(false);
+    }
+  };
 
   const handleProjectSwitch = (newId: string) => {
     setIsSwitching(true);
@@ -260,28 +328,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           ))}
         </nav>
 
-        {/* Kartu Pusat Bantuan */}
-        <div className="mt-auto p-4">
-          <div className="rounded-2xl border border-accent-blue/15 bg-accent-blue/[0.04] p-4 dark:border-accent-blue/20 dark:bg-accent-blue/10">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-accent-blue shadow-soft dark:bg-neutral-800 dark:text-accent-blue-light">
-                <HelpCircle className="h-4 w-4" />
-              </span>
-              <p className="text-xs font-bold text-neutral-900 dark:text-white">Pusat Bantuan</p>
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-              Butuh bantuan tim JagoBot? Kami siap membantu Anda.
-            </p>
-            <a
-              href="https://wa.me/628123456789"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border-subtle bg-white py-2 text-xs font-semibold text-accent-blue shadow-soft transition-all hover:bg-neutral-50 focus-ring dark:border-neutral-700 dark:bg-neutral-800 dark:text-accent-blue-light dark:hover:bg-neutral-700"
-            >
-              Hubungi Support
-            </a>
-          </div>
-        </div>
+        <div className="mt-auto" />
       </aside>
 
       {/* ── Area konten ─────────────────────────────────────── */}
@@ -371,7 +418,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                     </div>
 
                     <a
-                      href="https://wa.me/628123456789"
+                      href={import.meta.env.VITE_SUPPORT_WHATSAPP ? `https://wa.me/${import.meta.env.VITE_SUPPORT_WHATSAPP}` : "mailto:support@jagobot.com?subject=Bantuan%20WhatsApp%20JagoBot"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-neutral-600 transition-all hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
@@ -381,7 +428,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                     </a>
 
                     <a
-                      href="#"
+                      href="https://github.com/fazrinaesa/JagoBot"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-neutral-600 transition-all hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
                     >
                       <Database size={14} className="text-accent-blue" />
@@ -403,11 +452,11 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             {/* Notifikasi */}
             <div className="relative">
               <button
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                onClick={openNotifications}
                 className="relative rounded-xl border border-transparent p-2 text-neutral-500 transition-all hover:bg-neutral-50 hover:text-neutral-800 hover:shadow-soft focus-ring dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
               >
                 <Bell size={18} />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-white bg-accent-pink dark:border-surface-dark" />
+                {hasUnreadChats && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-white bg-accent-pink dark:border-surface-dark" />}
               </button>
 
               {isNotificationsOpen && (
@@ -421,12 +470,18 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                       </Link>
                     </div>
                     <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                      {[1, 2].map((i) => (
-                        <div key={i} className="cursor-pointer border-b border-border-subtle/60 p-4 transition-colors last:border-b-0 hover:bg-neutral-50 dark:border-neutral-800/60 dark:hover:bg-neutral-800/40">
-                          <p className="mb-0.5 text-xs font-semibold text-neutral-800 dark:text-neutral-100">Ada Pesan Baru!</p>
-                          <p className="line-clamp-1 text-[11px] text-neutral-500 dark:text-neutral-400">Pelanggan menanyakan harga produk...</p>
-                          <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wider text-neutral-400">Baru saja</p>
-                        </div>
+                      {chatNotifications.length === 0 ? (
+                        <p className="p-4 text-xs text-neutral-500">Belum ada chat terbaru.</p>
+                      ) : chatNotifications.map((chat) => (
+                        <Link key={chat.id} to="/dashboard/chat-logs" onClick={() => setIsNotificationsOpen(false)} className="block border-b border-border-subtle/60 p-4 transition-colors last:border-b-0 hover:bg-neutral-50 dark:border-neutral-800/60 dark:hover:bg-neutral-800/40">
+                          <p className="mb-0.5 text-xs font-semibold text-neutral-800 dark:text-neutral-100">
+                            {localStorage.getItem("role") === "SUPER_ADMIN"
+                              ? `Chat baru · ${[chat.storeName, chat.botName].filter(Boolean).join(" · ") || chat.platform}`
+                              : `Pesan baru · ${chat.platform}`}
+                          </p>
+                          <p className="line-clamp-1 text-[11px] text-neutral-500 dark:text-neutral-400">{chat.userMessage}</p>
+                          <p className="mt-1.5 text-[10px] font-medium text-neutral-400">{new Date(chat.createdAt).toLocaleString("id-ID")}</p>
+                        </Link>
                       ))}
                     </div>
                     <Link

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
+import * as path from 'path';
+import * as fs from 'fs';
 import prisma from '../lib/prisma';
-import { createClient } from '@supabase/supabase-js';
 
 export const getProfile = async (req: any, res: Response) => {
     try {
@@ -77,20 +78,18 @@ export const uploadAvatar = async (req: any, res: Response) => {
   try {
     const userId = req.user.userId;
     const file = req.file;
-    const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_SERVICE_KEY || '');
-
     if (!file) return res.status(400).json({ message: "File tidak ditemukan" });
+    if (!file.buffer?.length) return res.status(400).json({ message: "File foto kosong atau tidak terbaca" });
 
-    const fileName = `avatar-${userId}-${Date.now()}`;
+    const ext = (file.originalname.match(/\.[a-z0-9]+$/i)?.[0] || '.jpg').toLowerCase();
+    const fileName = `avatar-${userId}-${Date.now()}${ext}`;
 
-    // ✅ Pakai file.buffer langsung karena uploadImage pakai memoryStorage
-    const { error: storageError } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file.buffer, { contentType: file.mimetype, upsert: true });
-
-    if (storageError) throw storageError;
-
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    // Simpan ke disk lokal (folder uploads sudah di-serve di /uploads oleh server.ts).
+    // ponytail: disk lokal, cukup untuk 1 server. Ganti ke Supabase/S3 kalau deploy multi-instance / Vercel.
+    const uploadDir = path.join(__dirname, '../../uploads');
+    fs.mkdirSync(uploadDir, { recursive: true });
+    fs.writeFileSync(path.join(uploadDir, fileName), file.buffer);
+    const publicUrl = `/uploads/${fileName}`;
 
     await prisma.user.update({
       where: {
@@ -103,8 +102,8 @@ export const uploadAvatar = async (req: any, res: Response) => {
 
     res.json({ message: "Berhasil", avatarUrl: publicUrl });
   } catch (error: any) {
-    console.error("DETAIL ERROR BACKEND:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Avatar upload failed:", error);
+    res.status(500).json({ message: "Gagal menyimpan foto profil. Periksa konfigurasi storage dan database." });
   }
 };
 

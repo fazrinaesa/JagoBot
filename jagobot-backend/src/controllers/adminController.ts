@@ -159,6 +159,44 @@ export const updateUserStatus = async (req: any, res: Response) => {
 };
 
 /**
+ * GET /api/admin/notifications?limit=10
+ * Aktivitas chat terbaru lintas seluruh bot (khusus SUPER_ADMIN).
+ */
+export const getPlatformNotifications = async (req: any, res: Response) => {
+    try {
+        const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
+        const chats = await prisma.chatLog.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            select: {
+                id: true,
+                botId: true,
+                userMessage: true,
+                aiResponse: true,
+                platform: true,
+                createdAt: true,
+                bot: { select: { nama_bot: true, user: { select: { nama_toko: true } } } },
+            },
+        });
+        res.json({
+            data: chats.map((chat) => ({
+                id: chat.id,
+                botId: chat.botId,
+                userMessage: chat.userMessage,
+                aiResponse: chat.aiResponse,
+                platform: chat.platform,
+                createdAt: chat.createdAt,
+                botName: chat.bot?.nama_bot || null,
+                storeName: chat.bot?.user?.nama_toko || null,
+            })),
+        });
+    } catch (error) {
+        console.error('[Admin] getPlatformNotifications error:', error);
+        res.status(500).json({ message: 'Gagal mengambil notifikasi platform.' });
+    }
+};
+
+/**
  * GET /api/admin/me
  * Info peran pemanggil — berguna untuk frontend menampilkan menu.
  */

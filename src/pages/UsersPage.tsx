@@ -41,22 +41,35 @@ export const UsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState("");
   const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     setError(null);
     try {
       const res = await adminGetUsers({ search: search || undefined, role: roleFilter || undefined, page, limit: 20 });
       setUsers(res.data.data || []);
       setPagination(res.data.pagination);
+      setLastUpdated(new Date());
     } catch (e: any) {
       setError(e?.response?.data?.message || "Gagal memuat daftar pengguna.");
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, [page, roleFilter]);
+  useEffect(() => { void load(); }, [page, roleFilter]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && busyId === null && !search.trim()) void load(false);
+    }, 5000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && busyId === null && !search.trim()) void load(false);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); };
+  }, [page, roleFilter, busyId, search]);
 
   // Pencarian ditunda agar tidak membanjiri server tiap ketikan.
   useEffect(() => {
@@ -105,11 +118,16 @@ export const UsersPage: React.FC = () => {
         title="Manajemen Pengguna"
         description="Kelola peran dan status akun seluruh pengguna."
         actions={
-          <Button variant="secondary" onClick={load}>
+          <Button variant="secondary" onClick={() => void load()}>
             <RefreshCw className="mr-1.5 h-4 w-4" /> Muat ulang
           </Button>
         }
       />
+
+      <p className="flex items-center gap-1.5 text-xs text-neutral-400">
+        <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" /></span>
+        Diperbarui otomatis tiap 5 detik{lastUpdated ? ` · terakhir ${lastUpdated.toLocaleTimeString("id-ID")}` : ""}
+      </p>
 
       {error && (
         <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800/40 dark:bg-rose-900/20 dark:text-rose-300">

@@ -1,10 +1,12 @@
 import { Sparkles, MessageSquare, Save, Play, UserCircle2, Smile, Briefcase, Loader2, Check } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { updateBotSettings } from "../lib/api";
 import { Badge, Button, Card, Textarea } from "../components/ui";
 
 export const CustomPersonality = () => {
+  const navigate = useNavigate();
   const [selectedPreset, setSelectedPreset] = useState("casual");
   const [customPrompt, setCustomPrompt] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -247,7 +249,7 @@ export const CustomPersonality = () => {
             )}
           </Button>
 
-          <Button variant="secondary" className="w-full py-3.5 text-sm">
+          <Button type="button" variant="secondary" onClick={() => navigate("/dashboard/playground")} className="w-full py-3.5 text-sm">
             <Play className="h-4 w-4 text-accent-blue dark:text-accent-blue-light" /> Coba di Playground
           </Button>
         </div>

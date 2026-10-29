@@ -29,11 +29,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         // Penentuan rentang waktu untuk perhitungan tren (periode sebelumnya)
         let pastStartDate: Date;
 
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        const endDate = now;
 
         if (period === 'minggu') {
-            startDate = new Date();
-            startDate.setDate(now.getDate() - 6);
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - ((now.getDay() + 6) % 7));
             startDate.setHours(0, 0, 0, 0);
 
             // Past Start Date: 7 hari sebelum startDate
@@ -85,23 +85,24 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         // ChatLog belum menyimpan identitas pelanggan; jangan tampilkan estimasi palsu.
         const conversionRate = "0";
 
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const chartStartDate = period === 'minggu'
+            ? new Date(startDate)
+            : new Date(now.getFullYear(), now.getMonth(), 1);
 
         const recentChats = await prisma.chatLog.findMany({
             where: {
                 botId: { in: targetBotIds },
-                createdAt: { gte: sevenDaysAgo } 
+                createdAt: { gte: chartStartDate, lte: now }
             },
-            select: { createdAt: true } 
+            select: { createdAt: true }
         });
 
         const chartData: { name: string; chats: number; orders: number }[] = [];
         const daysOfWeek = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
+        const chartDays = period === 'minggu' ? 7 : now.getDate();
+        for (let i = 0; i < chartDays; i++) {
+            const d = new Date(chartStartDate);
+            d.setDate(chartStartDate.getDate() + i);
             const dayName = daysOfWeek[d.getDay()];
             const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
             const dateStr = localDate.toISOString().split('T')[0];
@@ -183,13 +184,13 @@ export const getAnalyticsStats = async (req: Request, res: Response) => {
         let startDate: Date;
         
         if (period === 'minggu') {
-            startDate = new Date();
-            startDate.setDate(now.getDate() - 6);
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - ((now.getDay() + 6) % 7));
             startDate.setHours(0, 0, 0, 0);
         } else {
             startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         }
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        const endDate = now;
 
         // 1. Total Percakapan
         const totalChats = await prisma.chatLog.count({

@@ -19,6 +19,7 @@ import { ChatbotPlayground } from "./pages/ChatbotPlayground";
 import { IntegrationSettings } from "./pages/IntegrationSettings";
 import { ProfilePage } from "./pages/ProfilePage";
 import { NotificationsPage } from "./pages/NotificationsPage";
+import { ChatLogsPage } from "./pages/ChatLogsPage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { AdminPaymentPage } from "./pages/AdminPaymentPage";
 import { AiConfigPage } from "./pages/AiConfigPage";
@@ -28,6 +29,7 @@ import { UsersPage } from "./pages/UsersPage";
 import { AdminOverviewPage } from "./pages/AdminOverviewPage";
 import { RequireSuperAdmin } from "./components/RequireSuperAdmin";
 import { RequireUser } from "./components/RequireUser";
+import { RequireAuthenticated } from "./components/RequireAuthenticated";
 
 export default function App() {
   return (
@@ -74,6 +76,11 @@ export default function App() {
           <Route path="/dashboard/profile" element={
             <DashboardLayout>
               <ProfilePage />
+            </DashboardLayout>
+          } />
+          <Route path="/dashboard/chat-logs" element={
+            <DashboardLayout>
+              <RequireAuthenticated><ChatLogsPage /></RequireAuthenticated>
             </DashboardLayout>
           } />
           <Route path="/dashboard/notifications" element={

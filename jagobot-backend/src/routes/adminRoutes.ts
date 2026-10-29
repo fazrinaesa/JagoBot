@@ -7,6 +7,7 @@ import {
     updateUserRole,
     updateUserStatus,
     getMe,
+    getPlatformNotifications,
 } from '../controllers/adminController';
 import {
     listProviders,
@@ -36,6 +37,7 @@ router.use(verifyToken, requireSuperAdmin);
 // ─── Ringkasan & identitas ───
 router.get('/overview', getOverview);
 router.get('/me', getMe);
+router.get('/notifications', getPlatformNotifications);
 
 // ─── Kelola pengguna ───
 router.get('/users', listUsers);

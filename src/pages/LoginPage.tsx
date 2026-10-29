@@ -1,4 +1,4 @@
-import { Mail, Lock, ArrowRight, Github } from "lucide-react";
+import { Mail, Lock, ArrowRight, Github, Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
@@ -7,6 +7,7 @@ import { Button, Input, FieldLabel } from "../components/ui";
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -89,14 +90,23 @@ export const LoginPage = () => {
           <div className="relative group">
             <Lock className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4.5 w-4.5 -translate-y-1/2 text-neutral-400 transition-colors group-focus-within:text-accent-blue" />
             <Input
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               disabled={isLoading}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="pl-11 py-3.5"
+              className="pl-11 py-3.5 pr-11"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+              aria-pressed={showPassword}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-neutral-400 hover:text-neutral-700 focus-ring dark:hover:text-neutral-200"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
         </div>
 

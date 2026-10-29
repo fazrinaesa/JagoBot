@@ -34,8 +34,9 @@ export const AdminPaymentPage: React.FC = () => {
   const [adminNote, setAdminNote] = useState("");
   const [selectedProof, setSelectedProof] = useState<any>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (showSpinner = false) => {
     try {
       const [proofsRes, subsRes] = await Promise.all([
         adminGetPaymentProofs(filter),
@@ -43,17 +44,29 @@ export const AdminPaymentPage: React.FC = () => {
       ]);
       setProofs(proofsRes.data?.data || []);
       setSubscriptions(subsRes.data?.data || []);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error("Admin payment fetch error:", err);
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
   useEffect(() => {
     setLoading(true);
-    fetchData();
+    void fetchData(true);
   }, [filter]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && !showDetail && reviewing === null) void fetchData();
+    }, 5000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !showDetail) void fetchData();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); };
+  }, [filter, showDetail, reviewing]);
 
   const handleReview = async (proofId: number, action: "approve" | "reject") => {
     if (reviewing !== null) return;
@@ -94,6 +107,11 @@ export const AdminPaymentPage: React.FC = () => {
         title="Verifikasi Pembayaran"
         description="Tinjau bukti transfer dan kelola langganan pengguna."
       />
+
+      <p className="flex items-center gap-1.5 text-xs text-neutral-400">
+        <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" /></span>
+        Diperbarui otomatis tiap 5 detik{lastUpdated ? ` · terakhir ${lastUpdated.toLocaleTimeString("id-ID")}` : ""}
+      </p>
 
       {/* Filter tabs */}
       <div className="flex flex-wrap gap-2">

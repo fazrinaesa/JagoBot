@@ -41,7 +41,7 @@ const imageFileFilter = (req: any, file: Express.Multer.File, cb: any) => {
 export const upload = multer({ storage, fileFilter });
 
 // ✅ uploadImage pakai memoryStorage agar file.buffer tersedia langsung tanpa tulis ke disk
-export const uploadImage = multer({ storage: multer.memoryStorage(), fileFilter: imageFileFilter });
+export const uploadImage = multer({ storage: multer.memoryStorage(), fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Payment proof upload — saves to disk for self-hosted deployment
 const proofStorage = multer.diskStorage({
