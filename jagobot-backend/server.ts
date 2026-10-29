@@ -16,12 +16,24 @@ import telegramRoutes from './src/routes/telegramRoutes';
 import adminRoutes from './src/routes/adminRoutes';
 import { startSheetPolling } from './src/lib/googleSheets';
 
+// PORT dari panel hosting harus menang atas nilai di .env.
+const panelPort = process.env.PORT;
+const panelDatabaseUrl = process.env.DATABASE_URL;
 dotenv.config();
+if (panelPort) process.env.PORT = panelPort;
+
+// Panel hosting menulis DATABASE_URL MySQL untuk site ini, sementara aplikasi
+// memakai PostgreSQL. Abaikan nilai MySQL agar Prisma tidak salah dialek.
+if (process.env.DATABASE_URL?.startsWith('mysql://') && panelDatabaseUrl?.startsWith('postgres')) {
+  process.env.DATABASE_URL = panelDatabaseUrl;
+}
+if (process.env.DATABASE_URL?.startsWith('mysql://') && process.env.POSTGRES_DATABASE_URL) {
+  process.env.DATABASE_URL = process.env.POSTGRES_DATABASE_URL;
+}
+
+// CDN/DB kredensial di .env panel sudah dimuat oleh dotenv di atas.
 console.log("DEBUG API KEY:", process.env.GEMINI_API_KEY ? "ADA ✅" : "KOSONG ❌");
-dotenv.config();
-// Tambahkan baris ini untuk cek kunci Supabase
 console.log("DEBUG SUPABASE URL:", process.env.SUPABASE_URL ? "ADA ✅" : "KOSONG ❌");
-console.log("DEBUG SUPABASE KEY:", process.env.SUPABASE_ANON_KEY ? "ADA ✅" : "KOSONG ❌");
 console.log("Starting server..."); // Trigger restart
 const app = express();
 
