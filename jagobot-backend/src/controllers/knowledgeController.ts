@@ -120,7 +120,7 @@ export const ingestPDF = async (req: Request, res: Response) => {
 
             await prisma.$executeRaw`
                 INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+                VALUES (${kb.id}, ${chunkContent}, ${vectorString})
             `;
         }
 
@@ -221,7 +221,7 @@ export const ingestManualText = async (req: any, res: any) => {
 
             await prisma.$executeRaw`
                 INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+                VALUES (${kb.id}, ${chunkContent}, ${vectorString})
             `;
         }
 
@@ -332,7 +332,7 @@ export const updateKnowledgeBase = async (req: Request, res: Response) => {
 
             await prisma.$executeRaw`
                 INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                VALUES (${kb.id}, ${chunkContent}, ${vectorString}::vector)
+                VALUES (${kb.id}, ${chunkContent}, ${vectorString})
             `;
         }
 

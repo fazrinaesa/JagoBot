@@ -163,7 +163,7 @@ export const syncSheetToKnowledgeBase = async (botId: number): Promise<{ rows: n
             const vectorString = `[${vector.join(',')}]`;
             await prisma.$executeRaw`
                 INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                VALUES (${kb.id}, ${chunk}, ${vectorString}::vector)
+                VALUES (${kb.id}, ${chunk}, ${vectorString})
             `;
         }
 
@@ -201,7 +201,7 @@ export const syncSheetToKnowledgeBase = async (botId: number): Promise<{ rows: n
             const vectorString = `[${vector.join(',')}]`;
             await prisma.$executeRaw`
                 INSERT INTO "DocumentChunk" ("knowledgeBaseId", "content", "embedding")
-                VALUES (${kb.id}, ${chunk}, ${vectorString}::vector)
+                VALUES (${kb.id}, ${chunk}, ${vectorString})
             `;
         }
 

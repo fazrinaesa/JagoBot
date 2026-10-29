@@ -1,8 +1,15 @@
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
--- pgvector dibutuhkan kolom embedding (Unsupported("vector")).
-CREATE EXTENSION IF NOT EXISTS vector;
+-- pgvector opsional: dipakai bila tersedia di server.
+-- Bila tidak ada, kolom embedding disimpan sebagai TEXT dan pencarian
+-- memakai fallback kata kunci (lihat match_document_chunks di migrasi berikut).
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS vector;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'pgvector tidak tersedia, memakai TEXT untuk embedding';
+END $$;
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -53,7 +60,7 @@ CREATE TABLE "DocumentChunk" (
     "id" SERIAL NOT NULL,
     "knowledgeBaseId" INTEGER NOT NULL,
     "content" TEXT NOT NULL,
-    "embedding" vector,
+    "embedding" TEXT,
 
     CONSTRAINT "DocumentChunk_pkey" PRIMARY KEY ("id")
 );
