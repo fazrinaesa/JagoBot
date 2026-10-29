@@ -12,5 +12,15 @@ CREATE TABLE IF NOT EXISTS "TelegramConnection" (
   "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS "TelegramConnection_status_idx" ON "TelegramConnection"("status");
+
+-- Idempotent Telegram webhook update claims; update_id is scoped to each connection.
+CREATE TABLE IF NOT EXISTS "TelegramUpdate" (
+  "id" SERIAL PRIMARY KEY,
+  "connectionId" INTEGER NOT NULL,
+  "updateId" BIGINT NOT NULL,
+  "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "TelegramUpdate_connectionId_updateId_key" UNIQUE ("connectionId", "updateId")
+);
+
 -- Applied to the local development database after verifying a pre-migration backup.
 -- Apply to deployment databases only after taking a verified backup.

@@ -177,3 +177,12 @@ model TelegramConnection {
   updatedAt        DateTime @updatedAt
   bot              Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
 }
+
+model TelegramUpdate {
+  id             Int      @id @default(autoincrement())
+  connectionId   Int
+  updateId       BigInt
+  receivedAt     DateTime @default(now())
+
+  @@unique([connectionId, updateId])
+}

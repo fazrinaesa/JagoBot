@@ -6,5 +6,12 @@ coverage/
 *.log
 .env*
 !.env.example
+!.env.production
+!*.env.production.example
+!**/.env.production.example
+
+# Unggahan runtime tidak boleh masuk repo
+jagobot-backend/uploads/
+!jagobot-backend/uploads/.gitkeep
 
 /src/generated/prisma

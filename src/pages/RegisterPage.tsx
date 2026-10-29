@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
 import { Button, Input, FieldLabel } from "../components/ui";
+import { apiBaseUrl } from "../lib/apiBase";
 
 export const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ export const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const apiUrl = apiBaseUrl();
       const response = await fetch(`${apiUrl}/api/auth/register`, {
         method: "POST",
         headers: {

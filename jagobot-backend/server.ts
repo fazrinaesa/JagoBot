@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes';
 import dotenv from 'dotenv';
@@ -32,8 +33,19 @@ app.use(express.static(path.join(backendDir, 'public')));
 // Anchor uploads to this backend, independent of the process working directory.
 app.use('/uploads', express.static(path.join(backendDir, 'uploads')));
 
+const allowedOrigins = [
+    'http://localhost:5177',
+    'http://localhost:5000',
+    'https://jagobot.jagoai.dev',
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.replace(/\/$/, '')] : []),
+];
+
 app.use(cors({
-    origin: '*', // Mengizinkan semua website luar mengakses endpoint backend kamu
+    origin: (origin, callback) => {
+        // Tanpa Origin (curl, health check, same-origin) selalu diizinkan.
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(null, false);
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -57,17 +69,28 @@ app.use('/api/health', (_req, res) => {
 });
 
 // Untuk development local
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-        console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`);
-        // Start Google Sheets polling if GOOGLE_CLIENT_ID is configured
-        if (process.env.GOOGLE_CLIENT_ID) {
-            startSheetPolling();
-        } else {
-            console.log('[Sheets] Google Sheets integration disabled (GOOGLE_CLIENT_ID not set)');
-        }
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server JagoBot jalan di http://localhost:${PORT}`);
+    // Start Google Sheets polling if GOOGLE_CLIENT_ID is configured
+    if (process.env.GOOGLE_CLIENT_ID) {
+        startSheetPolling();
+    } else {
+        console.log('[Sheets] Google Sheets integration disabled (GOOGLE_CLIENT_ID not set)');
+    }
+});
+
+// Produksi: sajikan hasil build frontend dari folder dist di root repo (satu domain).
+// Didaftarkan setelah API agar /api/* tidak tertangkap fallback SPA.
+const frontendDist = path.join(__dirname, '../dist');
+if (fs.existsSync(path.join(frontendDist, 'index.html'))) {
+    app.use(express.static(frontendDist));
+    app.get(/^\/(?!api\/).*/, (_req, res) => {
+        res.sendFile(path.join(frontendDist, 'index.html'));
     });
+    console.log(`[Static] Frontend disajikan dari ${frontendDist}`);
+} else {
+    console.log('[Static] dist frontend belum ada — jalankan "npm run build" di root repo.');
 }
 
 export default app;

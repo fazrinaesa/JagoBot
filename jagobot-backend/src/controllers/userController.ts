@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
 import prisma from '../lib/prisma';
+import { isCdnConfigured, uploadToCdn } from '../lib/cdn';
 
 export const getProfile = async (req: any, res: Response) => {
     try {
@@ -84,12 +85,19 @@ export const uploadAvatar = async (req: any, res: Response) => {
     const ext = (file.originalname.match(/\.[a-z0-9]+$/i)?.[0] || '.jpg').toLowerCase();
     const fileName = `avatar-${userId}-${Date.now()}${ext}`;
 
-    // Simpan ke disk lokal (folder uploads sudah di-serve di /uploads oleh server.ts).
-    // ponytail: disk lokal, cukup untuk 1 server. Ganti ke Supabase/S3 kalau deploy multi-instance / Vercel.
-    const uploadDir = path.join(__dirname, '../../uploads');
-    fs.mkdirSync(uploadDir, { recursive: true });
-    fs.writeFileSync(path.join(uploadDir, fileName), file.buffer);
-    const publicUrl = `/uploads/${fileName}`;
+    let publicUrl: string;
+
+    if (isCdnConfigured()) {
+      // Utama: CDN Kroombox (persisten antar-redeploy).
+      const asset = await uploadToCdn(file.buffer, fileName, file.mimetype);
+      publicUrl = asset.url;
+    } else {
+      // Fallback lokal: disk backend, cocok untuk 1 server tanpa CDN.
+      const uploadDir = path.join(__dirname, '../../uploads');
+      fs.mkdirSync(uploadDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadDir, fileName), file.buffer);
+      publicUrl = `/uploads/${fileName}`;
+    }
 
     await prisma.user.update({
       where: {

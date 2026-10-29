@@ -56,4 +56,9 @@ const proofStorage = multer.diskStorage({
     }
 });
 
-export const uploadProof = multer({ storage: proofStorage, fileFilter: imageFileFilter }).single('proof');
+// Buffer agar bisa langsung diteruskan ke CDN tanpa menyentuh disk.
+export const uploadProof = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: imageFileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 },
+}).single('proof');

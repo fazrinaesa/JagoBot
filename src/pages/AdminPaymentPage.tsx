@@ -14,10 +14,11 @@ const STATUS_BADGE: Record<string, { variant: "warning" | "success" | "danger" |
 };
 
 const proofImageUrl = (proofUrl: string) => {
-  const path = proofUrl.startsWith("/uploads/proof_")
+  if (/^https?:\/\//i.test(proofUrl)) return proofUrl; // CDN / eksternal
+  const legacyPath = proofUrl.startsWith("/uploads/proof_")
     ? proofUrl.replace("/uploads/", "/uploads/proofs/")
     : proofUrl;
-  return `${import.meta.env.VITE_API_URL || ""}${path}`;
+  return `${import.meta.env.VITE_API_URL || ""}${legacyPath}`;
 };
 
 const SUB_STATUS_BADGE: Record<string, { variant: "success" | "warning" | "neutral"; label: string }> = {

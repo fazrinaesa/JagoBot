@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { apiBaseUrl } from "../lib/apiBase";
 
 /**
  * Guard rute: hanya izinkan SUPER_ADMIN.
@@ -31,7 +32,7 @@ export const RequireSuperAdmin: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
 
-    const base = (import.meta.env.VITE_API_URL || "http://localhost:5000") + "/api";
+    const base = `${apiBaseUrl()}/api`;
     fetch(`${base}/admin/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {

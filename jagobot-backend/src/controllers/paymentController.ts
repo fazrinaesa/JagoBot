@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
+import * as path from 'path';
+import * as fs from 'fs';
 import prisma from '../lib/prisma';
+import { isCdnConfigured, uploadToCdn } from '../lib/cdn';
 
 // ─── USER-FACING: Get current subscription ───
 
@@ -47,7 +50,20 @@ export const submitPaymentProof = async (req: Request, res: Response) => {
 
         const file = (req as any).file;
         if (!file) return res.status(400).json({ message: 'Unggah bukti transfer terlebih dahulu.' });
-        const proofUrl = `/uploads/${file.filename}`;
+        if (!file.buffer?.length) return res.status(400).json({ message: 'Berkas bukti kosong atau tidak terbaca.' });
+
+        const ext = (file.originalname.match(/\.[a-z0-9]+$/i)?.[0] || '.jpg').toLowerCase();
+        const proofFileName = `proof-${userId}-${Date.now()}${ext}`;
+        let proofUrl: string;
+        if (isCdnConfigured()) {
+            const asset = await uploadToCdn(file.buffer, proofFileName, file.mimetype);
+            proofUrl = asset.url;
+        } else {
+            const dir = path.join(__dirname, '../../uploads/proofs');
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, proofFileName), file.buffer);
+            proofUrl = `/uploads/proofs/${proofFileName}`;
+        }
 
         const existingPending = await prisma.paymentProof.findFirst({
             where: { userId: Number(userId), status: 'pending' },

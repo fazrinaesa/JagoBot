@@ -189,9 +189,9 @@ export const ProfilePage = () => {
                 {formData.avatarUrl ? (
                   <img
                     src={
-                      formData.avatarUrl.startsWith("/uploads/")
-                        ? `${import.meta.env.VITE_API_URL || ""}${formData.avatarUrl}`
-                        : formData.avatarUrl
+                      /^https?:\/\//i.test(formData.avatarUrl)
+                        ? formData.avatarUrl
+                        : `${import.meta.env.VITE_API_URL || ""}${formData.avatarUrl}`
                     }
                     alt="Avatar"
                     className="h-full w-full rounded-full border border-border-subtle bg-white object-cover dark:border-neutral-700"
