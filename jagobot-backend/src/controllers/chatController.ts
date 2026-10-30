@@ -50,15 +50,19 @@ export const handleIncomingChat = async (req: Request, res: Response) => {
             // Generate embedding untuk pertanyaan user saat ini
             const queryVector = await generateEmbedding(message);
 
+            // Kolom embedding bertipe TEXT di hosting tanpa pgvector,
+            // jadi vektor dikirim sebagai literal string.
+            const queryVectorLiteral = `[${queryVector.join(',')}]`;
+
             const allMatches: any[] = [];
             for (const kb of allKbs) {
                 // Mencari potongan teks (chunks) yang paling relevan dengan pertanyaan
                 const matches: any = await prisma.$queryRaw`
-                    SELECT content, similarity 
+                    SELECT content, similarity
                     FROM match_document_chunks(
-                        ${queryVector}, 
-                        ${0.2}::float8, 
-                        ${5}::int, 
+                        ${queryVectorLiteral},
+                        ${0.2}::float8,
+                        ${5}::int,
                         ${kb.id}::bigint
                     );
                 `;

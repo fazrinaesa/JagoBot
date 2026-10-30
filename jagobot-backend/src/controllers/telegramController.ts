@@ -183,11 +183,13 @@ async function processTelegramMessage(connection: any, message: any) {
     let contextText = '';
     if (knowledgeBases.length) {
       const queryVector = await generateEmbedding(message.text);
+      // Literal string agar cocok dengan kolom TEXT (tanpa pgvector).
+      const queryVectorLiteral = `[${queryVector.join(',')}]`;
       const matches: any[] = [];
       for (const kb of knowledgeBases) {
         const rows: any = await prisma.$queryRaw`
           SELECT content, similarity
-          FROM match_document_chunks(${queryVector}, ${0.2}::float8, ${5}::int, ${kb.id}::bigint)
+          FROM match_document_chunks(${queryVectorLiteral}, ${0.2}::float8, ${5}::int, ${kb.id}::bigint)
         `;
         matches.push(...rows);
       }
