@@ -4,13 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=5177 --host=0.0.0.0",
+    "dev": "node scripts/launch.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "build:deploy": "npm run build && cd jagobot-backend && npm install --no-audit --no-fund && npx prisma generate && npx prisma migrate deploy",
-    "start": "cd jagobot-backend && npx tsx server.ts"
+    "start": "node scripts/launch.mjs --prod"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

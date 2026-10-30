@@ -22,13 +22,15 @@ const panelDatabaseUrl = process.env.DATABASE_URL;
 dotenv.config();
 if (panelPort) process.env.PORT = panelPort;
 
-// Panel hosting menulis DATABASE_URL MySQL untuk site ini, sementara aplikasi
-// memakai PostgreSQL. Abaikan nilai MySQL agar Prisma tidak salah dialek.
-if (process.env.DATABASE_URL?.startsWith('mysql://') && panelDatabaseUrl?.startsWith('postgres')) {
-  process.env.DATABASE_URL = panelDatabaseUrl;
-}
-if (process.env.DATABASE_URL?.startsWith('mysql://') && process.env.POSTGRES_DATABASE_URL) {
-  process.env.DATABASE_URL = process.env.POSTGRES_DATABASE_URL;
+// Template .env panel menulis DATABASE_URL MySQL. Aplikasi memakai PostgreSQL,
+// jadi prioritaskan URL Postgres yang dikirim lewat environment panel.
+const postgresUrl = process.env.DATABASE_URL_PG || process.env.POSTGRES_DATABASE_URL;
+if (process.env.DATABASE_URL?.startsWith('mysql://')) {
+  if (postgresUrl?.startsWith('postgres')) {
+    process.env.DATABASE_URL = postgresUrl;
+  } else if (panelDatabaseUrl?.startsWith('postgres')) {
+    process.env.DATABASE_URL = panelDatabaseUrl;
+  }
 }
 
 // CDN/DB kredensial di .env panel sudah dimuat oleh dotenv di atas.
