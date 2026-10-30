@@ -1,3 +1,4 @@
+import './src/lib/env';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -16,24 +17,6 @@ import telegramRoutes from './src/routes/telegramRoutes';
 import adminRoutes from './src/routes/adminRoutes';
 import { startSheetPolling } from './src/lib/googleSheets';
 
-// PORT dari panel hosting harus menang atas nilai di .env.
-const panelPort = process.env.PORT;
-const panelDatabaseUrl = process.env.DATABASE_URL;
-dotenv.config();
-if (panelPort) process.env.PORT = panelPort;
-
-// Template .env panel menulis DATABASE_URL MySQL. Aplikasi memakai PostgreSQL,
-// jadi prioritaskan URL Postgres yang dikirim lewat environment panel.
-const postgresUrl = process.env.DATABASE_URL_PG || process.env.POSTGRES_DATABASE_URL;
-if (process.env.DATABASE_URL?.startsWith('mysql://')) {
-  if (postgresUrl?.startsWith('postgres')) {
-    process.env.DATABASE_URL = postgresUrl;
-  } else if (panelDatabaseUrl?.startsWith('postgres')) {
-    process.env.DATABASE_URL = panelDatabaseUrl;
-  }
-}
-
-// CDN/DB kredensial di .env panel sudah dimuat oleh dotenv di atas.
 console.log("DEBUG API KEY:", process.env.GEMINI_API_KEY ? "ADA ✅" : "KOSONG ❌");
 console.log("DEBUG SUPABASE URL:", process.env.SUPABASE_URL ? "ADA ✅" : "KOSONG ❌");
 console.log("Starting server..."); // Trigger restart

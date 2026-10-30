@@ -1,3 +1,4 @@
+import './env';
 import { PrismaClient } from '@prisma/client';
 
 // Singleton pattern: mencegah pembuatan koneksi baru setiap kali hot-reload (dev mode)
