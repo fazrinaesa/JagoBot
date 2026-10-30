@@ -15,3 +15,7 @@ jagobot-backend/uploads/
 !jagobot-backend/uploads/.gitkeep
 
 /src/generated/prisma
+
+# URL Postgres produksi (dibuat di server, jangan di-commit)
+.pgurl
+.env.production.local
