@@ -1,6 +1,7 @@
 import { Globe, Code, Copy, Check, ExternalLink, X, Database, Plug } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "../lib/utils";
+import { apiBaseUrl } from "../lib/apiBase";
 import { Badge, Button, Card, PageHeader } from "../components/ui";
 import { connectTelegram, disconnectTelegram, getTelegramConnection } from "../lib/api";
 
@@ -74,9 +75,10 @@ export const IntegrationSettings = () => {
     finally { setTelegramBusy(false); }
   };
 
-  // STEP 5: Buat string kode snippet secara dinamis
-  const apiUrl = import.meta.env.VITE_API_URL || "";
-  const snippetCode = `<script \n  src="${apiUrl}/widget/jagobot.js" \n  data-bot-id="${activeBotId || "JB-PENDING"}"></script>`;
+  // STEP 5: Buat string kode snippet secara dinamis.
+  // Pakai origin absolut: klien menempelkan script di domain lain, jadi path
+  // relatif ("/widget/...") akan dicari ke server mereka sendiri dan 404.
+  const snippetCode = `<script \n  src="${apiBaseUrl()}/widget/jagobot.js" \n  data-bot-id="${activeBotId || ""}"></script>`;
 
   // STEP 6: Logika "copy to clipboard" dengan feedback visual
   const [isCopied, setIsCopied] = useState<boolean>(false);
