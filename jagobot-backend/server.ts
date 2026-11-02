@@ -37,6 +37,14 @@ const allowedOrigins = [
     ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.replace(/\/$/, '')] : []),
 ];
 
+// Widget publik dipasang di website klien mana pun, jadi endpoint ini
+// sengaja terbuka. Didaftarkan sebelum CORS global agar tidak tertimpa.
+app.use('/api/public', cors({
+    origin: '*',
+    methods: ['POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type']
+}));
+
 app.use(cors({
     origin: (origin, callback) => {
         // Tanpa Origin (curl, health check, same-origin) selalu diizinkan.

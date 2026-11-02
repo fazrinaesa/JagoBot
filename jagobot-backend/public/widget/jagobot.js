@@ -9,9 +9,17 @@
   }
 
   // CONFIGURATION URL BACKEND
-  const BACKEND_URL = (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
-    ? 'https://jago-bot-upla.vercel.app'
-    : 'http://localhost:5000';
+  // Alamat backend diambil dari lokasi script ini dimuat, jadi widget selalu
+  // memanggil server yang sama dengan yang menyajikan file ini (produksi
+  // maupun lokal). Bisa ditimpa manual lewat atribut data-api="https://...".
+  const apiOverride = scriptTag.getAttribute('data-api');
+  let BACKEND_URL = 'http://localhost:5000';
+  try {
+    if (scriptTag.src) BACKEND_URL = new URL(scriptTag.src).origin;
+  } catch (err) {
+    // biarkan fallback lokal bila src tidak bisa diparse
+  }
+  if (apiOverride) BACKEND_URL = apiOverride.replace(/\/$/, '');
 
   // 2. INJECT CSS LANGSUNG LEWAT JAVASCRIPT
   const style = document.createElement('style');
