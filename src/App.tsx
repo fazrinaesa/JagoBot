@@ -11,6 +11,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { OAuthCallbackPage } from "./pages/OAuthCallbackPage";
 import { DashboardWithAnalytics } from "./pages/DashboardWithAnalytics";
 import { ApiManagement } from "./pages/ApiManagement";
 import { KnowledgeBase } from "./pages/KnowledgeBase";
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={

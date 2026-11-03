@@ -1,8 +1,19 @@
 import { Mail, Lock, ArrowRight, Github, Eye, EyeOff } from "lucide-react";
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
 import { Button, Input, FieldLabel } from "../components/ui";
+import { apiBaseUrl } from "../lib/apiBase";
+
+const OAUTH_ERRORS: Record<string, string> = {
+  not_configured: "Login ini belum diaktifkan oleh admin (kredensial OAuth belum diatur).",
+  access_denied: "Anda membatalkan proses masuk.",
+  invalid_request: "Permintaan masuk tidak lengkap. Silakan coba lagi.",
+  state_expired: "Sesi masuk kedaluwarsa. Silakan coba lagi.",
+  state_mismatch: "Sesi masuk tidak valid. Silakan coba lagi.",
+  email_unavailable: "Akun Anda tidak membagikan email terverifikasi, jadi tidak bisa dipakai masuk.",
+  provider_error: "Gagal menghubungi penyedia login. Coba lagi beberapa saat.",
+};
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +21,17 @@ export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const startOAuth = (provider: "google" | "github") => {
+    window.location.href = `${apiBaseUrl()}/api/auth/oauth/${provider}/start`;
+  };
+
+  useEffect(() => {
+    const code = searchParams.get("oauth_error");
+    if (!code) return;
+    alert(OAUTH_ERRORS[code] || "Gagal masuk dengan penyedia tersebut. Silakan coba lagi.");
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,10 +149,10 @@ export const LoginPage = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Button variant="secondary" className="py-3">
+        <Button variant="secondary" className="py-3" type="button" onClick={() => startOAuth("google")}>
           <img src="https://www.google.com/favicon.ico" className="h-4 w-4" alt="Google" /> Google
         </Button>
-        <Button variant="secondary" className="py-3">
+        <Button variant="secondary" className="py-3" type="button" onClick={() => startOAuth("github")}>
           <Github className="h-4 w-4" /> GitHub
         </Button>
       </div>

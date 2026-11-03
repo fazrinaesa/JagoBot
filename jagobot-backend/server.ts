@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes';
+import oauthRoutes from './src/routes/oauthRoutes';
 import dotenv from 'dotenv';
 import dashboardRoutes from './src/routes/dashboardRoutes';
 import chatRoutes from './src/routes/chatRoutes'; // <-- TAMBAHKA
@@ -58,6 +59,7 @@ app.use(cors({
 app.use(express.json());
 
 // Pintu utama API
+app.use('/api/auth/oauth', oauthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chat', chatRoutes);
