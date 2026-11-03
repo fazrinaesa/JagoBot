@@ -90,7 +90,13 @@ app.listen(PORT, () => {
 const frontendDist = path.join(__dirname, '../dist');
 if (fs.existsSync(path.join(frontendDist, 'index.html'))) {
     app.use(express.static(frontendDist));
-    app.get(/^\/(?!api\/).*/, (_req, res) => {
+    app.get(/^\/(?!api\/).*/, (req, res) => {
+        // Jangan kirim index.html untuk berkas statis yang tidak ada.
+        // Kalau HTML dilayani sebagai .js, browser gagal parse dan halaman
+        // jadi putih kosong tanpa pesan yang jelas.
+        if (/\.[a-z0-9]+$/i.test(req.path)) {
+            return res.status(404).type('text/plain').send('Aset tidak ditemukan');
+        }
         res.sendFile(path.join(frontendDist, 'index.html'));
     });
     console.log(`[Static] Frontend disajikan dari ${frontendDist}`);
