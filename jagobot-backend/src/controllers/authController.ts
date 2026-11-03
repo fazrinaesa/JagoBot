@@ -107,11 +107,18 @@ export const forgotPassword = async (req: Request, res: Response) => {
         const resetLink = `${frontendUrl}/reset-password?token=${token}&id=${user.id}`;
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
-            }
+            },
+            // Batasi waktu koneksi: tanpa ini request bisa menggantung ~2 menit
+            // saat IPv6/DNS lambat, dan proxy menganggapnya timeout.
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 20000,
         });
 
         const mailOptions = {
@@ -132,10 +139,15 @@ export const forgotPassword = async (req: Request, res: Response) => {
             `
         };
 
-        await transporter.sendMail(mailOptions);
+        // Kirim di latar belakang: respons tetap generik dan instan, sehingga
+        // waktu balasan tidak membocorkan apakah email terdaftar atau tidak.
+        transporter
+            .sendMail(mailOptions)
+            .then(() => console.log('[ForgotPassword] Email reset terkirim.'))
+            .catch((mailError: any) => console.error('[ForgotPassword] Gagal kirim email:', mailError.message));
 
-        res.status(200).json({ 
-            message: "Jika email Anda terdaftar dalam sistem kami, tautan pengaturan ulang kata sandi telah dikirimkan ke email Anda." 
+        return res.status(200).json({
+            message: "Jika email Anda terdaftar dalam sistem kami, tautan pengaturan ulang kata sandi telah dikirimkan ke email Anda."
         });
 
     } catch (error) {

@@ -8,6 +8,11 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import dns from 'dns';
+
+// Server hosting kadang lambat pada IPv6; paksa IPv4 agar koneksi SMTP
+// (Gmail) tidak menunggu timeout IPv6 sebelum jatuh ke IPv4.
+dns.setDefaultResultOrder('ipv4first');
 
 // PORT yang disuntik panel harus menang atas nilai di .env.
 const panelPort = process.env.PORT;
